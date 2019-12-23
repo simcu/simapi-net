@@ -4,7 +4,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <OutputType>Library</OutputType>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>0.0.2</PackageVersion>
+    <Version>0.0.2</Version>
     <Authors>xRain@YYTech</Authors>
     <Description>AspNetCore一个方便的API文档,捕获异常,统一输入输出的API类库</Description>
     <PackageId>YY-Tech.YYApi</PackageId>
@@ -16,9 +16,6 @@
     <Folder Include="Helpers\" />
     <Folder Include="Communications\" />
     <Folder Include="Controllers\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Class1.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Remove="Properties\launchSettings.json" />
