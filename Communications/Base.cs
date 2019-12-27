@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Newtonsoft.Json.Serialization;
 
 namespace YYApi.Communications
 {
@@ -91,7 +90,7 @@ namespace YYApi.Communications
             {
                 IgnoreReadOnlyProperties = true,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                Converters = {new JsonStringEnumConverter()}
+                Converters = { new JsonStringEnumConverter() }
             });
         }
     }

@@ -9,7 +9,9 @@
     <Description>AspNetCore一个方便的API文档,捕获异常,统一输入输出的API类库</Description>
     <PackageId>YY-Tech.YYApi</PackageId>
     <IsPackable>true</IsPackable>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <IncludeSymbols>true</IncludeSymbols>
+    <PackageVersion>0.1.2</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,8 +23,8 @@
     <Content Remove="Properties\launchSettings.json" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="5.0.0-rc4" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="5.0.0-rc4" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="5.0.0-rc5" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="5.0.0-rc5" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>

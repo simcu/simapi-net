@@ -15,7 +15,10 @@ namespace YYApi.Controllers
     /// </summary>
     public class BaseController : Controller
     {
-        protected int LoginId => int.Parse(HttpContext.Items["LoginId"].ToString());
+        /// <summary>
+        /// 当前登录用户的ID
+        /// </summary>
+        protected int LoginId => HttpContext.Items["LoginId"] == null ? 0 : int.Parse(HttpContext.Items["LoginId"].ToString());
 
         /// <summary>
         /// 验证请求参数
