@@ -18,7 +18,7 @@ namespace YYApi.Controllers
         /// <summary>
         /// 当前登录用户的ID
         /// </summary>
-        protected int LoginId => HttpContext.Items["LoginId"] == null ? 0 : int.Parse(HttpContext.Items["LoginId"].ToString());
+        protected LoginInfoItem LoginInfo => (LoginInfoItem)HttpContext.Items["LoginInfo"];
 
         /// <summary>
         /// 验证请求参数

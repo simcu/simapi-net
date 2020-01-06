@@ -4,6 +4,9 @@ using System.Text.Json.Serialization;
 
 namespace YYApi.Communications
 {
+    /// <summary>
+    /// 基础相应
+    /// </summary>
     public class BaseResponse
     {
         /// <summary>
@@ -36,6 +39,7 @@ namespace YYApi.Communications
         {
             SetCode(200);
         }
+
 
         /// <summary>
         /// 返回指定代码的描述
@@ -90,8 +94,20 @@ namespace YYApi.Communications
             {
                 IgnoreReadOnlyProperties = true,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                Converters = { new JsonStringEnumConverter() }
+                Converters = {new JsonStringEnumConverter()}
             });
         }
+    }
+
+    /// <summary>
+    /// 动态内容
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class BaseResponse<T> : BaseResponse
+    {
+        /// <summary>
+        /// 动态内容
+        /// </summary>
+        public T Data { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -28,15 +29,26 @@ namespace YYApi.Helpers
 
             if (!string.IsNullOrEmpty(token))
             {
-                var id = cache.GetString(token);
-                if (id != null)
+                var login = cache.GetString(token);
+                if (login != null)
                 {
-                    httpContext.Items.Add("LoginId", id);
+                    httpContext.Items.Add("LoginInfo", JsonSerializer.Deserialize<LoginInfoItem>(login));
                 }
             }
 
             return Next(httpContext);
         }
+    }
+
+    /// <summary>
+    /// 登录信息中间件
+    /// </summary>
+    public class LoginInfoItem
+    {
+        //登录用户的ID
+        public int Id { get; set; }
+        //登录用户来源
+        public string Type { get; set; }
     }
 
     /// <summary>
@@ -70,10 +82,15 @@ namespace YYApi.Helpers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public string SetId(int id)
+        public string SetId(int id, string type = "user")
         {
             var uuid = GetUUID();
-            Cache.SetString(uuid, id.ToString());
+            var loginItem = new LoginInfoItem
+            {
+                Id = id,
+                Type = type
+            };
+            Cache.SetString(uuid, JsonSerializer.Serialize(loginItem));
             return uuid;
         }
 
