@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -56,11 +57,32 @@ namespace YYApi.Helpers
     /// </summary>
     public class CheckAuthAttribute : ActionFilterAttribute
     {
+        private string[] Types { get; }
+
+        //默认是user登录类型
+        public CheckAuthAttribute()
+        {
+            Types = new[] { "user" };
+        }
+
+        //设定特定类型的检测
+        public CheckAuthAttribute(string[] types)
+        {
+            Types = types;
+        }
+
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            if (context.HttpContext.Items["LoginId"] == null)
+            var loginInfo = (LoginInfoItem)context.HttpContext.Items["LoginInfo"];
+            //检测是否登录
+            if (loginInfo == null)
             {
                 throw new ApiException(401);
+            }
+            //检测用户类型
+            if (!Types.Contains(loginInfo.Type))
+            {
+                throw new ApiException(403);
             }
         }
     }
@@ -82,7 +104,7 @@ namespace YYApi.Helpers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public string SetId(int id, string type = "user")
+        public string Set(int id, string type = "user")
         {
             var uuid = GetUUID();
             var loginItem = new LoginInfoItem

@@ -15,7 +15,7 @@ namespace Controllers
         /// <summary>
         /// 获取登录用户信息
         /// </summary>
-        protected User LoginInfo => (User) HttpContext.Items["LoginInfo"];
+        protected LoginInfoItem LoginInfo => (LoginInfoItem) HttpContext.Items["LoginInfo"];
     }
 }
 ```
@@ -40,7 +40,7 @@ namespace Controllers
 #Startup.cs
 service.AddAuth();
 ```
-添加时候, 可以从DI中获取 Auth 类,调用 Auth.SetId(int) 将用户ID和生成的Token绑定,本方法返回缓存中的Key名称
+添加时候, 可以从DI中获取 Auth 类,调用 Auth.Set(int,string) 将用户ID/类型和生成的Token绑定,本方法返回缓存中的Key名称
 
 ```C#
 #Startup.cs
