@@ -46,7 +46,7 @@ namespace YYApi.Controllers
         /// <param name="code">错误代码</param>
         /// <param name="message">错误描述(若是常规错误,代码可自动带取描述)</param>
         /// <returns></returns>
-        protected static void Error(int code, string message = null)
+        protected static void Error(int code, string message = "")
         {
             throw new ApiException(code, message);
         }
@@ -57,7 +57,7 @@ namespace YYApi.Controllers
         /// <param name="condition">检测条件</param>
         /// <param name="code">错误代码</param>
         /// <param name="message">错误描述</param>
-        protected static void ErrorWhen(bool condition, int code, string message = null)
+        protected static void ErrorWhen(bool condition, int code, string message = "")
         {
             if (condition)
             {
@@ -71,7 +71,7 @@ namespace YYApi.Controllers
         /// <param name="condition">检测条件</param>
         /// <param name="code">错误代码</param>
         /// <param name="message">错误描述</param>
-        protected static void ErrorWhenNull(object condition, int code, string message = null)
+        protected static void ErrorWhenNull(object condition, int code, string message = "")
         {
             ErrorWhen(condition == null, code, message);
         }
