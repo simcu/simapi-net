@@ -65,6 +65,12 @@ namespace YYApi.Helpers
             Types = new[] { "user" };
         }
 
+        //只检测一种用户类型的快捷方式
+        public CheckAuthAttribute(string type)
+        {
+            Types = new[] { type };
+        }
+
         //设定特定类型的检测
         public CheckAuthAttribute(string[] types)
         {

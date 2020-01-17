@@ -25,6 +25,7 @@ namespace YYApi.Communications
         private readonly Dictionary<int, string> MsgBox = new Dictionary<int, string>()
         {
             {200, "成功"},
+            {204, "没有数据"},
             {400, "参数错误"},
             {401, "需要登录"},
             {403, "无权访问"},
@@ -100,7 +101,25 @@ namespace YYApi.Communications
     }
 
     /// <summary>
-    /// 动态内容
+    /// 动态内容分页
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class BasePageResponse<T> : BaseResponse
+    {
+        /// <summary>
+        /// 动态内容列表
+        /// </summary>
+        public T List { get; set; }
+        //当前页码
+        public int Page { get; set; }
+        //每页条数
+        public int Count { get; set; }
+        //总计条数
+        public int Total { get; set; }
+    }
+
+    /// <summary>
+    /// 动态Data返回
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class BaseResponse<T> : BaseResponse
@@ -109,11 +128,5 @@ namespace YYApi.Communications
         /// 动态内容列表
         /// </summary>
         public T Data { get; set; }
-        //当前页码
-        public int Page { get; set; }
-        //每页条数
-        public int Count { get; set; }
-        //总计条数
-        public int Total { get; set; }
     }
 }

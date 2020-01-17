@@ -66,6 +66,17 @@ namespace YYApi.Controllers
         }
 
         /// <summary>
+        /// 检测给定的变量是否为NUll
+        /// </summary>
+        /// <param name="condition">检测条件</param>
+        /// <param name="code">错误代码</param>
+        /// <param name="message">错误描述</param>
+        protected static void ErrorWhenNull(object condition, int code, string message = null)
+        {
+            ErrorWhen(condition == null, code, message);
+        }
+
+        /// <summary>
         /// 错误回馈页面
         /// </summary>
         /// <param name="code">错误代码</param>
@@ -77,6 +88,11 @@ namespace YYApi.Controllers
             var response = new BaseResponse();
             response.SetCode(code);
             return response;
+        }
+
+        protected BaseResponse<string> UploadFile()
+        {
+            return new BaseResponse<string>();
         }
     }
 }

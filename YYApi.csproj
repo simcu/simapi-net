@@ -4,7 +4,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <OutputType>Library</OutputType>
     <PackOnBuild>true</PackOnBuild>
-    <Version>0.1.6</Version>
+    <Version>0.2.1</Version>
     <Authors>xRain@YYTech</Authors>
     <Description>AspNetCore一个方便的API文档,捕获异常,统一输入输出的API类库</Description>
     <PackageId>YY-Tech.YYApi</PackageId>
@@ -17,10 +17,15 @@
     <Folder Include="Helpers\" />
     <Folder Include="Communications\" />
     <Folder Include="Controllers\" />
+    <Folder Include="JobService\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="5.0.0-rc5" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="5.0.0-rc5" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="5.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="5.0.0" />
+    <PackageReference Include="HangFire.Core" Version="1.7.8" />
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.7.8" />
+    <PackageReference Include="Hangfire.Console" Version="1.4.2" />
+    <PackageReference Include="Hangfire.Redis.StackExchange" Version="1.8.1" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>

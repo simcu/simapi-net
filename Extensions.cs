@@ -47,7 +47,7 @@ namespace YYApi
         {
             return builder.AddSwaggerGen(x =>
             {
-                x.SwaggerDoc("api", new OpenApiInfo {Title = title, Description = description});
+                x.SwaggerDoc("api", new OpenApiInfo { Title = title, Description = description });
                 x.EnableAnnotations();
                 x.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
@@ -60,9 +60,10 @@ namespace YYApi
                     }
                 });
                 x.AddSecurityDefinition("HeaderToken",
-                    new OpenApiSecurityScheme {Name = "Token", In = ParameterLocation.Header});
+                    new OpenApiSecurityScheme { Name = "Token", In = ParameterLocation.Header });
             });
         }
+
 
         /// <summary>
         /// 使用异常中间价扩展
