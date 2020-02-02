@@ -13,7 +13,7 @@ jobs:
       with:
         dotnet-version: '3.1.101'
     - name: Build
-      run: dotnet build MonkeyDotNet/Monkey
+      run: dotnet build
   
   publish:
     needs: build
