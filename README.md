@@ -1,5 +1,7 @@
 # YYApi 基于Asp.net Core 3的一个基础辅助包
 
+![CI](https://github.com/YY-Tech/YYApi/workflows/CI/badge.svg)
+
 ### 包含了以下组件:
 
 1. 统一的参数检测,基础认证服务
