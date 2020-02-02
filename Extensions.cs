@@ -32,7 +32,7 @@ namespace YYApi
         public static IServiceCollection AddYYApi(this IServiceCollection builder, string title,
             string description = null)
         {
-            return builder.AddAuth().AddApiDoc(title, description);
+            return builder.AddAuth().AddApiDoc(title, description).AddCors();
         }
 
         /// <summary>
@@ -138,7 +138,12 @@ namespace YYApi
         public static IApplicationBuilder UseYYApiMiddleware(this IApplicationBuilder builder, string title = "API文档",
             params SubmitMethod[] submitMethods)
         {
-            return builder.UseExceptionMiddleware().UseApiDoc(title, submitMethods).UseMiddleware<AuthMiddleware>();
+            return builder.UseExceptionMiddleware().UseApiDoc(title, submitMethods).UseMiddleware<AuthMiddleware>().UseCors(x =>
+            {
+                x.AllowAnyHeader();
+                x.AllowAnyMethod();
+                x.AllowAnyOrigin();
+            }); ;
         }
     }
 }

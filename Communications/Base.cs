@@ -129,4 +129,24 @@ namespace YYApi.Communications
         /// </summary>
         public T Data { get; set; }
     }
+
+
+    //===========》请求《===============
+
+    /// <summary>
+    /// 只有ID的请求
+    /// </summary>
+    public class IdOnlyRequest
+    {
+        public int Id { get; set; }
+    }
+
+    /// <summary>
+    /// 基础分页请求
+    /// </summary>
+    public class BasePageRequest
+    {
+        public int Page { get; set; }
+        public int Count { get; set; }
+    }
 }
