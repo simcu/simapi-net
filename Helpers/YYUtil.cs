@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace YYApi.Helpers
 {
-    public static class Util
+    public static class YYUtil
     {
         /// <summary>
         /// 检测手机号是否正确

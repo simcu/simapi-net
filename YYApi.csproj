@@ -18,6 +18,9 @@
     <Folder Include="Communications\" />
     <Folder Include="Controllers\" />
     <Folder Include="JobService\" />
+    <Folder Include="Middlewares\" />
+    <Folder Include="Attributes\" />
+    <Folder Include="Exceptions\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="5.0.0" />

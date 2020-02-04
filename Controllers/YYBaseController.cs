@@ -1,9 +1,9 @@
 ﻿using YYApi.Communications;
-using YYApi.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Linq;
+using YYApi.Exceptions;
 
 namespace YYApi.Controllers
 {
@@ -13,12 +13,12 @@ namespace YYApi.Controllers
     /// 2. 报错返回
     /// 3. 错误回馈页面
     /// </summary>
-    public class BaseController : Controller
+    public class YYBaseController : Controller
     {
         /// <summary>
         /// 当前登录用户的ID
         /// </summary>
-        protected LoginInfoItem LoginInfo => (LoginInfoItem)HttpContext.Items["LoginInfo"];
+        protected YYLoginItem LoginInfo => (YYLoginItem)HttpContext.Items["LoginInfo"];
 
         /// <summary>
         /// 验证请求参数
@@ -48,7 +48,7 @@ namespace YYApi.Controllers
         /// <returns></returns>
         protected static void Error(int code, string message = "")
         {
-            throw new ApiException(code, message);
+            throw new YYApiException(code, message);
         }
 
         /// <summary>
@@ -83,16 +83,16 @@ namespace YYApi.Controllers
         /// <returns></returns>
         [HttpGet("exception/{code:int}")]
         [ApiExplorerSettings(IgnoreApi = true)]
-        public BaseResponse ExceptionHandler(int code)
+        public YYBaseResponse ExceptionHandler(int code)
         {
-            var response = new BaseResponse();
+            var response = new YYBaseResponse();
             response.SetCode(code);
             return response;
         }
 
-        protected BaseResponse<string> UploadFile()
+        protected YYBaseResponse<string> UploadFile()
         {
-            return new BaseResponse<string>();
+            return new YYBaseResponse<string>();
         }
     }
 }

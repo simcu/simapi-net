@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
+using YYApi.Middlewares;
 
 namespace YYApi
 {
@@ -37,7 +38,7 @@ namespace YYApi
         public static IApplicationBuilder UseYYApi(this IApplicationBuilder builder, string title = "API文档",
             params SubmitMethod[] submitMethods)
         {
-            return builder.UseYYException().UseYYDoc(title, submitMethods).UseMiddleware<AuthMiddleware>();
+            return builder.UseYYException().UseYYDoc(title, submitMethods).UseMiddleware<YYAuthMiddleware>();
         }
 
 
@@ -51,7 +52,7 @@ namespace YYApi
         /// <returns></returns>
         public static IServiceCollection AddYYAuth(this IServiceCollection builder)
         {
-            return builder.AddScoped<Auth>();
+            return builder.AddScoped<YYAuth>();
         }
 
         /// <summary>
@@ -91,7 +92,7 @@ namespace YYApi
         /// <returns></returns>
         public static IApplicationBuilder UseYYException(this IApplicationBuilder builder)
         {
-            return builder.UseMiddleware<ExceptionMiddleware>();
+            return builder.UseMiddleware<YYExceptionMiddleware>();
         }
 
         /// <summary>
@@ -144,7 +145,7 @@ namespace YYApi
         /// <returns></returns>
         public static IApplicationBuilder UseYYAuth(this IApplicationBuilder builder)
         {
-            return builder.UseMiddleware<AuthMiddleware>();
+            return builder.UseMiddleware<YYAuthMiddleware>();
         }
 
 

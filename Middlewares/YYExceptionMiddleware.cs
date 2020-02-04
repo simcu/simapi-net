@@ -2,20 +2,20 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using YYApi.Communications;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Logging;
+using YYApi.Exceptions;
 
-namespace YYApi.Helpers
+namespace YYApi.Middlewares
 {
     /// <summary>
     /// 异常处理中间件
     /// </summary>
-    public class ExceptionMiddleware
+    public class YYExceptionMiddleware
     {
         private RequestDelegate Next { get; }
-        private ILogger<ExceptionMiddleware> Log { get; }
+        private ILogger<YYExceptionMiddleware> Log { get; }
 
-        public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> log)
+        public YYExceptionMiddleware(RequestDelegate next, ILogger<YYExceptionMiddleware> log)
         {
             Log = log;
             Next = next;
@@ -23,12 +23,12 @@ namespace YYApi.Helpers
 
         public async Task InvokeAsync(HttpContext context)
         {
-            var response = new BaseResponse();
+            var response = new YYBaseResponse();
             try
             {
                 await Next(context);
             }
-            catch (ApiException ex)
+            catch (YYApiException ex)
             {
                 response.SetCodeMsg(ex.Code, ex.Message);
                 ErrorResponse(context, response);
@@ -47,25 +47,11 @@ namespace YYApi.Helpers
         /// </summary>
         /// <param name="context"></param>
         /// <param name="response"></param>
-        private void ErrorResponse(HttpContext context, BaseResponse response)
+        private void ErrorResponse(HttpContext context, YYBaseResponse response)
         {
             context.Response.StatusCode = 200;
             context.Response.Headers.Add("Content-Type", "application/json");
             context.Response.WriteAsync(response.ToString());
-        }
-    }
-
-
-    /// <summary>
-    /// Api错误捕获异常
-    /// </summary>
-    public class ApiException : Exception
-    {
-        public int Code { get; }
-
-        public ApiException(int code, string message = "") : base(message)
-        {
-            Code = code;
         }
     }
 }

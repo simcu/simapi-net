@@ -7,7 +7,7 @@ namespace YYApi.Communications
     /// <summary>
     /// 基础相应
     /// </summary>
-    public class BaseResponse
+    public class YYBaseResponse
     {
         /// <summary>
         /// 错误代码
@@ -36,7 +36,7 @@ namespace YYApi.Communications
         /// <summary>
         /// 返回一个成功的空结果
         /// </summary>
-        public BaseResponse()
+        public YYBaseResponse()
         {
             SetCode(200);
         }
@@ -46,7 +46,7 @@ namespace YYApi.Communications
         /// 返回指定代码的描述
         /// </summary>
         /// <param name="code">错误代码</param>
-        public BaseResponse(int code)
+        public YYBaseResponse(int code)
         {
             SetCode(code);
         }
@@ -56,7 +56,7 @@ namespace YYApi.Communications
         /// </summary>
         /// <param name="code">错误代码</param>
         /// <param name="message">错误信息</param>
-        public BaseResponse(int code, string message)
+        public YYBaseResponse(int code, string message)
         {
             SetCodeMsg(code, message);
         }
@@ -104,7 +104,7 @@ namespace YYApi.Communications
     /// 动态内容分页
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class BasePageResponse<T> : BaseResponse
+    public class YYBasePageResponse<T> : YYBaseResponse
     {
         /// <summary>
         /// 动态内容列表
@@ -122,31 +122,11 @@ namespace YYApi.Communications
     /// 动态Data返回
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class BaseResponse<T> : BaseResponse
+    public class YYBaseResponse<T> : YYBaseResponse
     {
         /// <summary>
         /// 动态内容列表
         /// </summary>
         public T Data { get; set; }
-    }
-
-
-    //===========》请求《===============
-
-    /// <summary>
-    /// 只有ID的请求
-    /// </summary>
-    public class IdOnlyRequest
-    {
-        public int Id { get; set; }
-    }
-
-    /// <summary>
-    /// 基础分页请求
-    /// </summary>
-    public class BasePageRequest
-    {
-        public int Page { get; set; }
-        public int Count { get; set; }
     }
 }

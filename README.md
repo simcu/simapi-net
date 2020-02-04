@@ -27,28 +27,28 @@ namespace Controllers
 ```C#
 #Startup.cs
 
-	services.AddApiDoc("文档名称", "文档描述");
+	services.AddYYDoc("文档名称", "文档描述");
 
-	app.UseApiDoc("名称",SubmitMethod[])
+	app.UseYYDoc("名称",SubmitMethod[])
 
 #控制器中可以直接使用特性
 
-	[ApiDoc("分组","名称")]
+	[YYDoc("分组","名称")]
 ```
 
 3. 简单的基于Redis的登录TOKEN服务
 
 ```C#
 #Startup.cs
-service.AddAuth();
+service.AddYYAuth();
 ```
 添加时候, 可以从DI中获取 Auth 类,调用 Auth.Set(int,string) 将用户ID/类型和生成的Token绑定,本方法返回缓存中的Key名称
 
 ```C#
 #Startup.cs
-app.UseAuthMiddleware();
+app.UseYYAuth();
 ```
-调用本中间件,然后再需要登录认证的地方,使用 [CheckAuth] 特性,即可完成检测登录相关的操作,
+调用本中间件,然后再需要登录认证的地方,使用 [YYAuth] 特性,即可完成检测登录相关的操作,
 如果需要获取用户的ID, 只需要 直接使用 LoginId 属性即可获取
 
 4. 统一返回
@@ -60,5 +60,5 @@ app.UseAuthMiddleware();
 
 ```C#
 #Startup.cs
-app.UseExceptionMiddleware();
+app.UseYYException();
 ```

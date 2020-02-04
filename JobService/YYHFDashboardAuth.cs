@@ -20,11 +20,11 @@ namespace YYApi.JobService
     /// <summary>
     /// HangFire Dashboard Digest认证.
     /// </summary>
-    public class HFDashboardAuth : IDashboardAuthorizationFilter
+    public class YYHFDashboardAuth : IDashboardAuthorizationFilter
     {
         private IConfiguration _config { get; }
         private IDatabase _redis { get; }
-        public HFDashboardAuth(IConfiguration config, IDatabase redis)
+        public YYHFDashboardAuth(IConfiguration config, IDatabase redis)
         {
             _redis = redis;
             _config = config;
