@@ -12,18 +12,10 @@ namespace YYApi
     /// </summary>
     public static class Extensions
     {
-        /// <summary>
-        /// 添加自定义授权认证中间价
-        /// </summary>
-        /// <param name="builder"></param>
-        /// <returns></returns>
-        public static IServiceCollection AddAuth(this IServiceCollection builder)
-        {
-            return builder.AddScoped<Auth>();
-        }
+        //**********快捷添加**************
 
         /// <summary>
-        /// 添加整个YYAPI
+        /// 添加整个YYAPI,同时增加CORS规则
         /// </summary>
         /// <param name="builder"></param>
         /// <param name="title"></param>
@@ -32,7 +24,34 @@ namespace YYApi
         public static IServiceCollection AddYYApi(this IServiceCollection builder, string title,
             string description = null)
         {
-            return builder.AddAuth().AddApiDoc(title, description).AddCors();
+            return builder.AddYYAuth().AddYYDoc(title, description).AddCors(x => x.AddDefaultPolicy(po => po.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin()));
+        }
+
+        /// <summary>
+        /// 使用所有YYApi自定义中间件
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <param name="title"></param>
+        /// <param name="submitMethods"></param>
+        /// <returns></returns>
+        public static IApplicationBuilder UseYYApi(this IApplicationBuilder builder, string title = "API文档",
+            params SubmitMethod[] submitMethods)
+        {
+            return builder.UseYYException().UseYYDoc(title, submitMethods).UseMiddleware<AuthMiddleware>();
+        }
+
+
+
+        //*********组件快捷方式*************
+
+        /// <summary>
+        /// 添加自定义授权认证中间价
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddYYAuth(this IServiceCollection builder)
+        {
+            return builder.AddScoped<Auth>();
         }
 
         /// <summary>
@@ -42,7 +61,7 @@ namespace YYApi
         /// <param name="title">文档标题</param>
         /// <param name="description">文档描述</param>
         /// <returns></returns>
-        public static IServiceCollection AddApiDoc(this IServiceCollection builder, string title,
+        public static IServiceCollection AddYYDoc(this IServiceCollection builder, string title,
             string description = null)
         {
             return builder.AddSwaggerGen(x =>
@@ -70,7 +89,7 @@ namespace YYApi
         /// </summary>
         /// <param name="builder"></param>
         /// <returns></returns>
-        public static IApplicationBuilder UseExceptionMiddleware(this IApplicationBuilder builder)
+        public static IApplicationBuilder UseYYException(this IApplicationBuilder builder)
         {
             return builder.UseMiddleware<ExceptionMiddleware>();
         }
@@ -82,7 +101,7 @@ namespace YYApi
         /// <param name="title">文档标题</param>
         /// <param name="submitMethods">文档支持的提交方式(如果不指定,默认使用POST)</param>
         /// <returns></returns>
-        public static IApplicationBuilder UseApiDoc(this IApplicationBuilder builder, string title,
+        public static IApplicationBuilder UseYYDoc(this IApplicationBuilder builder, string title,
             params SubmitMethod[] submitMethods)
         {
             return builder.UseSwagger(x => x.RouteTemplate = "docs/{documentName}.json").UseSwaggerUI(x =>
@@ -112,10 +131,10 @@ namespace YYApi
         /// <param name="title">文档标题</param>
         /// <param name="submitMethods">API提交方式定义</param>
         /// <returns></returns>
-        public static IApplicationBuilder UseDocAndException(this IApplicationBuilder builder, string title = "API文档",
+        public static IApplicationBuilder UseYYDocEx(this IApplicationBuilder builder, string title = "API文档",
             params SubmitMethod[] submitMethods)
         {
-            return builder.UseExceptionMiddleware().UseApiDoc(title, submitMethods);
+            return builder.UseYYException().UseYYDoc(title, submitMethods);
         }
 
         /// <summary>
@@ -123,27 +142,11 @@ namespace YYApi
         /// </summary>
         /// <param name="builder"></param>
         /// <returns></returns>
-        public static IApplicationBuilder UseAuthMiddleware(this IApplicationBuilder builder)
+        public static IApplicationBuilder UseYYAuth(this IApplicationBuilder builder)
         {
             return builder.UseMiddleware<AuthMiddleware>();
         }
 
-        /// <summary>
-        /// 使用所有YYApi自定义中间件
-        /// </summary>
-        /// <param name="builder"></param>
-        /// <param name="title"></param>
-        /// <param name="submitMethods"></param>
-        /// <returns></returns>
-        public static IApplicationBuilder UseYYApiMiddleware(this IApplicationBuilder builder, string title = "API文档",
-            params SubmitMethod[] submitMethods)
-        {
-            return builder.UseExceptionMiddleware().UseApiDoc(title, submitMethods).UseMiddleware<AuthMiddleware>().UseCors(x =>
-            {
-                x.AllowAnyHeader();
-                x.AllowAnyMethod();
-                x.AllowAnyOrigin();
-            }); ;
-        }
+
     }
 }
