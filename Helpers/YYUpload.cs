@@ -72,7 +72,7 @@ namespace YYApi.Helpers
             var realPath = Directory.GetCurrentDirectory() + "/wwwroot" + filePath;
             if (!Directory.Exists(realPath))
             {
-                Directory.CreateDirectory(filePath);
+                Directory.CreateDirectory(realPath);
             }
             var fn = fileName + (string.IsNullOrEmpty(ext) ? string.Empty : $".{ext}");
             File.WriteAllBytes(realPath + fn, bt);
