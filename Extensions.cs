@@ -25,20 +25,20 @@ namespace YYApi
         public static IServiceCollection AddYYApi(this IServiceCollection builder, string title,
             string description = null)
         {
-            return builder.AddYYAuth().AddYYDoc(title, description).AddCors();
+            return builder.AddYYAuth().AddYYDoc(title, description).AddCors().AddYYUpload();
         }
 
         /// <summary>
-        /// 使用所有YYApi自定义中间件
+        ///  使用所有YYApi自定义中间件
         /// </summary>
         /// <param name="builder"></param>
         /// <param name="title"></param>
+        /// <param name="staticFileroot"></param>
         /// <param name="submitMethods"></param>
         /// <returns></returns>
-        public static IApplicationBuilder UseYYApi(this IApplicationBuilder builder, string title = "API文档",
-            params SubmitMethod[] submitMethods)
+        public static IApplicationBuilder UseYYApi(this IApplicationBuilder builder, string title = "API文档", params SubmitMethod[] submitMethods)
         {
-            return builder.UseYYException().UseYYDoc(title, submitMethods).UseMiddleware<YYAuthMiddleware>().UseCors(x => x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+            return builder.UseYYException().UseYYDoc(title, submitMethods).UseMiddleware<YYAuthMiddleware>().UseCors(x => x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin()).UseYYUpload();
         }
 
 
@@ -53,6 +53,16 @@ namespace YYApi
         public static IServiceCollection AddYYAuth(this IServiceCollection builder)
         {
             return builder.AddScoped<YYAuth>();
+        }
+
+        /// <summary>
+        /// 添加Base64上传组件
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddYYUpload(this IServiceCollection builder)
+        {
+            return builder.AddSingleton<YYUpload>();
         }
 
         /// <summary>
@@ -93,6 +103,16 @@ namespace YYApi
         public static IApplicationBuilder UseYYException(this IApplicationBuilder builder)
         {
             return builder.UseMiddleware<YYExceptionMiddleware>();
+        }
+
+        /// <summary>
+        /// 配置上传组件必须
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <returns></returns>
+        public static IApplicationBuilder UseYYUpload(this IApplicationBuilder builder)
+        {
+            return builder.UseStaticFiles();
         }
 
         /// <summary>

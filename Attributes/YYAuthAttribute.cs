@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc.Filters;
 using YYApi.Communications;
 using YYApi.Exceptions;
@@ -8,6 +9,7 @@ namespace YYApi.Attributes
     /// <summary>
     /// 检测登录中间件
     /// </summary>
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
     public class YYAuthAttribute : ActionFilterAttribute
     {
         private string[] Types { get; }

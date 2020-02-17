@@ -46,7 +46,7 @@ namespace YYApi.Controllers
         /// <param name="code">错误代码</param>
         /// <param name="message">错误描述(若是常规错误,代码可自动带取描述)</param>
         /// <returns></returns>
-        protected static void Error(int code, string message = "")
+        protected static void Error(int code = 500, string message = "")
         {
             throw new YYApiException(code, message);
         }
@@ -57,7 +57,7 @@ namespace YYApi.Controllers
         /// <param name="condition">检测条件</param>
         /// <param name="code">错误代码</param>
         /// <param name="message">错误描述</param>
-        protected static void ErrorWhen(bool condition, int code, string message = "")
+        protected static void ErrorWhen(bool condition, int code = 500, string message = "")
         {
             if (condition)
             {
@@ -71,7 +71,7 @@ namespace YYApi.Controllers
         /// <param name="condition">检测条件</param>
         /// <param name="code">错误代码</param>
         /// <param name="message">错误描述</param>
-        protected static void ErrorWhenNull(object condition, int code, string message = "")
+        protected static void ErrorWhenNull(object condition, int code = 404, string message = "请求的资源不存在")
         {
             ErrorWhen(condition == null, code, message);
         }
