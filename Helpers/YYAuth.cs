@@ -25,6 +25,17 @@ namespace YYApi.Helpers
         /// <returns></returns>
         public string Set(int id, string type = "user")
         {
+            return Set(id, new[] { type });
+        }
+
+        /// <summary>
+        /// 产生一个TOken并记录用户ID角色[多角色]
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public string Set(int id, string[] type)
+        {
             var uuid = Guid.NewGuid().ToString();
             var loginItem = new YYLoginItem
             {

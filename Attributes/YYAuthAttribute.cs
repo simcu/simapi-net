@@ -41,7 +41,7 @@ namespace YYApi.Attributes
                 throw new YYApiException(401);
             }
             //检测用户类型
-            if (!Types.Contains(loginInfo.Type))
+            if (Types.Intersect(loginInfo.Type).Count() == 0)
             {
                 throw new YYApiException(403);
             }

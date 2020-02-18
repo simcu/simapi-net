@@ -9,6 +9,6 @@ namespace YYApi.Communications
         //登录用户的ID
         public int Id { get; set; }
         //登录用户来源
-        public string Type { get; set; }
+        public string[] Type { get; set; }
     }
 }
