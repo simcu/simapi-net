@@ -33,7 +33,7 @@ namespace YYApi.Helpers
             Env = env;
         }
 
-        public class FileResult
+        public class YYUploadInfo
         {
             public string Path { get; set; }
             public int Size { get; set; }
@@ -47,7 +47,7 @@ namespace YYApi.Helpers
         /// <param name="path">存放路径</param>
         /// <param name="fileName">文件名</param>
         /// <returns></returns>
-        public FileResult SaveFile(string base64, string ext = null, string path = null, string fileName = null)
+        public YYUploadInfo SaveFile(string base64, string ext = null, string path = null, string fileName = null)
         {
             byte[] bt;
             var filePath = FilePath + path;
@@ -82,7 +82,7 @@ namespace YYApi.Helpers
             }
             var fn = fileName + (string.IsNullOrEmpty(ext) ? string.Empty : $".{ext}");
             File.WriteAllBytes(realPath + fn, bt);
-            return new FileResult
+            return new YYUploadInfo
             {
                 Path = filePath + fn,
                 Size = bt.Length
