@@ -112,7 +112,11 @@ namespace YYApi
         /// <returns></returns>
         public static IApplicationBuilder UseYYUpload(this IApplicationBuilder builder)
         {
-            return builder.UseStaticFiles();
+            return builder.UseStaticFiles(new StaticFileOptions
+            {
+                DefaultContentType = "application/x-msdownload",
+                ServeUnknownFileTypes = true
+            });
         }
 
         /// <summary>
