@@ -74,18 +74,29 @@ namespace YYApi.Helpers
             {
                 bt = Convert.FromBase64String(base64);
             }
+            var fn = fileName + (string.IsNullOrEmpty(ext) ? string.Empty : $".{ext}");
+            return WriteFile(filePath, fn, bt);
+        }
 
+        /// <summary>
+        /// 把数据写入文件
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="fileName"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public YYUploadInfo WriteFile(string filePath, string fileName, byte[] data)
+        {
             var realPath = Directory.GetCurrentDirectory() + "/wwwroot" + filePath;
             if (!Directory.Exists(realPath))
             {
                 Directory.CreateDirectory(realPath);
             }
-            var fn = fileName + (string.IsNullOrEmpty(ext) ? string.Empty : $".{ext}");
-            File.WriteAllBytes(realPath + fn, bt);
+            File.WriteAllBytes(realPath + fileName, data);
             return new YYUploadInfo
             {
-                Path = filePath + fn,
-                Size = bt.Length
+                Path = filePath + fileName,
+                Size = data.Length
             };
         }
     }
