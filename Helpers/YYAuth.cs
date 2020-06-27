@@ -23,20 +23,23 @@ namespace YYApi.Helpers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public string Set(int id, string type = "user")
+        public string Login(int id, string type = "user", string token = null)
         {
-            return Set(id, new[] { type });
+            return Login(id, new[] { type }, token);
         }
 
         /// <summary>
-        /// 产生一个TOken并记录用户ID角色[多角色]
+        /// 产生一个Token并记录用户ID角色[多角色]
         /// </summary>
         /// <param name="id"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public string Set(int id, string[] type)
+        public string Login(int id, string[] type, string uuid = null)
         {
-            var uuid = Guid.NewGuid().ToString();
+            if (uuid == null)
+            {
+                uuid = Guid.NewGuid().ToString();
+            }
             var loginItem = new YYLoginItem
             {
                 Id = id,
@@ -44,6 +47,15 @@ namespace YYApi.Helpers
             };
             Cache.SetString(uuid, JsonSerializer.Serialize(loginItem));
             return uuid;
+        }
+
+        /// <summary>
+        /// 退出登陆
+        /// </summary>
+        /// <param name="uuid">登陆标识</param>
+        public void Logout(string uuid)
+        {
+            Cache.Remove(uuid);
         }
 
     }

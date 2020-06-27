@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <OutputType>Library</OutputType>
     <PackOnBuild>true</PackOnBuild>
     <Version>0.2.3</Version>
@@ -23,12 +23,12 @@
     <Folder Include="Exceptions\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="5.1.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="5.1.0" />
-    <PackageReference Include="HangFire.Core" Version="1.7.9" />
-    <PackageReference Include="Hangfire.AspNetCore" Version="1.7.9" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="5.5.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="5.5.1" />
+    <PackageReference Include="HangFire.Core" Version="1.7.11" />
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.7.11" />
     <PackageReference Include="Hangfire.Console" Version="1.4.2" />
-    <PackageReference Include="Hangfire.Redis.StackExchange" Version="1.8.1" />
+    <PackageReference Include="Hangfire.Redis.StackExchange" Version="1.8.4" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>

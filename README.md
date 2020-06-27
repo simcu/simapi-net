@@ -62,3 +62,7 @@ app.UseYYAuth();
 #Startup.cs
 app.UseYYException();
 ```
+
+
+### TODO:
+1. 增加HANGFIRE 支持redis和sqlite 存储, 支持 基于其他系统的TOKEN认证和独立账号密码认证
