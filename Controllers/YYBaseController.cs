@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Linq;
 using YYApi.Exceptions;
+using YYApi.Attributes;
 
 namespace YYApi.Controllers
 {
@@ -77,22 +78,14 @@ namespace YYApi.Controllers
         }
 
         /// <summary>
-        /// 错误回馈页面
+        /// 上传文件
         /// </summary>
-        /// <param name="code">错误代码</param>
         /// <returns></returns>
-        [HttpGet("exception/{code:int}")]
-        [ApiExplorerSettings(IgnoreApi = true)]
-        public YYBaseResponse ExceptionHandler(int code)
-        {
-            var response = new YYBaseResponse();
-            response.SetCode(code);
-            return response;
-        }
-
         protected YYBaseResponse<string> UploadFile()
         {
             return new YYBaseResponse<string>();
         }
+
+        
     }
 }
