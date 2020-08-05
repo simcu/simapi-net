@@ -2,9 +2,9 @@
 using System.IO;
 using Microsoft.AspNetCore.Hosting;
 
-namespace YYApi.Helpers
+namespace SimApi.Helpers
 {
-    public class YYUpload
+    public class SimApiUpload
     {
         private string FilePathFolder = "/uploads/";
         public string FilePath
@@ -28,12 +28,12 @@ namespace YYApi.Helpers
 
         private IWebHostEnvironment Env { get; }
 
-        public YYUpload(IWebHostEnvironment env)
+        public SimApiUpload(IWebHostEnvironment env)
         {
             Env = env;
         }
 
-        public class YYUploadInfo
+        public class SimApiUploadInfo
         {
             public string Path { get; set; }
             public int Size { get; set; }
@@ -47,7 +47,7 @@ namespace YYApi.Helpers
         /// <param name="path">存放路径</param>
         /// <param name="fileName">文件名</param>
         /// <returns></returns>
-        public YYUploadInfo SaveFile(string base64, string ext = null, string path = null, string fileName = null)
+        public SimApiUploadInfo SaveFile(string base64, string ext = null, string path = null, string fileName = null)
         {
             byte[] bt;
             var filePath = FilePath + path;
@@ -85,7 +85,7 @@ namespace YYApi.Helpers
         /// <param name="fileName"></param>
         /// <param name="data"></param>
         /// <returns></returns>
-        public YYUploadInfo WriteFile(string filePath, string fileName, byte[] data)
+        public SimApiUploadInfo WriteFile(string filePath, string fileName, byte[] data)
         {
             var realPath = Directory.GetCurrentDirectory() + "/wwwroot" + filePath;
             if (!Directory.Exists(realPath))
@@ -93,7 +93,7 @@ namespace YYApi.Helpers
                 Directory.CreateDirectory(realPath);
             }
             File.WriteAllBytes(realPath + fileName, data);
-            return new YYUploadInfo
+            return new SimApiUploadInfo
             {
                 Path = filePath + fileName,
                 Size = data.Length

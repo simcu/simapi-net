@@ -1,12 +1,12 @@
-﻿using YYApi.Communications;
+﻿using SimApi.Communications;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Linq;
-using YYApi.Exceptions;
-using YYApi.Attributes;
+using SimApi.Exceptions;
+using SimApi.Attributes;
 
-namespace YYApi.Controllers
+namespace SimApi.Controllers
 {
     /// <summary>
     /// 基础控制器,所有控制器均继承本控制器
@@ -14,12 +14,12 @@ namespace YYApi.Controllers
     /// 2. 报错返回
     /// 3. 错误回馈页面
     /// </summary>
-    public class YYBaseController : Controller
+    public class SimApiBaseController : Controller
     {
         /// <summary>
         /// 当前登录用户的ID
         /// </summary>
-        protected YYLoginItem LoginInfo => (YYLoginItem)HttpContext.Items["LoginInfo"];
+        protected SimApiLoginItem LoginInfo => (SimApiLoginItem)HttpContext.Items["LoginInfo"];
 
         /// <summary>
         /// 验证请求参数
@@ -49,7 +49,7 @@ namespace YYApi.Controllers
         /// <returns></returns>
         protected static void Error(int code = 500, string message = "")
         {
-            throw new YYApiException(code, message);
+            throw new SimApiException(code, message);
         }
 
         /// <summary>
@@ -81,11 +81,11 @@ namespace YYApi.Controllers
         /// 上传文件
         /// </summary>
         /// <returns></returns>
-        protected YYBaseResponse<string> UploadFile()
+        protected SimApiBaseResponse<string> UploadFile()
         {
-            return new YYBaseResponse<string>();
+            return new SimApiBaseResponse<string>();
         }
 
-        
+
     }
 }

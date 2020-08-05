@@ -1,21 +1,21 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using YYApi.Communications;
+using SimApi.Communications;
 using Microsoft.Extensions.Logging;
-using YYApi.Exceptions;
+using SimApi.Exceptions;
 
-namespace YYApi.Middlewares
+namespace SimApi.Middlewares
 {
     /// <summary>
     /// 异常处理中间件
     /// </summary>
-    public class YYExceptionMiddleware
+    public class SimApiExceptionMiddleware
     {
         private RequestDelegate Next { get; }
-        private ILogger<YYExceptionMiddleware> Log { get; }
+        private ILogger<SimApiExceptionMiddleware> Log { get; }
 
-        public YYExceptionMiddleware(RequestDelegate next, ILogger<YYExceptionMiddleware> log)
+        public SimApiExceptionMiddleware(RequestDelegate next, ILogger<SimApiExceptionMiddleware> log)
         {
             Log = log;
             Next = next;
@@ -23,12 +23,12 @@ namespace YYApi.Middlewares
 
         public async Task InvokeAsync(HttpContext context)
         {
-            var response = new YYBaseResponse();
+            var response = new SimApiBaseResponse();
             try
             {
                 await Next(context);
             }
-            catch (YYApiException ex)
+            catch (SimApiException ex)
             {
                 response.SetCodeMsg(ex.Code, ex.Message);
                 ErrorResponse(context, response);
@@ -47,7 +47,7 @@ namespace YYApi.Middlewares
         /// </summary>
         /// <param name="context"></param>
         /// <param name="response"></param>
-        private void ErrorResponse(HttpContext context, YYBaseResponse response)
+        private void ErrorResponse(HttpContext context, SimApiBaseResponse response)
         {
             context.Response.StatusCode = 200;
             context.Response.Headers.Add("Content-Type", "application/json");

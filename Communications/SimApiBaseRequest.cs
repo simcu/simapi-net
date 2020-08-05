@@ -1,10 +1,10 @@
 ﻿using System;
-namespace YYApi.Communications
+namespace SimApi.Communications
 {
     /// <summary>
     /// 只有ID的请求
     /// </summary>
-    public class YYIdOnlyRequest
+    public class SimApiIdOnlyRequest
     {
         public int Id { get; set; }
     }
@@ -12,7 +12,7 @@ namespace YYApi.Communications
     /// <summary>
     /// 基础分页请求
     /// </summary>
-    public class YYBasePageRequest
+    public class SimApiBasePageRequest
     {
         public int Page { get; set; }
         public int Count { get; set; }

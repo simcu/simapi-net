@@ -1,14 +1,14 @@
 ﻿using System;
-namespace YYApi.Exceptions
+namespace SimApi.Exceptions
 {
     /// <summary>
     /// Api错误捕获异常
     /// </summary>
-    public class YYApiException : Exception
+    public class SimApiException : Exception
     {
         public int Code { get; }
 
-        public YYApiException(int code, string message = "") : base(message)
+        public SimApiException(int code, string message = "") : base(message)
         {
             Code = code;
         }

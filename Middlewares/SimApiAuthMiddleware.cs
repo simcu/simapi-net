@@ -2,18 +2,18 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Distributed;
-using YYApi.Communications;
+using SimApi.Communications;
 
-namespace YYApi.Middlewares
+namespace SimApi.Middlewares
 {
     /// <summary>
     /// 认证信息获取中间件
     /// </summary>
-    public class YYAuthMiddleware
+    public class SimApiAuthMiddleware
     {
         private RequestDelegate Next { get; }
 
-        public YYAuthMiddleware(RequestDelegate next)
+        public SimApiAuthMiddleware(RequestDelegate next)
         {
             Next = next;
         }
@@ -31,7 +31,7 @@ namespace YYApi.Middlewares
                 var login = cache.GetString(token);
                 if (login != null)
                 {
-                    httpContext.Items.Add("LoginInfo", JsonSerializer.Deserialize<YYLoginItem>(login));
+                    httpContext.Items.Add("LoginInfo", JsonSerializer.Deserialize<SimApiLoginItem>(login));
                 }
             }
 

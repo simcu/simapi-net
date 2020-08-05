@@ -1,16 +1,16 @@
 ﻿using System;
 using Microsoft.AspNetCore.Mvc;
-using YYApi.Attributes;
-using YYApi.Communications;
-using YYApi.Helpers;
+using SimApi.Attributes;
+using SimApi.Communications;
+using SimApi.Helpers;
 
-namespace YYApi.Controllers
+namespace SimApi.Controllers
 {
-    public class YYCommonController : YYBaseController
+    public class YYCommonController : SimApiBaseController
     {
-        private YYAuth Auth { get; }
+        private SimApiAuth Auth { get; }
 
-        public YYCommonController(YYAuth auth)
+        public YYCommonController(SimApiAuth auth)
         {
             Auth = auth;
         }
@@ -22,9 +22,9 @@ namespace YYApi.Controllers
         /// <returns></returns>
         [HttpGet("exception/{code:int}")]
         [ApiExplorerSettings(IgnoreApi = true)]
-        public YYBaseResponse ExceptionHandler(int code)
+        public SimApiBaseResponse ExceptionHandler(int code)
         {
-            var response = new YYBaseResponse();
+            var response = new SimApiBaseResponse();
             response.SetCode(code);
             return response;
         }
@@ -33,19 +33,19 @@ namespace YYApi.Controllers
         /// 检测用户登陆的控制器
         /// </summary>
         /// <returns></returns>
-        [HttpPost("/auth/check"), YYDoc("认证", "检测登陆")]
-        public YYBaseResponse<int> CheckLogin()
+        [HttpPost("/auth/check"), SimApiDoc("认证", "检测登陆")]
+        public SimApiBaseResponse<int> CheckLogin()
         {
             ErrorWhenNull(LoginInfo, 401);
-            return new YYBaseResponse<int> { Data = LoginInfo.Id };
+            return new SimApiBaseResponse<int> { Data = LoginInfo.Id };
         }
 
         /// <summary>
         /// 退出登陆
         /// </summary>
         /// <returns></returns>
-        [HttpPost("/auth/logout"), YYDoc("认证", "退出登陆")]
-        public YYBaseResponse Logout()
+        [HttpPost("/auth/logout"), SimApiDoc("认证", "退出登陆")]
+        public SimApiBaseResponse Logout()
         {
             string token = null;
 
@@ -54,7 +54,7 @@ namespace YYApi.Controllers
                 token = Request.Headers["Token"];
             }
             Auth.Logout(token);
-            return new YYBaseResponse();
+            return new SimApiBaseResponse();
         }
     }
 }

@@ -2,12 +2,12 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace YYApi.Communications
+namespace SimApi.Communications
 {
     /// <summary>
     /// 基础相应
     /// </summary>
-    public class YYBaseResponse
+    public class SimApiBaseResponse
     {
         /// <summary>
         /// 错误代码
@@ -36,7 +36,7 @@ namespace YYApi.Communications
         /// <summary>
         /// 返回一个成功的空结果
         /// </summary>
-        public YYBaseResponse()
+        public SimApiBaseResponse()
         {
             SetCode(200);
         }
@@ -46,7 +46,7 @@ namespace YYApi.Communications
         /// 返回指定代码的描述
         /// </summary>
         /// <param name="code">错误代码</param>
-        public YYBaseResponse(int code)
+        public SimApiBaseResponse(int code)
         {
             SetCode(code);
         }
@@ -56,7 +56,7 @@ namespace YYApi.Communications
         /// </summary>
         /// <param name="code">错误代码</param>
         /// <param name="message">错误信息</param>
-        public YYBaseResponse(int code, string message)
+        public SimApiBaseResponse(int code, string message)
         {
             SetCodeMsg(code, message);
         }
@@ -104,7 +104,7 @@ namespace YYApi.Communications
     /// 动态内容分页
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class YYBasePageResponse<T> : YYBaseResponse
+    public class SimApiBasePageResponse<T> : SimApiBaseResponse
     {
         /// <summary>
         /// 动态内容列表
@@ -122,7 +122,7 @@ namespace YYApi.Communications
     /// 动态Data返回
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class YYBaseResponse<T> : YYBaseResponse
+    public class SimApiBaseResponse<T> : SimApiBaseResponse
     {
         /// <summary>
         /// 动态内容列表

@@ -3,9 +3,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace YYApi.Helpers
+namespace SimApiApi.Helpers
 {
-    public static class YYUtil
+    public static class SimApiUtil
     {
         /// <summary>
         /// 检测手机号是否正确

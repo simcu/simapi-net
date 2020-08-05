@@ -5,9 +5,9 @@
     <OutputType>Library</OutputType>
     <PackOnBuild>true</PackOnBuild>
     <Version>0.2.3</Version>
-    <Authors>xRain@YYTech</Authors>
+    <Authors>xRain@SimcuTeam</Authors>
     <Description>AspNetCore一个方便的API文档,捕获异常,统一输入输出的API类库</Description>
-    <PackageId>YY-Tech.YYApi</PackageId>
+    <PackageId>simcu.simapi</PackageId>
     <IsPackable>true</IsPackable>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <IncludeSymbols>true</IncludeSymbols>

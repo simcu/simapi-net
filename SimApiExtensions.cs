@@ -1,12 +1,12 @@
 ﻿using System;
-using YYApi.Helpers;
+using SimApi.Helpers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
-using YYApi.Middlewares;
+using SimApi.Middlewares;
 
-namespace YYApi
+namespace SimApi
 {
     /// <summary>
     /// 加入系统的扩展信息
@@ -16,29 +16,29 @@ namespace YYApi
         //**********快捷添加**************
 
         /// <summary>
-        /// 添加整个YYAPI,同时增加CORS规则
+        /// 添加整个SimApiAPI,同时增加CORS规则
         /// </summary>
         /// <param name="builder"></param>
         /// <param name="title"></param>
         /// <param name="description"></param>
         /// <returns></returns>
-        public static IServiceCollection AddYYApi(this IServiceCollection builder, string title,
+        public static IServiceCollection AddSimApiApi(this IServiceCollection builder, string title,
             string description = null)
         {
-            return builder.AddYYAuth().AddYYDoc(title, description).AddCors().AddYYUpload();
+            return builder.AddSimApiAuth().AddSimApiDoc(title, description).AddCors().AddSimApiUpload();
         }
 
         /// <summary>
-        ///  使用所有YYApi自定义中间件
+        ///  使用所有SimApiApi自定义中间件
         /// </summary>
         /// <param name="builder"></param>
         /// <param name="title"></param>
         /// <param name="staticFileroot"></param>
         /// <param name="submitMethods"></param>
         /// <returns></returns>
-        public static IApplicationBuilder UseYYApi(this IApplicationBuilder builder, string title = "API文档", params SubmitMethod[] submitMethods)
+        public static IApplicationBuilder UseSimApiApi(this IApplicationBuilder builder, string title = "API文档", params SubmitMethod[] submitMethods)
         {
-            return builder.UseYYException().UseYYDoc(title, submitMethods).UseMiddleware<YYAuthMiddleware>().UseCors(x => x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin()).UseYYUpload();
+            return builder.UseSimApiException().UseSimApiDoc(title, submitMethods).UseMiddleware<SimApiAuthMiddleware>().UseCors(x => x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin()).UseSimApiUpload();
         }
 
 
@@ -50,9 +50,9 @@ namespace YYApi
         /// </summary>
         /// <param name="builder"></param>
         /// <returns></returns>
-        public static IServiceCollection AddYYAuth(this IServiceCollection builder)
+        public static IServiceCollection AddSimApiAuth(this IServiceCollection builder)
         {
-            return builder.AddScoped<YYAuth>();
+            return builder.AddScoped<SimApiAuth>();
         }
 
         /// <summary>
@@ -60,9 +60,9 @@ namespace YYApi
         /// </summary>
         /// <param name="builder"></param>
         /// <returns></returns>
-        public static IServiceCollection AddYYUpload(this IServiceCollection builder)
+        public static IServiceCollection AddSimApiUpload(this IServiceCollection builder)
         {
-            return builder.AddSingleton<YYUpload>();
+            return builder.AddSingleton<SimApiUpload>();
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace YYApi
         /// <param name="title">文档标题</param>
         /// <param name="description">文档描述</param>
         /// <returns></returns>
-        public static IServiceCollection AddYYDoc(this IServiceCollection builder, string title,
+        public static IServiceCollection AddSimApiDoc(this IServiceCollection builder, string title,
             string description = null)
         {
             return builder.AddSwaggerGen(x =>
@@ -100,9 +100,9 @@ namespace YYApi
         /// </summary>
         /// <param name="builder"></param>
         /// <returns></returns>
-        public static IApplicationBuilder UseYYException(this IApplicationBuilder builder)
+        public static IApplicationBuilder UseSimApiException(this IApplicationBuilder builder)
         {
-            return builder.UseMiddleware<YYExceptionMiddleware>();
+            return builder.UseMiddleware<SimApiExceptionMiddleware>();
         }
 
         /// <summary>
@@ -110,7 +110,7 @@ namespace YYApi
         /// </summary>
         /// <param name="builder"></param>
         /// <returns></returns>
-        public static IApplicationBuilder UseYYUpload(this IApplicationBuilder builder)
+        public static IApplicationBuilder UseSimApiUpload(this IApplicationBuilder builder)
         {
             return builder.UseStaticFiles(new StaticFileOptions
             {
@@ -126,7 +126,7 @@ namespace YYApi
         /// <param name="title">文档标题</param>
         /// <param name="submitMethods">文档支持的提交方式(如果不指定,默认使用POST)</param>
         /// <returns></returns>
-        public static IApplicationBuilder UseYYDoc(this IApplicationBuilder builder, string title,
+        public static IApplicationBuilder UseSimApiDoc(this IApplicationBuilder builder, string title,
             params SubmitMethod[] submitMethods)
         {
             return builder.UseSwagger(x => x.RouteTemplate = "docs/{documentName}.json").UseSwaggerUI(x =>
@@ -156,10 +156,10 @@ namespace YYApi
         /// <param name="title">文档标题</param>
         /// <param name="submitMethods">API提交方式定义</param>
         /// <returns></returns>
-        public static IApplicationBuilder UseYYDocEx(this IApplicationBuilder builder, string title = "API文档",
+        public static IApplicationBuilder UseSimApiDocEx(this IApplicationBuilder builder, string title = "API文档",
             params SubmitMethod[] submitMethods)
         {
-            return builder.UseYYException().UseYYDoc(title, submitMethods);
+            return builder.UseSimApiException().UseSimApiDoc(title, submitMethods);
         }
 
         /// <summary>
@@ -167,9 +167,9 @@ namespace YYApi
         /// </summary>
         /// <param name="builder"></param>
         /// <returns></returns>
-        public static IApplicationBuilder UseYYAuth(this IApplicationBuilder builder)
+        public static IApplicationBuilder UseSimApiAuth(this IApplicationBuilder builder)
         {
-            return builder.UseMiddleware<YYAuthMiddleware>();
+            return builder.UseMiddleware<SimApiAuthMiddleware>();
         }
 
 

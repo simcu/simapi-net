@@ -2,18 +2,18 @@ using System;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Distributed;
-using YYApi.Communications;
+using SimApi.Communications;
 
-namespace YYApi.Helpers
+namespace SimApi.Helpers
 {
     /// <summary>
     /// 认证助手
     /// </summary>
-    public class YYAuth
+    public class SimApiAuth
     {
         private IDistributedCache Cache { get; }
 
-        public YYAuth(IDistributedCache cache)
+        public SimApiAuth(IDistributedCache cache)
         {
             Cache = cache;
         }
@@ -40,7 +40,7 @@ namespace YYApi.Helpers
             {
                 uuid = Guid.NewGuid().ToString();
             }
-            var loginItem = new YYLoginItem
+            var loginItem = new SimApiLoginItem
             {
                 Id = id,
                 Type = type
