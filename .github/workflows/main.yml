@@ -31,4 +31,4 @@ jobs:
         dotnet pack --configuration release -p:PackageVersion=$version
         dotnet nuget push bin/release/simcu.simapi.$version.nupkg -k ${NUGET_APIKEY} -s https://www.nuget.org/api/v2/package
       env:
-        APIKEY: ${{ secrets.APPKEY }}
+        NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
