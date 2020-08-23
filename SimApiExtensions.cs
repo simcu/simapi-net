@@ -16,27 +16,27 @@ namespace SimApi
         //**********快捷添加**************
 
         /// <summary>
-        /// 添加整个SimApiAPI,同时增加CORS规则
+        /// 添加整个SimAPI,同时增加CORS规则
         /// </summary>
         /// <param name="builder"></param>
         /// <param name="title"></param>
         /// <param name="description"></param>
         /// <returns></returns>
-        public static IServiceCollection AddSimApiApi(this IServiceCollection builder, string title,
+        public static IServiceCollection AddSimApi(this IServiceCollection builder, string title,
             string description = null)
         {
             return builder.AddSimApiAuth().AddSimApiDoc(title, description).AddCors().AddSimApiUpload();
         }
 
         /// <summary>
-        ///  使用所有SimApiApi自定义中间件
+        ///  使用所有SimApi自定义中间件
         /// </summary>
         /// <param name="builder"></param>
         /// <param name="title"></param>
         /// <param name="staticFileroot"></param>
         /// <param name="submitMethods"></param>
         /// <returns></returns>
-        public static IApplicationBuilder UseSimApiApi(this IApplicationBuilder builder, string title = "API文档", params SubmitMethod[] submitMethods)
+        public static IApplicationBuilder UseSimApi(this IApplicationBuilder builder, string title = "API文档", params SubmitMethod[] submitMethods)
         {
             return builder.UseSimApiException().UseSimApiDoc(title, submitMethods).UseMiddleware<SimApiAuthMiddleware>().UseCors(x => x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin()).UseSimApiUpload();
         }
