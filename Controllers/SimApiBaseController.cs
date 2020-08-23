@@ -72,7 +72,7 @@ namespace SimApi.Controllers
         /// <param name="condition">检测条件</param>
         /// <param name="code">错误代码</param>
         /// <param name="message">错误描述</param>
-        protected static void ErrorWhenNull(object condition, int code = 404, string message = "请求的资源不存在")
+        protected static void ErrorWhenNull(object condition, int code = 404, string message = "")
         {
             ErrorWhen(condition == null, code, message);
         }

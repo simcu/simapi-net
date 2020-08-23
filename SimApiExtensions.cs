@@ -13,6 +13,9 @@ namespace SimApi
     /// </summary>
     public static class Extensions
     {
+        public static string DocumentTitle = "";
+        public static string DocumentDescription = "";
+
         //**********快捷添加**************
 
         /// <summary>
@@ -36,9 +39,9 @@ namespace SimApi
         /// <param name="staticFileroot"></param>
         /// <param name="submitMethods"></param>
         /// <returns></returns>
-        public static IApplicationBuilder UseSimApi(this IApplicationBuilder builder, string title = "API文档", params SubmitMethod[] submitMethods)
+        public static IApplicationBuilder UseSimApi(this IApplicationBuilder builder, params SubmitMethod[] submitMethods)
         {
-            return builder.UseSimApiException().UseSimApiDoc(title, submitMethods).UseMiddleware<SimApiAuthMiddleware>().UseCors(x => x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin()).UseSimApiUpload();
+            return builder.UseSimApiException().UseSimApiDoc(submitMethods).UseMiddleware<SimApiAuthMiddleware>().UseCors(x => x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin()).UseSimApiUpload();
         }
 
 
@@ -75,9 +78,11 @@ namespace SimApi
         public static IServiceCollection AddSimApiDoc(this IServiceCollection builder, string title,
             string description = null)
         {
+            DocumentTitle = title;
+            DocumentDescription = description;
             return builder.AddSwaggerGen(x =>
             {
-                x.SwaggerDoc("api", new OpenApiInfo { Title = title, Description = description });
+                x.SwaggerDoc("api", new OpenApiInfo { Title = DocumentTitle, Description = DocumentDescription });
                 x.EnableAnnotations();
                 x.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
@@ -126,14 +131,13 @@ namespace SimApi
         /// <param name="title">文档标题</param>
         /// <param name="submitMethods">文档支持的提交方式(如果不指定,默认使用POST)</param>
         /// <returns></returns>
-        public static IApplicationBuilder UseSimApiDoc(this IApplicationBuilder builder, string title,
-            params SubmitMethod[] submitMethods)
+        public static IApplicationBuilder UseSimApiDoc(this IApplicationBuilder builder, params SubmitMethod[] submitMethods)
         {
             return builder.UseSwagger(x => x.RouteTemplate = "docs/{documentName}.json").UseSwaggerUI(x =>
             {
                 x.RoutePrefix = "docs";
-                x.DocumentTitle = title;
-                x.SwaggerEndpoint("/docs/api.json", name: title);
+                x.DocumentTitle = DocumentTitle;
+                x.SwaggerEndpoint("/docs/api.json", name: DocumentTitle);
                 x.EnableValidator();
                 if (submitMethods.Length > 0)
                 {
@@ -156,10 +160,9 @@ namespace SimApi
         /// <param name="title">文档标题</param>
         /// <param name="submitMethods">API提交方式定义</param>
         /// <returns></returns>
-        public static IApplicationBuilder UseSimApiDocEx(this IApplicationBuilder builder, string title = "API文档",
-            params SubmitMethod[] submitMethods)
+        public static IApplicationBuilder UseSimApiDocEx(this IApplicationBuilder builder, params SubmitMethod[] submitMethods)
         {
-            return builder.UseSimApiException().UseSimApiDoc(title, submitMethods);
+            return builder.UseSimApiException().UseSimApiDoc(submitMethods);
         }
 
         /// <summary>

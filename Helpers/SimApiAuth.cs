@@ -55,7 +55,10 @@ namespace SimApi.Helpers
         /// <param name="uuid">登陆标识</param>
         public void Logout(string uuid)
         {
-            Cache.Remove(uuid);
+            if (!string.IsNullOrEmpty(uuid))
+            {
+                Cache.Remove(uuid);
+            }
         }
 
     }

@@ -30,7 +30,14 @@ namespace SimApi.Middlewares
             }
             catch (SimApiException ex)
             {
-                response.SetCodeMsg(ex.Code, ex.Message);
+                if (string.IsNullOrEmpty(ex.Message))
+                {
+                    response.SetCode(ex.Code);
+                }
+                else
+                {
+                    response.SetCodeMsg(ex.Code, ex.Message);
+                }
                 ErrorResponse(context, response);
             }
             catch (Exception ex)
