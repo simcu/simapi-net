@@ -23,6 +23,11 @@ namespace SimApi.Middlewares
 
         public async Task InvokeAsync(HttpContext context)
         {
+            if (context.Request.Headers.ContainsKey("Query-Id"))
+            {
+                context.Response.Headers["Query-Id"] = context.Request.Headers["Query-Id"];
+            }
+
             var response = new SimApiBaseResponse();
             try
             {

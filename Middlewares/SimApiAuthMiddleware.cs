@@ -34,7 +34,7 @@ namespace SimApi.Middlewares
                     httpContext.Items.Add("LoginInfo", JsonSerializer.Deserialize<SimApiLoginItem>(login));
                 }
             }
-
+           
             return Next(httpContext);
         }
     }
