@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using SimApi.Communications;
 using SimApi.Exceptions;
@@ -13,6 +14,7 @@ namespace SimApi.Attributes
     public class SimApiAuthAttribute : ActionFilterAttribute
     {
         private string[] Types { get; }
+
 
         //默认是user登录类型
         public SimApiAuthAttribute()
@@ -30,6 +32,13 @@ namespace SimApi.Attributes
         public SimApiAuthAttribute(string[] types)
         {
             Types = types;
+        }
+
+        //只检测一种用户类型的快捷方式
+        public SimApiAuthAttribute(string type, string url)
+        {
+            Types = new[] { type };
+            new HttpPostAttribute(url);
         }
 
         public override void OnActionExecuting(ActionExecutingContext context)
