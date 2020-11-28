@@ -3,20 +3,7 @@ name: PublishNugetPackage
 on: [create]
 
 jobs:
-  build:
-    name: Build Project
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v1
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: '5.0.100'
-    - name: Build
-      run: dotnet build
-  
   publish:
-    needs: build
     name: Publish Project to Nuget
     runs-on: ubuntu-latest
     steps:
@@ -27,6 +14,7 @@ jobs:
         dotnet-version: '5.0.100'
     - name: Publish
       run: |
+        dotnet build
         version=`git describe --tags`
         dotnet pack --configuration release -p:PackageVersion=$version
         dotnet nuget push bin/release/Simcu.SimApi.$version.nupkg -k ${NUGET_APIKEY} -s https://www.nuget.org/api/v2/package
