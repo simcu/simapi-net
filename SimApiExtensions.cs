@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using SimApi.Middlewares;
+using Microsoft.AspNetCore.HttpOverrides;
 
 namespace SimApi
 {
@@ -28,7 +29,16 @@ namespace SimApi
         public static IServiceCollection AddSimApi(this IServiceCollection builder, string title,
             string description = null)
         {
-            return builder.AddSimApiAuth().AddSimApiDoc(title, description).AddCors().AddSimApiUpload();
+            return builder.AddSimApiAuth().AddSimApiDoc(title, description).AddCors().AddSimApiUpload().Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
+                    ForwardedHeaders.XForwardedProto;
+                // Only loopback proxies are allowed by default.
+                // Clear that restriction because forwarders are enabled by explicit 
+                // configuration.
+                options.KnownNetworks.Clear();
+                options.KnownProxies.Clear();
+            }); ;
         }
 
         /// <summary>
@@ -41,7 +51,7 @@ namespace SimApi
         /// <returns></returns>
         public static IApplicationBuilder UseSimApi(this IApplicationBuilder builder, params SubmitMethod[] submitMethods)
         {
-            return builder.UseSimApiException().UseSimApiDoc(submitMethods).UseMiddleware<SimApiAuthMiddleware>().UseCors(x => x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin()).UseSimApiUpload();
+            return builder.UseSimApiException().UseSimApiDoc(submitMethods).UseMiddleware<SimApiAuthMiddleware>().UseCors(x => x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin()).UseSimApiUpload().UseForwardedHeaders();
         }
 
 
