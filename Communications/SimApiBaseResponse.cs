@@ -95,7 +95,7 @@ namespace SimApi.Communications
             {
                 IgnoreReadOnlyProperties = true,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                Converters = { new JsonStringEnumConverter() }
+                Converters = {new JsonStringEnumConverter()}
             });
         }
     }
@@ -110,10 +110,13 @@ namespace SimApi.Communications
         /// 动态内容列表
         /// </summary>
         public T List { get; set; }
+
         //当前页码
         public int Page { get; set; }
+
         //每页条数
         public int Count { get; set; }
+
         //总计条数
         public int Total { get; set; }
     }

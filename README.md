@@ -1,4 +1,4 @@
-# YYApi 基于Asp.net Core 3的一个基础辅助包
+# YYApi 基于Asp.net Core 3/5的一个基础辅助包
 
 ![CI](https://github.com/YY-Tech/YYApi/workflows/CI/badge.svg)
 
