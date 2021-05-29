@@ -32,6 +32,10 @@ namespace SimApi.Middlewares
             try
             {
                 await Next(context);
+                if (context.Response.StatusCode != 200)
+                {
+                    throw new SimApiException(context.Response.StatusCode);
+                }
             }
             catch (SimApiException ex)
             {
@@ -43,6 +47,7 @@ namespace SimApi.Middlewares
                 {
                     response.SetCodeMsg(ex.Code, ex.Message);
                 }
+
                 ErrorResponse(context, response);
             }
             catch (Exception ex)
