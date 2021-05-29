@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using SimApi.Communications;
@@ -34,7 +35,10 @@ namespace SimApi.Middlewares
                 await Next(context);
                 if (context.Response.StatusCode != 200)
                 {
-                    throw new SimApiException(context.Response.StatusCode);
+                    if (!new[] {301, 302}.Contains(context.Response.StatusCode))
+                    {
+                        throw new SimApiException(context.Response.StatusCode);
+                    }
                 }
             }
             catch (SimApiException ex)
