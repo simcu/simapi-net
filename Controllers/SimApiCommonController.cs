@@ -6,6 +6,7 @@ using SimApi.Helpers;
 
 namespace SimApi.Controllers
 {
+    [ApiExplorerSettings(GroupName = "api")]
     public class YYCommonController : SimApiBaseController
     {
         private SimApiAuth Auth { get; }
@@ -37,7 +38,7 @@ namespace SimApi.Controllers
         public SimApiBaseResponse<int> CheckLogin()
         {
             ErrorWhenNull(LoginInfo, 401);
-            return new SimApiBaseResponse<int> { Data = LoginInfo.Id };
+            return new SimApiBaseResponse<int> {Data = LoginInfo.Id};
         }
 
         /// <summary>
@@ -53,6 +54,7 @@ namespace SimApi.Controllers
             {
                 token = Request.Headers["Token"];
             }
+
             Auth.Logout(token);
             return new SimApiBaseResponse();
         }
