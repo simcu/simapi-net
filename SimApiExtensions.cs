@@ -185,6 +185,11 @@ namespace SimApi
                 builder.UseForwardedHeaders();
             }
 
+            //请求一下检测存储错误
+            if(options.EnableSimApiStorage){
+                builder.ApplicationServices.GetService<SimApiStorage>();
+            }
+
             return builder;
         }
     }
