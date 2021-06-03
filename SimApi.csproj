@@ -25,10 +25,12 @@
     <Folder Include="Middlewares\" />
     <Folder Include="Attributes\" />
     <Folder Include="Exceptions\" />
+    <Folder Include="Configurations\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="5.6.3" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="5.6.3" />
+    <PackageReference Include="Minio" Version="3.1.13" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.1.4" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.1.4" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>

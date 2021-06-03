@@ -23,43 +23,33 @@ namespace Controllers
 }
 ```
 
-2. 基于Swagger的API文档服务
 
+统一配置，现在只需要进行AddSimApi的配置， Configure中直接 UseSimApi即可。
 ```C#
-#Startup.cs
-
-	services.AddSimApiDoc("文档名称", "文档描述");
-
-	app.UseSimApiDoc("名称",SubmitMethod[])
-
-#控制器中可以直接使用特性
-
-	[SimApiDoc("分组","名称")]
-```
-
-3. 简单的基于Redis的登录TOKEN服务
-
-```C#
-#Startup.cs
-service.AddSimApiAuth();
-```
-添加时候, 可以从DI中获取 Auth 类,调用 Auth.Set(int,string) 将用户ID/类型和生成的Token绑定,本方法返回缓存中的Key名称
-
-```C#
-#Startup.cs
-app.UseSimApiAuth();
-```
-调用本中间件,然后再需要登录认证的地方,使用 [YYAuth] 特性,即可完成检测登录相关的操作,
-如果需要获取用户的ID, 只需要 直接使用 LoginId 属性即可获取
-
-4. 统一返回
-所有Response 均需要继承 SimApiBaseResponse类
-
-
-5. 异常处理
-本异常中间件封装了API错误的异常处理,控制器可以使用 Error(int,string) 直接返回API错误
-
-```C#
-#Startup.cs
-app.UseSimApiException();
+services.AddSimApi(options =>
+{
+   options.ConfigureSimApiDoc(options =>
+   {
+     options.ApiGroups = new[]
+     {
+        new SimApiDocGroupOption
+            {Id = "admin", Name = "后台管理接口", Description = "本接口调用需要Scope：sac.api.admin"},
+        new SimApiDocGroupOption
+            {Id = "user-v1", Name = "用户中心接口", Description = "本接口调用需要Scope：sac.api.user"}
+     };
+     options.ApiAuth = new SimApiAuthOption
+       {
+         Type = new[] {"ClientCredentials", "Implicit", "AuthorizationCode"},
+         Scopes = new Dictionary<string, string>
+            {
+              {"sac.api.user", "用户信息接口权限"},
+              {"sac.api.admin", "后台管理API"}
+            },
+         AuthorizationUrl = "/connect/authorize",
+         TokenUrl = "/connect/token"
+       };
+     });
+     options.EnableSimApiStorage = true;
+     options.SimApiStorageOptions = Configuration.GetSection("S3").Get<SimApiStorageOptions>();
+});
 ```
