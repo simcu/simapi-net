@@ -153,15 +153,23 @@ namespace SimApi
         public static IApplicationBuilder UseSimApi(this IApplicationBuilder builder)
         {
             var options = builder.ApplicationServices.GetService<SimApiOptions>();
+            if (options.EnableForwardHeaders)
+            {
+                SimApiUtil.Log("开始配置ForwardedHeaders...");
+                builder.UseForwardedHeaders();
+            }
+
             if (options.EnableSimApiAuth)
             {
+                SimApiUtil.Log("开始配置SimApiAuth...");
                 builder.UseMiddleware<SimApiAuthMiddleware>();
             }
 
             if (options.EnableSimApiDoc)
             {
+                SimApiUtil.Log("开始配置SimApiDoc...");
                 var docOptions = options.SimApiDocOptions;
-                return builder.UseSwagger(x => x.RouteTemplate = "/swagger/{documentName}.json").UseSwaggerUI(x =>
+                builder.UseSwagger(x => x.RouteTemplate = "/swagger/{documentName}.json").UseSwaggerUI(x =>
                 {
                     x.DocumentTitle = docOptions.DocumentTitle;
                     foreach (var group in docOptions.ApiGroups)
@@ -177,17 +185,20 @@ namespace SimApi
 
             if (options.EnableSimApiException)
             {
+                SimApiUtil.Log("开始配置SimApiException...");
                 builder.UseMiddleware<SimApiExceptionMiddleware>();
             }
 
-            if (options.EnableForwardHeaders)
+            //请求一下检测存储错误
+            if (options.EnableSimApiStorage)
             {
-                builder.UseForwardedHeaders();
+                SimApiUtil.Log("开始配置SimApiStorage...");
+                builder.ApplicationServices.GetService<SimApiStorage>();
             }
 
-            //请求一下检测存储错误
-            if(options.EnableSimApiStorage){
-                builder.ApplicationServices.GetService<SimApiStorage>();
+            if (options.EnableLowerUrl)
+            {
+                SimApiUtil.Log("开始配置使用URL小写...");
             }
 
             return builder;
