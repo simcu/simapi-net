@@ -1,4 +1,5 @@
 ﻿using System;
+
 namespace SimApi.Communications
 {
     /// <summary>
@@ -7,6 +8,15 @@ namespace SimApi.Communications
     public class SimApiIdOnlyRequest
     {
         public int Id { get; set; }
+    }
+
+    /// <summary>
+    /// 动态类型单字段请求
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class SimApiOneFieldRequest<T>
+    {
+        public T Data { get; set; }
     }
 
     /// <summary>
