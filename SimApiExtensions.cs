@@ -27,6 +27,12 @@ namespace SimApi
                 builder.AddScoped<SimApiAuth>();
             }
 
+            if (simApiOptions.EnableCors)
+            {
+                builder.AddCors(cors => cors.AddPolicy("any",
+                    policy => { policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin(); }));
+            }
+
             // 使用SimApiDoc
             if (simApiOptions.EnableSimApiDoc)
             {
@@ -158,6 +164,12 @@ namespace SimApi
             {
                 SimApiUtil.Log("开始配置ForwardedHeaders...");
                 builder.UseForwardedHeaders();
+            }
+
+            if (options.EnableCors)
+            {
+                SimApiUtil.Log("开始配置Cors全部允许...");
+                builder.UseCors("any");
             }
 
             if (options.EnableSimApiAuth)
