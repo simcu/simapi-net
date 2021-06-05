@@ -138,6 +138,7 @@ namespace SimApi
 
             if (simApiOptions.EnableSimApiStorage)
             {
+                builder.AddHttpContextAccessor();
                 builder.AddSingleton<SimApiStorage>();
             }
 
