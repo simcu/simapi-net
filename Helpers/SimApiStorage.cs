@@ -10,6 +10,9 @@ namespace SimApi.Helpers
     public class SimApiStorage
     {
         private MinioClient Mc { get; }
+
+        public MinioClient Client => Mc;
+
         private string ServeUrl { get; }
         private string Bucket { get; }
         private IHttpContextAccessor HttpContextAccessor { get; }
