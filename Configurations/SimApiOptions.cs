@@ -11,6 +11,7 @@ namespace SimApi.Configs
         public bool EnableSimApiStorage { get; set; } = false;
         public bool EnableForwardHeaders { get; set; } = true;
         public bool EnableLowerUrl { get; set; } = true;
+        public bool EnableLogger { get; set; } = true;
         public SimApiDocOptions SimApiDocOptions { get; set; } = new SimApiDocOptions();
         public SimApiStorageOptions SimApiStorageOptions { get; set; } = new SimApiStorageOptions();
 

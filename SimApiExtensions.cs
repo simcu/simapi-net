@@ -5,7 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using SimApi.Middlewares;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.Logging;
 using SimApi.Configs;
+using SimApi.Logger;
 
 namespace SimApi
 {
@@ -168,27 +170,34 @@ namespace SimApi
         public static IApplicationBuilder UseSimApi(this IApplicationBuilder builder)
         {
             var options = builder.ApplicationServices.GetService<SimApiOptions>();
+            if (options.EnableLogger)
+            {
+                builder.ApplicationServices.GetService<ILoggerFactory>().AddProvider(new SimApiLoggerProvider());
+            }
+
+            var logger = builder.ApplicationServices.GetService<ILogger>();
+
             if (options.EnableForwardHeaders)
             {
-                SimApiUtil.Log("开始配置ForwardedHeaders...");
+                logger.LogInformation("开始配置ForwardedHeaders...");
                 builder.UseForwardedHeaders();
             }
 
             if (options.EnableCors)
             {
-                SimApiUtil.Log("开始配置Cors全部允许...");
+                logger.LogInformation("开始配置Cors全部允许...");
                 builder.UseCors("any");
             }
 
             if (options.EnableSimApiAuth)
             {
-                SimApiUtil.Log("开始配置SimApiAuth...");
+                logger.LogInformation("开始配置SimApiAuth...");
                 builder.UseMiddleware<SimApiAuthMiddleware>();
             }
 
             if (options.EnableSimApiDoc)
             {
-                SimApiUtil.Log("开始配置SimApiDoc...");
+                logger.LogInformation("开始配置SimApiDoc...");
                 var docOptions = options.SimApiDocOptions;
                 builder.UseSwagger(x => x.RouteTemplate = "/swagger/{documentName}.json").UseSwaggerUI(x =>
                 {
@@ -206,20 +215,20 @@ namespace SimApi
 
             if (options.EnableSimApiException)
             {
-                SimApiUtil.Log("开始配置SimApiException...");
+                logger.LogInformation("开始配置SimApiException...");
                 builder.UseMiddleware<SimApiExceptionMiddleware>();
             }
 
             //请求一下检测存储错误
             if (options.EnableSimApiStorage)
             {
-                SimApiUtil.Log("开始配置SimApiStorage...");
+                logger.LogInformation("开始配置SimApiStorage...");
                 builder.ApplicationServices.GetService<SimApiStorage>();
             }
 
             if (options.EnableLowerUrl)
             {
-                SimApiUtil.Log("开始配置使用URL小写...");
+                logger.LogInformation("开始配置使用URL小写...");
             }
 
             return builder;
