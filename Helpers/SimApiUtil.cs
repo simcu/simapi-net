@@ -1,5 +1,4 @@
-﻿using System;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -36,13 +35,6 @@ namespace SimApi.Helpers
             }
 
             return strbul.ToString();
-        }
-
-        public static void Log(string message, string type = "Information")
-        {
-            Console.WriteLine($"[ SimApi ][ {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:ffff")} ][ {type} ]");
-            Console.WriteLine(message);
-            Console.WriteLine("");
         }
     }
 }

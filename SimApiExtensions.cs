@@ -175,7 +175,7 @@ namespace SimApi
                 builder.ApplicationServices.GetService<ILoggerFactory>().AddProvider(new SimApiLoggerProvider());
             }
 
-            var logger = builder.ApplicationServices.GetService<ILogger>();
+            var logger = builder.ApplicationServices.GetService<ILogger<SimApiLogger>>();
 
             if (options.EnableForwardHeaders)
             {
