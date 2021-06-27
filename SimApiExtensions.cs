@@ -93,6 +93,14 @@ namespace SimApi
                                 };
                                 haveOauth = true;
                                 break;
+                            case "Password":
+                                oauthFlows.Password = new OpenApiOAuthFlow
+                                {
+                                    TokenUrl = new Uri(docOptions.ApiAuth.TokenUrl, UriKind.RelativeOrAbsolute),
+                                    Scopes = docOptions.ApiAuth.Scopes
+                                };
+                                haveOauth = true;
+                                break;
                         }
                     }
 
