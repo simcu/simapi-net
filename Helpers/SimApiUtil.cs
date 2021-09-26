@@ -13,7 +13,7 @@ namespace SimApi.Helpers
         /// <returns></returns>
         public static bool CheckCell(string cell)
         {
-            var regex = new Regex("^1[34578]\\d{9}$");
+            var regex = new Regex("^1[3456789]\\d{9}$");
             return regex.IsMatch(cell);
         }
 
