@@ -55,6 +55,19 @@ namespace SimApi.Helpers
             }
         }
 
+        public string GetUploadUrl(string path, int expire = 7200)
+        {
+            try
+            {
+                return Mc.PresignedPutObjectAsync(Bucket, path, expire).Result;
+            }
+            catch (MinioException e)
+            {
+                Console.WriteLine("Error occurred: " + e);
+                return e.Message;
+            }
+        }
+
         public string UploadFile(string path, Stream stream)
         {
             try
