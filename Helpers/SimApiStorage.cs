@@ -41,7 +41,6 @@ namespace SimApi.Helpers
 
             ServeUrl = options.ServeUrl;
             Bucket = options.Bucket;
-            Console.WriteLine($"{endpoint} == {options.AccessKey} == {options.SecretKey}");
             var mcb = new MinioClient().WithEndpoint(endpoint)
                 .WithCredentials(options.AccessKey, options.SecretKey);
             if (useSsl)
@@ -71,12 +70,12 @@ namespace SimApi.Helpers
             }
         }
 
-        public string UploadFile(string path, Stream stream)
+        public string UploadFile(string path, Stream stream,string contentType = "image/png")
         {
             try
             {
-                Mc.PutObjectAsync(new PutObjectArgs().WithBucket(Bucket).WithObject(path).WithStreamData(stream))
-                    .Wait();
+                Mc.PutObjectAsync(new PutObjectArgs().WithBucket(Bucket).WithObject(path).
+                    WithObjectSize(stream.Length).WithStreamData(stream).WithContentType(contentType)).Wait();
                 return null;
             }
             catch (MinioException e)
