@@ -11,6 +11,14 @@ namespace SimApi.Communications
     }
 
     /// <summary>
+    /// 只有ID的请求(字符串)
+    /// </summary>
+    public class SimApiStringIdOnlyRequest
+    {
+        public string Id { get; set; }
+    }
+
+    /// <summary>
     /// 动态类型单字段请求
     /// </summary>
     /// <typeparam name="T"></typeparam>
@@ -25,6 +33,7 @@ namespace SimApi.Communications
     public class SimApiBasePageRequest
     {
         public int Page { get; set; }
+
         public int Count { get; set; }
     }
 }
