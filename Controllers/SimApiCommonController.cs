@@ -35,10 +35,13 @@ namespace SimApi.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpPost("/auth/check"), SimApiDoc("认证", "检测登陆")]
-        public SimApiBaseResponse<int> CheckLogin()
+        public SimApiBaseResponse<string> CheckLogin()
         {
             ErrorWhenNull(LoginInfo, 401);
-            return new SimApiBaseResponse<int> {Data = LoginInfo.Id};
+            return new SimApiBaseResponse<string>
+            {
+                Data = LoginInfo.Id
+            };
         }
 
         /// <summary>

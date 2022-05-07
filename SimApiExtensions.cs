@@ -23,7 +23,7 @@ namespace SimApi
             var simApiOptions = new SimApiOptions();
             options?.Invoke(simApiOptions);
 
-            // 是否使用SIMAUTH
+            // 是否使用 AUTH
             if (simApiOptions.EnableSimApiAuth)
             {
                 builder.AddScoped<SimApiAuth>();
@@ -43,7 +43,11 @@ namespace SimApi
                 {
                     foreach (var group in docOptions.ApiGroups)
                     {
-                        x.SwaggerDoc(group.Id, new OpenApiInfo {Title = group.Name, Description = group.Description});
+                        x.SwaggerDoc(group.Id, new OpenApiInfo
+                        {
+                            Title = group.Name,
+                            Description = group.Description
+                        });
                     }
 
                     x.EnableAnnotations();
@@ -61,9 +65,15 @@ namespace SimApi
                                         new OpenApiSecurityScheme
                                         {
                                             Reference = new OpenApiReference
-                                                {Type = ReferenceType.SecurityScheme, Id = "HeaderToken"}
+                                            {
+                                                Type = ReferenceType.SecurityScheme,
+                                                Id = "HeaderToken"
+                                            }
                                         },
-                                        new[] {"readAccess", "writeAccess"}
+                                        new[]
+                                        {
+                                            "readAccess", "writeAccess"
+                                        }
                                     }
                                 });
                                 haveSimApiAuth = true;
@@ -121,9 +131,15 @@ namespace SimApi
                                 new OpenApiSecurityScheme
                                 {
                                     Reference = new OpenApiReference
-                                        {Type = ReferenceType.SecurityScheme, Id = "oauth2"}
+                                    {
+                                        Type = ReferenceType.SecurityScheme,
+                                        Id = "oauth2"
+                                    }
                                 },
-                                new[] {"SimApiAuth"}
+                                new[]
+                                {
+                                    "SimApiAuth"
+                                }
                             }
                         });
                     }
@@ -131,7 +147,11 @@ namespace SimApi
                     if (haveSimApiAuth)
                     {
                         x.AddSecurityDefinition("HeaderToken",
-                            new OpenApiSecurityScheme {Name = "Token", In = ParameterLocation.Header});
+                            new OpenApiSecurityScheme
+                            {
+                                Name = "Token",
+                                In = ParameterLocation.Header
+                            });
                     }
                 });
             }
@@ -139,17 +159,17 @@ namespace SimApi
             // 使用Header转发，应对代理后获取真实ip
             if (simApiOptions.EnableForwardHeaders)
             {
-                builder.Configure<ForwardedHeadersOptions>(options =>
+                builder.Configure<ForwardedHeadersOptions>(fwOptions =>
                 {
-                    options.ForwardedHeaders = ForwardedHeaders.All;
-                    options.KnownNetworks.Clear();
-                    options.KnownProxies.Clear();
+                    fwOptions.ForwardedHeaders = ForwardedHeaders.All;
+                    fwOptions.KnownNetworks.Clear();
+                    fwOptions.KnownProxies.Clear();
                 });
             }
 
             if (simApiOptions.EnableLowerUrl)
             {
-                builder.AddRouting(options => options.LowercaseUrls = true);
+                builder.AddRouting(rOptions => rOptions.LowercaseUrls = true);
             }
 
             if (simApiOptions.EnableSimApiStorage)
@@ -169,13 +189,14 @@ namespace SimApi
         /// <returns></returns>
         public static IApplicationBuilder UseSimApi(this IApplicationBuilder builder)
         {
-            var options = builder.ApplicationServices.GetService<SimApiOptions>();
+            var options = builder.ApplicationServices.GetRequiredService<SimApiOptions>();
             if (options.EnableLogger)
             {
-                builder.ApplicationServices.GetService<ILoggerFactory>().AddProvider(new SimApiLoggerProvider());
+                builder.ApplicationServices.GetRequiredService<ILoggerFactory>()
+                    .AddProvider(new SimApiLoggerProvider());
             }
 
-            var logger = builder.ApplicationServices.GetService<ILogger<SimApiLogger>>();
+            var logger = builder.ApplicationServices.GetRequiredService<ILogger<SimApiLogger>>();
 
             if (options.EnableForwardHeaders)
             {

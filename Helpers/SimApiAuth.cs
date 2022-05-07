@@ -23,7 +23,7 @@ namespace SimApi.Helpers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public string Login(int id, string type = "user", string token = null)
+        public string Login(string id, string type = "user", string token = null)
         {
             return Login(id, new[] { type }, token);
         }
@@ -34,7 +34,7 @@ namespace SimApi.Helpers
         /// <param name="id"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public string Login(int id, string[] type, string uuid = null)
+        public string Login(string id, string[] type, string uuid = null)
         {
             if (uuid == null)
             {

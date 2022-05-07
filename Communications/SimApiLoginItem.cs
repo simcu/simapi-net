@@ -1,4 +1,5 @@
 ﻿using System;
+
 namespace SimApi.Communications
 {
     /// <summary>
@@ -7,7 +8,8 @@ namespace SimApi.Communications
     public class SimApiLoginItem
     {
         //登录用户的ID
-        public int Id { get; set; }
+        public string Id { get; set; }
+
         //登录用户来源
         public string[] Type { get; set; }
     }
