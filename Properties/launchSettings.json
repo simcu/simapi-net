@@ -4,7 +4,7 @@
     "anonymousAuthentication": true
   },
   "profiles": {
-    "YYApi": {
+    "SimApi": {
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {

@@ -17,7 +17,6 @@
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(RunConfiguration)' == 'YYApi' " />
   <ItemGroup>
     <Folder Include="Helpers\" />
     <Folder Include="Communications\" />
@@ -28,9 +27,9 @@
     <Folder Include="Configurations\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Minio" Version="3.1.13" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.2.3" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.2.3" />
+    <PackageReference Include="Minio" Version="4.0.2" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.3.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.3.1" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>

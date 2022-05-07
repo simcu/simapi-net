@@ -14,7 +14,9 @@ namespace SimApi.Helpers
         public MinioClient Client => Mc;
 
         private string ServeUrl { get; }
+
         private string Bucket { get; }
+
         private IHttpContextAccessor HttpContextAccessor { get; }
 
         public SimApiStorage(SimApiOptions apiOptions, IHttpContextAccessor httpContextAccessor)
@@ -22,7 +24,7 @@ namespace SimApi.Helpers
             var options = apiOptions.SimApiStorageOptions;
             HttpContextAccessor = httpContextAccessor;
             var useSsl = false;
-            var endpoint = string.Empty;
+            string endpoint;
             if (options.Endpoint.StartsWith("http://"))
             {
                 endpoint = options.Endpoint.Replace("http://", string.Empty);
@@ -39,19 +41,19 @@ namespace SimApi.Helpers
 
             ServeUrl = options.ServeUrl;
             Bucket = options.Bucket;
+            Console.WriteLine($"{endpoint} == {options.AccessKey} == {options.SecretKey}");
+            var mcb = new MinioClient().WithEndpoint(endpoint)
+                .WithCredentials(options.AccessKey, options.SecretKey);
             if (useSsl)
             {
-                Mc = new MinioClient(endpoint, options.AccessKey, options.SecretKey).WithSSL();
+                mcb = mcb.WithSSL();
             }
-            else
-            {
-                Mc = new MinioClient(endpoint, options.AccessKey, options.SecretKey);
-            }
+            Mc = mcb.Build();
 
-            bool found = Mc.BucketExistsAsync(Bucket).Result;
+            bool found = Mc.BucketExistsAsync(new BucketExistsArgs().WithBucket(Bucket)).Result;
             if (!found)
             {
-                Mc.MakeBucketAsync(Bucket).Wait();
+                Mc.MakeBucketAsync(new MakeBucketArgs().WithBucket(Bucket)).Wait();
             }
         }
 
@@ -59,7 +61,8 @@ namespace SimApi.Helpers
         {
             try
             {
-                return Mc.PresignedPutObjectAsync(Bucket, path, expire).Result;
+                return Mc.PresignedPutObjectAsync(new PresignedPutObjectArgs().WithBucket(Bucket)
+                    .WithObject(path).WithExpiry(expire)).Result;
             }
             catch (MinioException e)
             {
@@ -72,7 +75,8 @@ namespace SimApi.Helpers
         {
             try
             {
-                Mc.PutObjectAsync(Bucket, path, stream, stream.Length).Wait();
+                Mc.PutObjectAsync(new PutObjectArgs().WithBucket(Bucket).WithObject(path).WithStreamData(stream))
+                    .Wait();
                 return null;
             }
             catch (MinioException e)
@@ -84,8 +88,8 @@ namespace SimApi.Helpers
 
         public string FullUrl(string path)
         {
-            var httpRequest = HttpContextAccessor.HttpContext.Request;
-            var url = $"{httpRequest.Scheme}://{httpRequest.Host}";
+            var httpRequest = HttpContextAccessor.HttpContext?.Request;
+            var url = $"{httpRequest?.Scheme}://{httpRequest?.Host}";
             if (string.IsNullOrEmpty(path))
             {
                 return path;
