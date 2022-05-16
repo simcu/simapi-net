@@ -1,6 +1,9 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Text.Unicode;
 
 namespace SimApi.Helpers
 {
@@ -35,6 +38,19 @@ namespace SimApi.Helpers
             }
 
             return strbul.ToString();
+        }
+
+        /// <summary>
+        /// 将对象序列化成JSON （控制台输出中文不会被编码）
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static string Json(object obj)
+        {
+            return JsonSerializer.Serialize(obj, new JsonSerializerOptions
+            {
+                Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
+            });
         }
     }
 }
