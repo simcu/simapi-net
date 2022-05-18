@@ -1,5 +1,6 @@
 using System;
 using Microsoft.Extensions.Logging;
+using SimApi.Helpers;
 
 namespace SimApi.Logger
 {
@@ -30,7 +31,7 @@ namespace SimApi.Logger
                 _ => defautColor
             };
             Console.WriteLine(
-                $"[ {Name} ][ {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:ffff")} ][ {logLevel.ToString()} ]");
+                $"[ {Name} ][ {SimApiUtil.CstNow.ToString("yyyy-MM-dd HH:mm:ss:ffff")} ][ {logLevel.ToString()} ]");
             Console.ForegroundColor = defautColor;
             Console.WriteLine($"{state}");
             if (exception != null)

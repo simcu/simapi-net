@@ -10,6 +10,11 @@ namespace SimApi.Helpers
 {
     public static class SimApiUtil
     {
+        public static DateTime CstNow
+        {
+            get => DateTime.UtcNow.AddHours(8);
+        }
+
         /// <summary>
         /// 检测手机号是否正确
         /// </summary>
@@ -60,7 +65,7 @@ namespace SimApi.Helpers
         /// <returns></returns>
         public static DateTime GetCstNow()
         {
-            return DateTime.UtcNow.AddHours(8);
+            return CstNow;
         }
     }
 }

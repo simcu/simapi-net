@@ -1,23 +1,36 @@
 using System;
 using System.Linq;
 using System.Text.Json;
+using SimApi.Helpers;
 
 namespace SimApi.Models
 {
     public class SimApiBaseModel
     {
-        protected virtual string[] MapperIgnoreField { get; set; } = {"Id", "CreatedAt", "UpdatedAt"};
+        protected virtual string[] MapperIgnoreField { get; set; } =
+        {
+            "Id", "CreatedAt", "UpdatedAt"
+        };
+
         protected virtual string UpdatedTimeField { get; set; } = "UpdatedAt";
 
         public void MapData<TS>(TS source, bool mapAll = false)
         {
             //获取要赋值的源数据不为null的项目
             var sourceProps = source.GetType().GetProperties().Where(x => x.GetValue(source) != null)
-                .Select(x => new {x.Name, x.PropertyType})
+                .Select(x => new
+                {
+                    x.Name,
+                    x.PropertyType
+                })
                 .ToDictionary(x => x.Name, x => x.PropertyType);
 
             //获取目标对象的属性信息
-            var targetProps = GetType().GetProperties().Select(x => new {x.Name, x.PropertyType})
+            var targetProps = GetType().GetProperties().Select(x => new
+                {
+                    x.Name,
+                    x.PropertyType
+                })
                 .ToDictionary(x => x.Name, x => x.PropertyType);
             foreach (var sp in sourceProps)
             {
@@ -37,11 +50,19 @@ namespace SimApi.Models
         {
             //获取要赋值的源数据不为null的项目
             var sourceProps = source.GetType().GetProperties().Where(x => x.GetValue(source) != null)
-                .Select(x => new {x.Name, x.PropertyType})
+                .Select(x => new
+                {
+                    x.Name,
+                    x.PropertyType
+                })
                 .ToDictionary(x => x.Name, x => x.PropertyType);
 
             //获取目标对象的属性信息
-            var targetProps = GetType().GetProperties().Select(x => new {x.Name, x.PropertyType})
+            var targetProps = GetType().GetProperties().Select(x => new
+                {
+                    x.Name,
+                    x.PropertyType
+                })
                 .ToDictionary(x => x.Name, x => x.PropertyType);
             foreach (var sp in sourceProps)
             {
@@ -63,7 +84,7 @@ namespace SimApi.Models
         /// <returns></returns>
         public void UpdateTime()
         {
-            GetType().GetProperty(UpdatedTimeField)?.SetValue(this, DateTime.Now);
+            GetType().GetProperty(UpdatedTimeField)?.SetValue(this, SimApiUtil.CstNow);
         }
     }
 }
