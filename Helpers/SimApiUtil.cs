@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -51,6 +52,15 @@ namespace SimApi.Helpers
             {
                 Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
             });
+        }
+
+        /// <summary>
+        /// 获取 CST 当前时间
+        /// </summary>
+        /// <returns></returns>
+        public static DateTime GetCstNow()
+        {
+            return DateTime.UtcNow.AddHours(8);
         }
     }
 }
