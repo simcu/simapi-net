@@ -10,9 +10,20 @@ namespace SimApi.Helpers
 {
     public static class SimApiUtil
     {
+        /// <summary>
+        /// 当前CST时间
+        /// </summary>
         public static DateTime CstNow
         {
             get => DateTime.UtcNow.AddHours(8);
+        }
+
+        /// <summary>
+        /// 当前秒级时间戳
+        /// </summary>
+        public static double TimestampNow
+        {
+            get => (DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0)).TotalSeconds;
         }
 
         /// <summary>
@@ -57,15 +68,6 @@ namespace SimApi.Helpers
             {
                 Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
             });
-        }
-
-        /// <summary>
-        /// 获取 CST 当前时间
-        /// </summary>
-        /// <returns></returns>
-        public static DateTime GetCstNow()
-        {
-            return CstNow;
         }
     }
 }
