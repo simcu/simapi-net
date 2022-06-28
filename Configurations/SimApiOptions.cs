@@ -4,15 +4,24 @@ namespace SimApi.Configs
 {
     public class SimApiOptions
     {
-        public bool EnableCors { get; set; } = true;
+        public bool EnableCors { get; set; } = false;
+
         public bool EnableSimApiAuth { get; set; } = false;
-        public bool EnableSimApiDoc { get; set; } = true;
-        public bool EnableSimApiException { get; set; } = true;
+
+        public bool EnableSimApiDoc { get; set; } = false;
+
+        public bool EnableSimApiException { get; set; } = false;
+
         public bool EnableSimApiStorage { get; set; } = false;
-        public bool EnableForwardHeaders { get; set; } = true;
-        public bool EnableLowerUrl { get; set; } = true;
-        public bool EnableLogger { get; set; } = true;
+
+        public bool EnableForwardHeaders { get; set; } = false;
+
+        public bool EnableLowerUrl { get; set; } = false;
+
+        public bool EnableLogger { get; set; } = false;
+
         public SimApiDocOptions SimApiDocOptions { get; set; } = new SimApiDocOptions();
+
         public SimApiStorageOptions SimApiStorageOptions { get; set; } = new SimApiStorageOptions();
 
 

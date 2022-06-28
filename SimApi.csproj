@@ -27,7 +27,7 @@
     <Folder Include="Configurations\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Minio" Version="4.0.2" />
+    <PackageReference Include="Minio" Version="4.0.4" />
     <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.3.1" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.3.1" />
   </ItemGroup>
