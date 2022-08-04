@@ -198,7 +198,7 @@ namespace SimApi
         {
             var options = builder.ApplicationServices.GetRequiredService<SimApiOptions>();
 
-            var logger = builder.ApplicationServices.GetRequiredService<ILogger>();
+            var logger = builder.ApplicationServices.GetRequiredService<ILogger<SimApiOptions>>();
 
             if (options.EnableForwardHeaders)
             {
