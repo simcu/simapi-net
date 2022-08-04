@@ -22,7 +22,14 @@ namespace SimApi
         {
             var simApiOptions = new SimApiOptions();
             options?.Invoke(simApiOptions);
-
+            if (simApiOptions.EnableLogger)
+            {
+                builder.AddLogging(logger =>
+                {
+                    logger.ClearProviders();
+                    logger.AddProvider(new SimApiLoggerProvider());
+                });
+            }
             // 是否使用 AUTH
             if (simApiOptions.EnableSimApiAuth)
             {
@@ -190,13 +197,8 @@ namespace SimApi
         public static IApplicationBuilder UseSimApi(this IApplicationBuilder builder)
         {
             var options = builder.ApplicationServices.GetRequiredService<SimApiOptions>();
-            if (options.EnableLogger)
-            {
-                builder.ApplicationServices.GetRequiredService<ILoggerFactory>()
-                    .AddProvider(new SimApiLoggerProvider());
-            }
 
-            var logger = builder.ApplicationServices.GetRequiredService<ILogger<SimApiLogger>>();
+            var logger = builder.ApplicationServices.GetRequiredService<ILogger>();
 
             if (options.EnableForwardHeaders)
             {
