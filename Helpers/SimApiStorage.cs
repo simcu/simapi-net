@@ -15,7 +15,7 @@ namespace SimApi.Helpers
 
         private string ServeUrl { get; }
 
-        private string Bucket { get; }
+        public string Bucket { get; }
 
         private IHttpContextAccessor HttpContextAccessor { get; }
 
@@ -49,7 +49,7 @@ namespace SimApi.Helpers
             }
             Mc = mcb.Build();
 
-            bool found = Mc.BucketExistsAsync(new BucketExistsArgs().WithBucket(Bucket)).Result;
+            var found = Mc.BucketExistsAsync(new BucketExistsArgs().WithBucket(Bucket)).Result;
             if (!found)
             {
                 Mc.MakeBucketAsync(new MakeBucketArgs().WithBucket(Bucket)).Wait();
