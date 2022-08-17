@@ -56,33 +56,36 @@ namespace SimApi.Helpers
             }
         }
 
+        /// <summary>
+        /// 获取上传的URL
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="expire"></param>
+        /// <returns></returns>
         public string GetUploadUrl(string path, int expire = 7200)
         {
-            try
-            {
-                return Mc.PresignedPutObjectAsync(new PresignedPutObjectArgs().WithBucket(Bucket)
-                    .WithObject(path).WithExpiry(expire)).Result;
-            }
-            catch (MinioException e)
-            {
-                Console.WriteLine("Error occurred: " + e);
-                return e.Message;
-            }
+            return Mc.PresignedPutObjectAsync(new PresignedPutObjectArgs().WithBucket(Bucket)
+                .WithObject(path).WithExpiry(expire)).Result;
         }
 
-        public string UploadFile(string path, Stream stream,string contentType = "image/png")
+        /// <summary>
+        /// 获取下载的URL
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="expire"></param>
+        /// <returns></returns>
+        public string GetDownloadUrl(string path, int expire = 600)
         {
-            try
-            {
-                Mc.PutObjectAsync(new PutObjectArgs().WithBucket(Bucket).WithObject(path).
-                    WithObjectSize(stream.Length).WithStreamData(stream).WithContentType(contentType)).Wait();
-                return null;
-            }
-            catch (MinioException e)
-            {
-                Console.WriteLine("Error occurred: " + e);
-                return e.Message;
-            }
+            return Mc.PresignedGetObjectAsync(new PresignedGetObjectArgs().WithBucket(Bucket).WithObject(path)
+                .WithExpiry(expire)).Result;
+        }
+
+
+        public string UploadFile(string path, Stream stream, string contentType = "image/png")
+        {
+            Mc.PutObjectAsync(new PutObjectArgs().WithBucket(Bucket).WithObject(path).WithObjectSize(stream.Length)
+                .WithStreamData(stream).WithContentType(contentType)).Wait();
+            return null;
         }
 
         public string FullUrl(string path)
