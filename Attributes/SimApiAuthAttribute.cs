@@ -19,13 +19,16 @@ namespace SimApi.Attributes
         //默认是user登录类型
         public SimApiAuthAttribute()
         {
-            Types = new[] { "user" };
+            Types = new[]
+            {
+                "user"
+            };
         }
 
         //只检测一种用户类型的快捷方式
         public SimApiAuthAttribute(string type)
         {
-            Types = new[] { type };
+            Types = type.Split(",");
         }
 
         //设定特定类型的检测
@@ -37,7 +40,10 @@ namespace SimApi.Attributes
         //只检测一种用户类型的快捷方式
         public SimApiAuthAttribute(string type, string url)
         {
-            Types = new[] { type };
+            Types = new[]
+            {
+                type
+            };
             new HttpPostAttribute(url);
         }
 
