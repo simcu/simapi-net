@@ -56,7 +56,7 @@ namespace SimApi.Attributes
                 throw new SimApiException(401);
             }
             //检测用户类型
-            if (Types.Intersect(loginInfo.Type).Count() == 0)
+            if (!Types.Intersect(loginInfo.Type).Any())
             {
                 throw new SimApiException(403);
             }

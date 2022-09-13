@@ -14,6 +14,7 @@ namespace SimApi.Middlewares
     public class SimApiExceptionMiddleware
     {
         private RequestDelegate Next { get; }
+
         private ILogger<SimApiExceptionMiddleware> Log { get; }
 
         public SimApiExceptionMiddleware(RequestDelegate next, ILogger<SimApiExceptionMiddleware> log)
@@ -35,7 +36,10 @@ namespace SimApi.Middlewares
                 await Next(context);
                 if (context.Response.StatusCode != 200)
                 {
-                    if (!new[] {301, 302}.Contains(context.Response.StatusCode))
+                    if (!new[]
+                        {
+                            301, 302
+                        }.Contains(context.Response.StatusCode))
                     {
                         throw new SimApiException(context.Response.StatusCode);
                     }
@@ -70,9 +74,12 @@ namespace SimApi.Middlewares
         /// <param name="response"></param>
         private void ErrorResponse(HttpContext context, SimApiBaseResponse response)
         {
-            context.Response.StatusCode = 200;
-            context.Response.Headers.Add("Content-Type", "application/json");
-            context.Response.WriteAsync(response.ToString());
+            if (!context.Response.HasStarted)
+            {
+                context.Response.StatusCode = 200;
+                context.Response.Headers.Add("Content-Type", "application/json");
+                context.Response.WriteAsync(response.ToString());
+            }
         }
     }
 }
