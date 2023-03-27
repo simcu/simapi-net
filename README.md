@@ -1,7 +1,6 @@
 # YYApi 基于Asp.net Core 3/5的一个基础辅助包
 
-![CI](https://github.com/YY-Tech/YYApi/workflows/CI/badge.svg)
-
+[![PublishNugetPackage](https://github.com/simcu/simapi-net/actions/workflows/nuget-publish.yml/badge.svg)](https://github.com/simcu/simapi-net/actions/workflows/nuget-publish.yml)
 ### 包含了以下组件:
 
 1. 统一的参数检测,基础认证服务
