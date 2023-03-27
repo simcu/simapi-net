@@ -1,39 +1,23 @@
-﻿using System;
-
-namespace SimApi.Communications
+﻿namespace SimApi.Communications
 {
     /// <summary>
     /// 只有ID的请求
     /// </summary>
-    public class SimApiIdOnlyRequest
-    {
-        public int Id { get; set; }
-    }
+    public record SimApiIdOnlyRequest(int Id);
 
     /// <summary>
     /// 只有ID的请求(字符串)
     /// </summary>
-    public class SimApiStringIdOnlyRequest
-    {
-        public string Id { get; set; }
-    }
+    public record SimApiStringIdOnlyRequest(string Id);
 
     /// <summary>
     /// 动态类型单字段请求
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class SimApiOneFieldRequest<T>
-    {
-        public T Data { get; set; }
-    }
+    public record SimApiOneFieldRequest<T>(T Data);
 
     /// <summary>
     /// 基础分页请求
     /// </summary>
-    public class SimApiBasePageRequest
-    {
-        public int Page { get; set; }
-
-        public int Count { get; set; }
-    }
+    public record SimApiBasePageRequest(int Page, int Count);
 }

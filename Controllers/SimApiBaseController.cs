@@ -29,13 +29,11 @@ namespace SimApi.Controllers
         {
             if (!context.ModelState.IsValid)
             {
-                foreach (var item in context.ModelState.Values)
+                foreach (var item in context.ModelState.Values.Where(item =>
+                             item.ValidationState == ModelValidationState.Invalid))
                 {
-                    if (item.ValidationState == ModelValidationState.Invalid)
-                    {
-                        Error(400, item.Errors.First().ErrorMessage);
-                        break;
-                    }
+                    Error(400, item.Errors.First().ErrorMessage);
+                    break;
                 }
             }
         }
@@ -83,7 +81,7 @@ namespace SimApi.Controllers
         /// <returns></returns>
         protected SimApiBaseResponse<string> UploadFile()
         {
-            return new SimApiBaseResponse<string>();
+            return new SimApiBaseResponse<string>(null);
         }
     }
 }

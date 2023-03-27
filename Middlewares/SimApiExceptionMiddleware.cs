@@ -47,14 +47,9 @@ namespace SimApi.Middlewares
             }
             catch (SimApiException ex)
             {
-                if (string.IsNullOrEmpty(ex.Message))
-                {
-                    response.SetCode(ex.Code);
-                }
-                else
-                {
-                    response.SetCodeMsg(ex.Code, ex.Message);
-                }
+                response = string.IsNullOrEmpty(ex.Message)
+                    ? new SimApiBaseResponse(ex.Code)
+                    : new SimApiBaseResponse(ex.Code, ex.Message);
 
                 ErrorResponse(context, response);
             }
@@ -62,7 +57,7 @@ namespace SimApi.Middlewares
             {
                 Log.LogError(ex.Message);
                 Log.LogError(ex.StackTrace);
-                response.SetCodeMsg(500, ex.Message);
+                response = new SimApiBaseResponse(500, ex.Message);
                 ErrorResponse(context, response);
             }
         }

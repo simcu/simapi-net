@@ -25,9 +25,7 @@ namespace SimApi.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public SimApiBaseResponse ExceptionHandler(int code)
         {
-            var response = new SimApiBaseResponse();
-            response.SetCode(code);
-            return response;
+            return new SimApiBaseResponse(code);
         }
 
         /// <summary>
@@ -38,10 +36,7 @@ namespace SimApi.Controllers
         public SimApiBaseResponse<string> CheckLogin()
         {
             ErrorWhenNull(LoginInfo, 401);
-            return new SimApiBaseResponse<string>
-            {
-                Data = LoginInfo.Id
-            };
+            return new SimApiBaseResponse<string>(LoginInfo.Id);
         }
 
         /// <summary>

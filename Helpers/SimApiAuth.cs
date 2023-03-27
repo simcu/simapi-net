@@ -25,7 +25,10 @@ namespace SimApi.Helpers
         /// <returns></returns>
         public string Login(string id, string type = "user", string token = null)
         {
-            return Login(id, new[] { type }, token);
+            return Login(id, new[]
+            {
+                type
+            }, token);
         }
 
         /// <summary>
@@ -36,15 +39,8 @@ namespace SimApi.Helpers
         /// <returns></returns>
         public string Login(string id, string[] type, string uuid = null)
         {
-            if (uuid == null)
-            {
-                uuid = Guid.NewGuid().ToString();
-            }
-            var loginItem = new SimApiLoginItem
-            {
-                Id = id,
-                Type = type
-            };
+            uuid ??= Guid.NewGuid().ToString();
+            var loginItem = new SimApiLoginItem(id, type);
             Cache.SetString(uuid, JsonSerializer.Serialize(loginItem));
             return uuid;
         }
@@ -60,6 +56,5 @@ namespace SimApi.Helpers
                 Cache.Remove(uuid);
             }
         }
-
     }
 }

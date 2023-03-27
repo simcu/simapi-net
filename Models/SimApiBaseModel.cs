@@ -32,15 +32,12 @@ namespace SimApi.Models
                     x.PropertyType
                 })
                 .ToDictionary(x => x.Name, x => x.PropertyType);
-            foreach (var sp in sourceProps)
+            foreach (var sp in sourceProps.Where(sp =>
+                         targetProps.ContainsKey(sp.Key) && sp.Value == targetProps[sp.Key] &&
+                         (!MapperIgnoreField.Contains(sp.Key) || mapAll)))
             {
-                //检查源对象不为空的属性是否在目标对象中存在
-                if (targetProps.ContainsKey(sp.Key) && sp.Value == targetProps[sp.Key] &&
-                    (!MapperIgnoreField.Contains(sp.Key) || mapAll))
-                {
-                    GetType().GetProperty(sp.Key)?
-                        .SetValue(this, source.GetType().GetProperty(sp.Key)?.GetValue(source));
-                }
+                GetType().GetProperty(sp.Key)?
+                    .SetValue(this, source.GetType().GetProperty(sp.Key)?.GetValue(source));
             }
 
             UpdateTime();
@@ -64,15 +61,12 @@ namespace SimApi.Models
                     x.PropertyType
                 })
                 .ToDictionary(x => x.Name, x => x.PropertyType);
-            foreach (var sp in sourceProps)
+            foreach (var sp in sourceProps.Where(sp =>
+                         targetProps.ContainsKey(sp.Key) && sp.Value == targetProps[sp.Key] &&
+                         mapFields.Contains(sp.Key)))
             {
-                //检查源对象不为空的属性是否在目标对象中存在
-                if (targetProps.ContainsKey(sp.Key) && sp.Value == targetProps[sp.Key] &&
-                    mapFields.Contains(sp.Key))
-                {
-                    GetType().GetProperty(sp.Key)?
-                        .SetValue(this, source.GetType().GetProperty(sp.Key)?.GetValue(source));
-                }
+                GetType().GetProperty(sp.Key)?
+                    .SetValue(this, source.GetType().GetProperty(sp.Key)?.GetValue(source));
             }
 
             UpdateTime();
