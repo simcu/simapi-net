@@ -20,7 +20,6 @@ namespace SimApi.Logger
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception,
             Func<TState, Exception, string> formatter)
         {
-            var defautColor = Console.ForegroundColor;
             Console.ForegroundColor = logLevel switch
             {
                 LogLevel.Debug => ConsoleColor.DarkMagenta,
@@ -28,18 +27,15 @@ namespace SimApi.Logger
                 LogLevel.Warning => ConsoleColor.Yellow,
                 LogLevel.Error => ConsoleColor.Red,
                 LogLevel.Critical => ConsoleColor.DarkRed,
-                _ => defautColor
+                _ => ConsoleColor.White
             };
-            Console.WriteLine(
-                $"[ {Name} ][ {SimApiUtil.CstNow.ToString("yyyy-MM-dd HH:mm:ss:ffff")} ][ {logLevel.ToString()} ]");
-            Console.ForegroundColor = defautColor;
-            Console.WriteLine($"{state}");
+            var message =
+                $"[ {Name} ][ {SimApiUtil.CstNow.ToString("yyyy-MM-dd HH:mm:ss:ffff")} ][ {logLevel.ToString()} ]\n{state}\n";
             if (exception != null)
             {
-                Console.WriteLine($"{exception}");
+                message += $"{exception}\n";
             }
-
-            Console.WriteLine();
+            Console.WriteLine(message);
         }
     }
 }
