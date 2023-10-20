@@ -22,12 +22,11 @@
     <Folder Include="Communications\" />
     <Folder Include="Controllers\" />
     <Folder Include="Middlewares\" />
-    <Folder Include="Attributes\" />
     <Folder Include="Exceptions\" />
-    <Folder Include="Configurations\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Minio" Version="4.0.7" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.6.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.5.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.5.0" />
   </ItemGroup>

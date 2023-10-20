@@ -42,6 +42,11 @@ namespace SimApi
                     policy => { policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin(); }));
             }
 
+            if (simApiOptions.EnableSynapse)
+            {
+                builder.AddSingleton<Synapse>();
+            }
+
             // 使用SimApiDoc
             if (simApiOptions.EnableSimApiDoc)
             {
@@ -77,10 +82,7 @@ namespace SimApi
                                                 Id = "HeaderToken"
                                             }
                                         },
-                                        new[]
-                                        {
-                                            "readAccess", "writeAccess"
-                                        }
+                                        new[] { "readAccess", "writeAccess" }
                                     }
                                 });
                                 haveSimApiAuth = true;
@@ -143,10 +145,7 @@ namespace SimApi
                                         Id = "oauth2"
                                     }
                                 },
-                                new[]
-                                {
-                                    "SimApiAuth"
-                                }
+                                new[] { "SimApiAuth" }
                             }
                         });
                     }
@@ -252,6 +251,12 @@ namespace SimApi
             if (options.EnableLowerUrl)
             {
                 logger.LogInformation("开始配置使用URL小写...");
+            }
+
+            if (options.EnableSynapse)
+            {
+                var synapse = builder.ApplicationServices.GetRequiredService<Synapse>();
+                synapse.Init();
             }
 
             return builder;

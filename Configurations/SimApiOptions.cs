@@ -53,6 +53,12 @@ namespace SimApi.Configs
         public bool EnableLogger { get; set; } = false;
 
         /// <summary>
+        /// 是否启用Synapse
+        /// </summary>
+        public bool EnableSynapse { get; set; } = false;
+
+
+        /// <summary>
         /// Swagger文档相关配置，需要启用 EnableSimApiDoc
         /// </summary>
         public SimApiDocOptions SimApiDocOptions { get; set; } = new SimApiDocOptions();
@@ -62,6 +68,17 @@ namespace SimApi.Configs
         /// </summary>
         public SimApiStorageOptions SimApiStorageOptions { get; set; } = new SimApiStorageOptions();
 
+        public SimApiSynapseOptions SimApiSynapseOptions { get; set; } = new SimApiSynapseOptions();
+
+        public void ConfigureSimApiSynapse(Action<SimApiSynapseOptions> options = null)
+        {
+            options?.Invoke(SimApiSynapseOptions);
+        }
+
+        public void ConfigureSimApiSynapse(SimApiSynapseOptions options)
+        {
+            SimApiSynapseOptions = options;
+        }
 
         public void ConfigureSimApiDoc(Action<SimApiDocOptions> options = null)
         {
