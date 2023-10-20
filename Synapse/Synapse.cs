@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
@@ -75,8 +76,14 @@ public partial class Synapse
             RunRpcClient();
             Logger.LogInformation("Rpc Client Ready, Client Timeout: {OptionsRpcTimeout}s", Options.RpcTimeout);
         }
-        RunRpcServer();
-        RunEventServer();
+        if (RpcRegistry.Count > 0)
+        {
+            RunRpcServer();
+        }
+        if (EventRegistry.Count > 0)
+        {
+            RunEventServer();
+        }
     }
 
 

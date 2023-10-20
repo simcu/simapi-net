@@ -5,6 +5,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Serialization;
 using RabbitMQ.Client.Events;
 using SimApi.Communications;
 using SimApi.Helpers;
@@ -64,7 +65,11 @@ public partial class Synapse
             if (ResponseCache.TryGetValue(props.MessageId, out var value))
             {
                 response = JsonSerializer.Deserialize<SimApiBaseResponse<object>>(
-                    Encoding.UTF8.GetString(value));
+                    Encoding.UTF8.GetString(value), new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                        Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
+                    });
                 ResponseCache.Remove(props.MessageId);
                 break;
             }

@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using RabbitMQ.Client.Events;
 using SimApi.Communications;
 using SimApi.Exceptions;
+using SimApi.Helpers;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace SimApi;
@@ -36,37 +37,43 @@ public partial class Synapse
             {
                 var callClass = Sp.CreateScope().ServiceProvider.GetRequiredService(method.Class);
                 var mt = callClass.GetType().GetMethod(method.Method);
-                if (mt != null)
+                try
                 {
-                    try
+                    var pt = mt.GetParameters()[0].ParameterType;
+                    if (pt == typeof(string))
                     {
-                        var pt = mt.GetParameters()[0].ParameterType;
-                        if (pt == typeof(string))
-                        {
-                            var ret = mt.Invoke(callClass, new[] { reqBody });
-                            res = new SimApiBaseResponse<object>(ret);
-                        }
-                        else
-                        {
-                            var ret = mt.Invoke(callClass, new[] { JsonSerializer.Deserialize(reqBody, pt) });
-                            res = new SimApiBaseResponse<object>(ret);
-                        }
+                        var ret = mt.Invoke(callClass, new[] { reqBody });
+                        res = new SimApiBaseResponse<object>(ret);
                     }
-                    catch (SimApiException e)
+                    else
                     {
-                        res = new SimApiBaseResponse(e.Code, e.Message);
-                    }
-                    catch (Exception e)
-                    {
-                        res = new SimApiBaseResponse(500, e.ToString());
+                        var paramObj = JsonSerializer.Deserialize(reqBody, pt, new JsonSerializerOptions
+                        {
+                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                        });
+                        var ret = mt.Invoke(callClass, new[] { paramObj });
+                        res = new SimApiBaseResponse<object>(ret);
                     }
                 }
+                catch (SimApiException e)
+                {
+                    Logger.LogDebug("RPC错误: {Err}", e.Message);
+                    res = new SimApiBaseResponse(e.Code, e.Message);
+                }
+                catch (Exception e)
+                {
+                    Logger.LogDebug("RPC调用失败: {Err}", e.Message);
+                    res = new SimApiBaseResponse(500, e.Message);
+                }
             }
-            var returnJson = JsonSerializer.Serialize((SimApiBaseResponse<object>)res, new JsonSerializerOptions
+
+
+            var returnJson = JsonSerializer.Serialize((object)res, new JsonSerializerOptions
             {
                 Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             });
+            Console.WriteLine(returnJson);
             var reply = $"client.{ea.BasicProperties.ReplyTo}.{ea.BasicProperties.AppId}";
             var props = RpcServerChannel.CreateBasicProperties();
             props.AppId = Options.AppId;

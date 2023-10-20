@@ -28,32 +28,28 @@ public partial class Synapse
 
             var key = ea.RoutingKey.Replace("event.", string.Empty);
             var method = EventRegistry.FirstOrDefault(x => x.Key == key);
-            if (method != null)
+            var callClass = Sp.CreateScope().ServiceProvider.GetRequiredService(method.Class);
+            var mt = callClass.GetType().GetMethod(method.Method);
+            var pt = mt.GetParameters()[0].ParameterType;
+            try
             {
-                var callClass = Sp.CreateScope().ServiceProvider.GetRequiredService(method.Class);
-                var mt = callClass.GetType().GetMethod(method.Method);
-                if (mt != null)
-                {
-                    var pt = mt.GetParameters()[0].ParameterType;
-                    try
+                mt.Invoke(callClass, pt == typeof(string)
+                    ? new object[] { reqBody }
+                    : new[]
                     {
-                        mt.Invoke(callClass, pt == typeof(string)
-                            ? new object[] { reqBody }
-                            : new[] { JsonSerializer.Deserialize(reqBody, pt) });
-                        EventServerChannel.BasicAck(ea.DeliveryTag, false);
-                    }
-                    catch (Exception)
-                    {
-                        EventServerChannel.BasicNack(ea.DeliveryTag, false, true);
-                    }
-                }
-                else
-                {
-                    Logger.LogError("Event Callback not available: {Ev}", method.Key);
-                    EventServerChannel.BasicNack(ea.DeliveryTag, false, false);
-                }
+                        JsonSerializer.Deserialize(reqBody, pt, new JsonSerializerOptions
+                        {
+                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                        })
+                    });
+                EventServerChannel.BasicAck(ea.DeliveryTag, false);
+            }
+            catch (Exception e)
+            {
+                Logger.LogError("Event Processor Error: {Err}", e.Message);
+                EventServerChannel.BasicNack(ea.DeliveryTag, false, false);
             }
         };
-        EventServerChannel.BasicConsume(queue, true, "", false, false, null, consumer);
+        EventServerChannel.BasicConsume(queue, false, "", false, false, null, consumer);
     }
 }
