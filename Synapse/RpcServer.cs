@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -37,13 +38,13 @@ public partial class Synapse
             {
                 var callClass = Sp.CreateScope().ServiceProvider.GetRequiredService(method.Class);
                 var mt = callClass.GetType().GetMethod(method.Method);
+                var param = Array.Empty<object>();
                 try
                 {
                     var pt = mt.GetParameters()[0].ParameterType;
                     if (pt == typeof(string))
                     {
-                        var ret = mt.Invoke(callClass, new[] { reqBody });
-                        res = new SimApiBaseResponse<object>(ret);
+                        param = new[] { reqBody };
                     }
                     else
                     {
@@ -51,14 +52,23 @@ public partial class Synapse
                         {
                             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
                         });
-                        var ret = mt.Invoke(callClass, new[] { paramObj });
-                        res = new SimApiBaseResponse<object>(ret);
+                        param = new[] { paramObj };
                     }
+                    var ret = mt.Invoke(callClass, param);
+                    res = new SimApiBaseResponse<object>(ret);
                 }
-                catch (SimApiException e)
+                catch (TargetInvocationException e)
                 {
-                    Logger.LogDebug("RPC错误: {Err}", e.Message);
-                    res = new SimApiBaseResponse(e.Code, e.Message);
+                    if (e.InnerException is SimApiException)
+                    {
+                        var ie = e.InnerException as SimApiException;
+                        Logger.LogDebug("RPC调用错误: {Err}", ie.Message);
+                        res = new SimApiBaseResponse(ie.Code, ie.Message);
+                    }
+                    else
+                    {
+                        res = new SimApiBaseResponse(500, e.Message);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -67,13 +77,11 @@ public partial class Synapse
                 }
             }
 
-
             var returnJson = JsonSerializer.Serialize((object)res, new JsonSerializerOptions
             {
                 Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             });
-            Console.WriteLine(returnJson);
             var reply = $"client.{ea.BasicProperties.ReplyTo}.{ea.BasicProperties.AppId}";
             var props = RpcServerChannel.CreateBasicProperties();
             props.AppId = Options.AppId;

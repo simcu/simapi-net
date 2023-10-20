@@ -46,7 +46,7 @@ public partial class Synapse
             }
             catch (Exception e)
             {
-                Logger.LogError("Event Processor Error: {Err}", e.Message);
+                Logger.LogError("Event Processor Error: {Err}", e.InnerException);
                 EventServerChannel.BasicNack(ea.DeliveryTag, false, false);
             }
         };
