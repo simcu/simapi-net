@@ -1,4 +1,4 @@
-# YYApi 基于Asp.net Core 3/5的一个基础辅助包
+# SimApi 基于.Net的一个基础辅助包
 
 [![PublishNugetPackage](https://github.com/simcu/simapi-net/actions/workflows/nuget-publish.yml/badge.svg)](https://github.com/simcu/simapi-net/actions/workflows/nuget-publish.yml)
 ### 包含了以下组件:
@@ -52,3 +52,4 @@ services.AddSimApi(options =>
      options.SimApiStorageOptions = Configuration.GetSection("S3").Get<SimApiStorageOptions>();
 });
 ```
+基于S3的存储,基于RabbitMq的事件RPC调用,自定义Logger格式,自定义响应格式
