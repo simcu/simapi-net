@@ -4,6 +4,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
 using Microsoft.Extensions.Logging;
+using SimApi.Helpers;
 
 namespace SimApi;
 
@@ -16,11 +17,7 @@ public partial class Synapse
 
     private void FireEvent(string eventName, object param)
     {
-        var paramJson = JsonSerializer.Serialize(param, new JsonSerializerOptions
-        {
-            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        });
+        var paramJson = JsonSerializer.Serialize(param, SimApiUtil.JsonOption);
         var router = $"event.{Options.AppName}.{eventName}";
         var props = EventClientChannel.CreateBasicProperties();
         props.AppId = Options.AppId;

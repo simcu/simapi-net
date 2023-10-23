@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.Unicode;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -48,10 +49,7 @@ public partial class Synapse
                     }
                     else
                     {
-                        var paramObj = JsonSerializer.Deserialize(reqBody, pt, new JsonSerializerOptions
-                        {
-                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                        });
+                        var paramObj = JsonSerializer.Deserialize(reqBody, pt, SimApiUtil.JsonOption);
                         param = new[] { paramObj };
                     }
                     var ret = mt.Invoke(callClass, param);
@@ -59,9 +57,8 @@ public partial class Synapse
                 }
                 catch (TargetInvocationException e)
                 {
-                    if (e.InnerException is SimApiException)
+                    if (e.InnerException is SimApiException ie)
                     {
-                        var ie = e.InnerException as SimApiException;
                         Logger.LogDebug("RPC调用错误: {Err}", ie.Message);
                         res = new SimApiBaseResponse(ie.Code, ie.Message);
                     }
@@ -77,11 +74,7 @@ public partial class Synapse
                 }
             }
 
-            var returnJson = JsonSerializer.Serialize((object)res, new JsonSerializerOptions
-            {
-                Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            });
+            var returnJson = JsonSerializer.Serialize((object)res, SimApiUtil.JsonOption);
             var reply = $"client.{ea.BasicProperties.ReplyTo}.{ea.BasicProperties.AppId}";
             var props = RpcServerChannel.CreateBasicProperties();
             props.AppId = Options.AppId;

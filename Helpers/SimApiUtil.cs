@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Text.Unicode;
 
@@ -13,18 +14,22 @@ namespace SimApi.Helpers
         /// <summary>
         /// 当前CST时间
         /// </summary>
-        public static DateTime CstNow
+        public static DateTime CstNow => DateTime.UtcNow.AddHours(8);
+
+        /// <summary>
+        /// JSON序列化常规选项
+        /// </summary>
+        public static JsonSerializerOptions JsonOption => new()
         {
-            get => DateTime.UtcNow.AddHours(8);
-        }
+            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        };
 
         /// <summary>
         /// 当前秒级时间戳
         /// </summary>
-        public static double TimestampNow
-        {
-            get => (DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0)).TotalSeconds;
-        }
+        public static double TimestampNow => (DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0)).TotalSeconds;
 
         /// <summary>
         /// 检测手机号是否正确
@@ -45,13 +50,13 @@ namespace SimApi.Helpers
         /// <returns></returns>
         public static string Md5(string source, string mode = "x2")
         {
-            byte[] sor = Encoding.UTF8.GetBytes(source);
-            MD5 md5 = MD5.Create();
-            byte[] result = md5.ComputeHash(sor);
-            StringBuilder strbul = new StringBuilder(40);
-            for (int i = 0; i < result.Length; i++)
+            var sor = Encoding.UTF8.GetBytes(source);
+            var md5 = MD5.Create();
+            var result = md5.ComputeHash(sor);
+            var strbul = new StringBuilder(40);
+            foreach (var t in result)
             {
-                strbul.Append(result[i].ToString(mode));
+                strbul.Append(t.ToString(mode));
             }
 
             return strbul.ToString();
@@ -64,10 +69,7 @@ namespace SimApi.Helpers
         /// <returns></returns>
         public static string Json(object obj)
         {
-            return JsonSerializer.Serialize(obj, new JsonSerializerOptions
-            {
-                Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
-            });
+            return JsonSerializer.Serialize(obj, JsonOption);
         }
     }
 }

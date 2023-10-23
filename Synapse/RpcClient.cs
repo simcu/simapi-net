@@ -38,11 +38,7 @@ public partial class Synapse
 
     private object FireRpc(string app, string action, object param)
     {
-        var paramJson = JsonSerializer.Serialize(param, new JsonSerializerOptions
-        {
-            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        });
+        var paramJson = JsonSerializer.Serialize(param, SimApiUtil.JsonOption);
         var router = $"server.{app}";
         SimApiBaseResponse response;
         var props = RpcClientChannel.CreateBasicProperties();
@@ -65,11 +61,7 @@ public partial class Synapse
             if (ResponseCache.TryGetValue(props.MessageId, out var value))
             {
                 response = JsonSerializer.Deserialize<SimApiBaseResponse<object>>(
-                    Encoding.UTF8.GetString(value), new JsonSerializerOptions
-                    {
-                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                        Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
-                    });
+                    Encoding.UTF8.GetString(value), SimApiUtil.JsonOption);
                 ResponseCache.Remove(props.MessageId);
                 break;
             }

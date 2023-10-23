@@ -5,6 +5,7 @@ using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client.Events;
+using SimApi.Helpers;
 
 namespace SimApi;
 
@@ -35,13 +36,7 @@ public partial class Synapse
             {
                 mt.Invoke(callClass, pt == typeof(string)
                     ? new object[] { reqBody }
-                    : new[]
-                    {
-                        JsonSerializer.Deserialize(reqBody, pt, new JsonSerializerOptions
-                        {
-                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                        })
-                    });
+                    : new[] { JsonSerializer.Deserialize(reqBody, pt, SimApiUtil.JsonOption) });
                 EventServerChannel.BasicAck(ea.DeliveryTag, false);
             }
             catch (Exception e)
