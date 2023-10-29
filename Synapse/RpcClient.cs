@@ -36,11 +36,11 @@ public partial class Synapse
         RpcClientChannel.BasicConsume(queue, false, "", false, false, null, consumer);
     }
 
-    private object FireRpc(string app, string action, object param)
+    private string FireRpc(string app, string action, object param)
     {
         var paramJson = JsonSerializer.Serialize(param, SimApiUtil.JsonOption);
         var router = $"server.{app}";
-        SimApiBaseResponse response;
+        string response;
         var props = RpcClientChannel.CreateBasicProperties();
         props.AppId = Options.AppId;
         props.MessageId = Guid.NewGuid().ToString();
@@ -55,13 +55,12 @@ public partial class Synapse
         {
             if (SimApiUtil.TimestampNow - ts > Options.RpcTimeout)
             {
-                response = new SimApiBaseResponse(502, "timeout");
+                response = JsonSerializer.Serialize(new SimApiBaseResponse(502, "timeout"), SimApiUtil.JsonOption);
                 break;
             }
             if (ResponseCache.TryGetValue(props.MessageId, out var value))
             {
-                response = JsonSerializer.Deserialize<SimApiBaseResponse<object>>(
-                    Encoding.UTF8.GetString(value), SimApiUtil.JsonOption);
+                response = Encoding.UTF8.GetString(value);
                 ResponseCache.Remove(props.MessageId);
                 break;
             }

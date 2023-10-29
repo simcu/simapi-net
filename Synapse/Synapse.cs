@@ -96,7 +96,8 @@ public partial class Synapse
         }
         else
         {
-            res = FireRpc(appName, method, param);
+            var data = FireRpc(appName, method, param);
+            res = JsonSerializer.Deserialize<SimApiBaseResponse<T>>(data, SimApiUtil.JsonOption);
         }
         return res as SimApiBaseResponse<T>;
     }
