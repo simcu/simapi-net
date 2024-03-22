@@ -40,9 +40,9 @@ public class SimApiCommonController(SimApiAuth auth) : SimApiBaseController
     {
         string token = null;
 
-        if (Request.Headers.ContainsKey("Token"))
+        if (Request.Headers.TryGetValue("Token", out var value))
         {
-            token = Request.Headers["Token"];
+            token = value;
         }
 
         auth.Logout(token);
