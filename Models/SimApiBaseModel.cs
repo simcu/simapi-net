@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text.Json;
 using SimApi.Helpers;
@@ -7,10 +8,16 @@ namespace SimApi.Models
 {
     public class SimApiBaseModel
     {
-        protected virtual string[] MapperIgnoreField { get; set; } =
-        {
-            "Id", "CreatedAt", "UpdatedAt"
-        };
+        [Column(Order = 1)]
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+
+        [Column(Order = 9998)]
+        public DateTime UpdatedAt { get; set; } = SimApiUtil.CstNow;
+
+        [Column(Order = 9999)]
+        public DateTime CreatedAt { get; set; } = SimApiUtil.CstNow;
+
+        protected virtual string[] MapperIgnoreField { get; set; } = { "Id", "CreatedAt", "UpdatedAt" };
 
         protected virtual string UpdatedTimeField { get; set; } = "UpdatedAt";
 

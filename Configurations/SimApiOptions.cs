@@ -61,14 +61,14 @@ namespace SimApi.Configs
         /// <summary>
         /// Swagger文档相关配置，需要启用 EnableSimApiDoc
         /// </summary>
-        public SimApiDocOptions SimApiDocOptions { get; set; } = new SimApiDocOptions();
+        public SimApiDocOptions SimApiDocOptions { get; set; } = new();
 
         /// <summary>
         /// S3兼容的存储系统配置，需要启用 EnableSimApiStorage
         /// </summary>
-        public SimApiStorageOptions SimApiStorageOptions { get; set; } = new SimApiStorageOptions();
+        public SimApiStorageOptions SimApiStorageOptions { get; set; } = new();
 
-        public SimApiSynapseOptions SimApiSynapseOptions { get; set; } = new SimApiSynapseOptions();
+        public SimApiSynapseOptions SimApiSynapseOptions { get; set; } = new();
 
         public void ConfigureSimApiSynapse(Action<SimApiSynapseOptions> options = null)
         {
