@@ -6,75 +6,61 @@ using SimApi.Communications;
 using Microsoft.Extensions.Logging;
 using SimApi.Exceptions;
 
-namespace SimApi.Middlewares
+namespace SimApi.Middlewares;
+
+/// <summary>
+/// 异常处理中间件
+/// </summary>
+public class SimApiExceptionMiddleware(RequestDelegate next, ILogger<SimApiExceptionMiddleware> log)
 {
-    /// <summary>
-    /// 异常处理中间件
-    /// </summary>
-    public class SimApiExceptionMiddleware
+    public async Task InvokeAsync(HttpContext context)
     {
-        private RequestDelegate Next { get; }
-
-        private ILogger<SimApiExceptionMiddleware> Log { get; }
-
-        public SimApiExceptionMiddleware(RequestDelegate next, ILogger<SimApiExceptionMiddleware> log)
+        if (context.Request.Headers.TryGetValue("Query-Id", out var header))
         {
-            Log = log;
-            Next = next;
+            context.Response.Headers["Query-Id"] = header;
         }
 
-        public async Task InvokeAsync(HttpContext context)
+        SimApiBaseResponse response;
+        try
         {
-            if (context.Request.Headers.ContainsKey("Query-Id"))
+            await next(context);
+            if (context.Response.StatusCode != 200)
             {
-                context.Response.Headers["Query-Id"] = context.Request.Headers["Query-Id"];
-            }
-
-            var response = new SimApiBaseResponse();
-            try
-            {
-                await Next(context);
-                if (context.Response.StatusCode != 200)
+                if (!new[] { 301, 302 }.Contains(context.Response.StatusCode))
                 {
-                    if (!new[]
-                        {
-                            301, 302
-                        }.Contains(context.Response.StatusCode))
-                    {
-                        throw new SimApiException(context.Response.StatusCode);
-                    }
+                    throw new SimApiException(context.Response.StatusCode);
                 }
             }
-            catch (SimApiException ex)
-            {
-                response = string.IsNullOrEmpty(ex.Message)
-                    ? new SimApiBaseResponse(ex.Code)
-                    : new SimApiBaseResponse(ex.Code, ex.Message);
-
-                ErrorResponse(context, response);
-            }
-            catch (Exception ex)
-            {
-                Log.LogError(ex.Message);
-                Log.LogError(ex.StackTrace);
-                response = new SimApiBaseResponse(500, ex.Message);
-                ErrorResponse(context, response);
-            }
         }
-
-        /// <summary>
-        /// 异常抛出错误
-        /// </summary>
-        /// <param name="context"></param>
-        /// <param name="response"></param>
-        private void ErrorResponse(HttpContext context, SimApiBaseResponse response)
+        catch (SimApiException ex)
         {
-            if (!context.Response.HasStarted)
-            {
-                context.Response.StatusCode = 200;
-                context.Response.Headers.Add("Content-Type", "application/json");
-                context.Response.WriteAsync(response.ToString());
-            }
+            response = string.IsNullOrEmpty(ex.Message)
+                ? new SimApiBaseResponse(ex.Code)
+                : new SimApiBaseResponse(ex.Code, ex.Message);
+
+            ErrorResponse(context, response);
+        }
+        catch (Exception ex)
+        {
+            log.LogError(ex.Message);
+            log.LogError(ex.StackTrace);
+            response = new SimApiBaseResponse(500, ex.Message);
+            ErrorResponse(context, response);
+        }
+    }
+
+    /// <summary>
+    /// 异常抛出错误
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="response"></param>
+    private void ErrorResponse(HttpContext context, SimApiBaseResponse response)
+    {
+        if (!context.Response.HasStarted)
+        {
+            context.Response.StatusCode = 200;
+            context.Response.Headers.Append("Content-Type", "application/json");
+            context.Response.WriteAsync(response.ToString());
         }
     }
 }

@@ -5,61 +5,54 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using SimApi.Communications;
 using SimApi.Exceptions;
 
-namespace SimApi.Attributes
+namespace SimApi.Attributes;
+
+/// <summary>
+/// 检测登录中间件
+/// </summary>
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
+public class SimApiAuthAttribute : ActionFilterAttribute
 {
-    /// <summary>
-    /// 检测登录中间件
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-    public class SimApiAuthAttribute : ActionFilterAttribute
+    private string[] Types { get; }
+
+
+    //默认是user登录类型
+    public SimApiAuthAttribute()
     {
-        private string[] Types { get; }
+        Types = new[] { "user" };
+    }
 
+    //只检测一种用户类型的快捷方式
+    public SimApiAuthAttribute(string type)
+    {
+        Types = type.Split(",");
+    }
 
-        //默认是user登录类型
-        public SimApiAuthAttribute()
+    //设定特定类型的检测
+    public SimApiAuthAttribute(string[] types)
+    {
+        Types = types;
+    }
+
+    //只检测一种用户类型的快捷方式
+    public SimApiAuthAttribute(string type, string url)
+    {
+        Types = new[] { type };
+        new HttpPostAttribute(url);
+    }
+
+    public override void OnActionExecuting(ActionExecutingContext context)
+    {
+        var loginInfo = (SimApiLoginItem)context.HttpContext.Items["LoginInfo"];
+        //检测是否登录
+        if (loginInfo == null)
         {
-            Types = new[]
-            {
-                "user"
-            };
+            throw new SimApiException(401);
         }
-
-        //只检测一种用户类型的快捷方式
-        public SimApiAuthAttribute(string type)
+        //检测用户类型
+        if (!Types.Intersect(loginInfo.Type).Any())
         {
-            Types = type.Split(",");
-        }
-
-        //设定特定类型的检测
-        public SimApiAuthAttribute(string[] types)
-        {
-            Types = types;
-        }
-
-        //只检测一种用户类型的快捷方式
-        public SimApiAuthAttribute(string type, string url)
-        {
-            Types = new[]
-            {
-                type
-            };
-            new HttpPostAttribute(url);
-        }
-
-        public override void OnActionExecuting(ActionExecutingContext context)
-        {
-            var loginInfo = (SimApiLoginItem)context.HttpContext.Items["LoginInfo"];
-            //检测是否登录
-            if (loginInfo == null)
-            {
-                throw new SimApiException(401);
-            }
-            //检测用户类型
-            if (!Types.Intersect(loginInfo.Type).Any())
-            {
-                throw new SimApiException(403);
-            }
+            throw new SimApiException(403);
         }
     }
 }

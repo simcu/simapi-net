@@ -4,38 +4,30 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Distributed;
 using SimApi.Communications;
 
-namespace SimApi.Middlewares
+namespace SimApi.Middlewares;
+
+/// <summary>
+/// 认证信息获取中间件
+/// </summary>
+public class SimApiAuthMiddleware(RequestDelegate next)
 {
-    /// <summary>
-    /// 认证信息获取中间件
-    /// </summary>
-    public class SimApiAuthMiddleware
+    public Task Invoke(HttpContext httpContext, IDistributedCache cache)
     {
-        private RequestDelegate Next { get; }
-
-        public SimApiAuthMiddleware(RequestDelegate next)
+        string token = null;
+        if (httpContext.Request.Headers.TryGetValue("Token", out var header))
         {
-            Next = next;
+            token = header;
         }
 
-        public Task Invoke(HttpContext httpContext, IDistributedCache cache)
+        if (!string.IsNullOrEmpty(token))
         {
-            string token = null;
-            if (httpContext.Request.Headers.ContainsKey("Token"))
+            var login = cache.GetString(token);
+            if (login != null)
             {
-                token = httpContext.Request.Headers["Token"];
+                httpContext.Items.Add("LoginInfo", JsonSerializer.Deserialize<SimApiLoginItem>(login));
             }
-
-            if (!string.IsNullOrEmpty(token))
-            {
-                var login = cache.GetString(token);
-                if (login != null)
-                {
-                    httpContext.Items.Add("LoginInfo", JsonSerializer.Deserialize<SimApiLoginItem>(login));
-                }
-            }
-           
-            return Next(httpContext);
         }
+
+        return next(httpContext);
     }
 }

@@ -1,22 +1,20 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 
-namespace SimApi.Logger
+namespace SimApi.Logger;
+
+public class SimApiLoggerProvider : ILoggerProvider
 {
-    public class SimApiLoggerProvider : ILoggerProvider
+    private readonly ConcurrentDictionary<string, SimApiLogger> _loggers = new();
+
+
+    public ILogger CreateLogger(string categoryName)
     {
-        private readonly ConcurrentDictionary<string, SimApiLogger> _loggers =
-            new ConcurrentDictionary<string, SimApiLogger>();
+        return _loggers.GetOrAdd(categoryName, name => new SimApiLogger(name));
+    }
 
-
-        public ILogger CreateLogger(string categoryName)
-        {
-            return _loggers.GetOrAdd(categoryName, name => new SimApiLogger(name));
-        }
-
-        public void Dispose()
-        {
-            _loggers.Clear();
-        }
+    public void Dispose()
+    {
+        _loggers.Clear();
     }
 }
