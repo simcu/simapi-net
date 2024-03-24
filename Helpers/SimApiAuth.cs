@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
@@ -14,6 +15,8 @@ public class SimApiAuth(IDistributedCache cache)
     /// 产生一个Token记录并返回Token
     /// </summary>
     /// <param name="id"></param>
+    /// <param name="type"></param>
+    /// <param name="token"></param>
     /// <returns></returns>
     public string Login(string id, string type = "user", string token = null)
     {
@@ -25,6 +28,7 @@ public class SimApiAuth(IDistributedCache cache)
     /// </summary>
     /// <param name="id"></param>
     /// <param name="type"></param>
+    /// <param name="uuid"></param>
     /// <returns></returns>
     public string Login(string id, string[] type, string uuid = null)
     {
@@ -32,6 +36,17 @@ public class SimApiAuth(IDistributedCache cache)
         var loginItem = new SimApiLoginItem(id, type);
         cache.SetString(uuid, JsonSerializer.Serialize(loginItem));
         return uuid;
+    }
+
+    /// <summary>
+    /// 获取登陆信息
+    /// </summary>
+    /// <param name="token"></param>
+    /// <returns></returns>
+    public SimApiLoginItem? GetLogin(string token)
+    {
+        var login = cache.GetString(token);
+        return login != null ? JsonSerializer.Deserialize<SimApiLoginItem>(login) : default;
     }
 
     /// <summary>
