@@ -33,7 +33,7 @@ public static class SimApiExtensions
         // 是否使用 AUTH
         if (simApiOptions.EnableSimApiAuth)
         {
-            builder.AddScoped<SimApiAuth>();
+            builder.AddSingleton<SimApiAuth>();
         }
 
         if (simApiOptions.EnableCors)
