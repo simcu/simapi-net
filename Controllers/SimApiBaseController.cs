@@ -50,7 +50,7 @@ public class SimApiBaseController : Controller
     }
 
     /// <summary>
-    /// 检测条件，根据条件返回报错
+    /// 检测条件，根据条件返回报错 如果condition是ture报错
     /// </summary>
     /// <param name="condition">检测条件</param>
     /// <param name="code">错误代码</param>
@@ -61,6 +61,30 @@ public class SimApiBaseController : Controller
         {
             Error(code, message);
         }
+    }
+
+
+    /// <summary>
+    /// 检测条件，根据条件返回报错 如果condition是ture报错
+    /// </summary>
+    /// <param name="condition">检测条件</param>
+    /// <param name="code">错误代码</param>
+    /// <param name="message">错误描述</param>
+    protected static void ErrorWhenTrue(bool condition, int code = 500, string message = "")
+    {
+        ErrorWhen(condition, code, message);
+    }
+
+
+    /// <summary>
+    /// 如果condition是false 报错
+    /// </summary>
+    /// <param name="condition"></param>
+    /// <param name="code"></param>
+    /// <param name="message"></param>
+    protected static void ErrorWhenFalse(bool condition, int code = 500, string message = "")
+    {
+        ErrorWhen(!condition, code, message);
     }
 
     /// <summary>
