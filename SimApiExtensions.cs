@@ -6,7 +6,7 @@ using Microsoft.OpenApi.Models;
 using SimApi.Middlewares;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Logging;
-using SimApi.Configs;
+using SimApi.Configurations;
 using SimApi.Logger;
 
 namespace SimApi;
@@ -30,6 +30,7 @@ public static class SimApiExtensions
                 logger.AddProvider(new SimApiLoggerProvider());
             });
         }
+
         // 是否使用 AUTH
         if (simApiOptions.EnableSimApiAuth)
         {
@@ -199,6 +200,7 @@ public static class SimApiExtensions
 
         var logger = builder.ApplicationServices.GetRequiredService<ILogger<SimApiOptions>>();
 
+        logger.LogInformation("当前时区: {LocalId}", TimeZoneInfo.Local.Id);
         if (options.EnableForwardHeaders)
         {
             logger.LogInformation("开始配置ForwardedHeaders...");

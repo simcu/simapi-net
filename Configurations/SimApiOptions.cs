@@ -1,6 +1,6 @@
 using System;
 
-namespace SimApi.Configs;
+namespace SimApi.Configurations;
 
 public class SimApiOptions
 {
@@ -11,7 +11,7 @@ public class SimApiOptions
     public bool EnableCors { get; set; } = true;
 
     /// <summary>
-    /// 启用SimapiAuth，一个简单的基于Header Token的认证方式。
+    /// 启用SimApiAuth，一个简单的基于Header Token的认证方式。
     /// default: false
     /// </summary>
     public bool EnableSimApiAuth { get; set; } = false;

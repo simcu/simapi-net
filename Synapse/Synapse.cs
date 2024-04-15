@@ -8,7 +8,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
 using SimApi.Attributes;
 using SimApi.Communications;
-using SimApi.Configs;
+using SimApi.Configurations;
 using SimApi.Helpers;
 
 namespace SimApi;
@@ -50,6 +50,7 @@ public partial class Synapse
         {
             Logger.LogCritical("Synapse初始化失败: AppName or SysName 错误");
         }
+
         Options.AppId ??= Guid.NewGuid().ToString();
         Logger.LogInformation("System Name: {SysName}\nApp Name: {AppName}\nAppId: {AppId}", Options.SysName,
             Options.AppName, Options.AppId);
@@ -76,10 +77,12 @@ public partial class Synapse
             RunRpcClient();
             Logger.LogInformation("Rpc Client Ready, Client Timeout: {OptionsRpcTimeout}s", Options.RpcTimeout);
         }
+
         if (RpcRegistry.Count > 0)
         {
             RunRpcServer();
         }
+
         if (EventRegistry.Count > 0)
         {
             RunEventServer();
@@ -99,6 +102,7 @@ public partial class Synapse
             var data = FireRpc(appName, method, param);
             res = JsonSerializer.Deserialize<SimApiBaseResponse<T>>(data, SimApiUtil.JsonOption);
         }
+
         return res as SimApiBaseResponse<T>;
     }
 
@@ -152,12 +156,14 @@ public partial class Synapse
                 channel.BasicQos(0, processNum, false);
                 log += $"最大处理器数量: {processNum}";
             }
+
             Logger.LogInformation(log);
         }
         catch (ConnectFailureException e)
         {
             Logger.LogError("Channel [{{Desc}}] 创建失败...\n {0}", e);
         }
+
         return channel;
     }
 
@@ -173,6 +179,7 @@ public partial class Synapse
         {
             Logger.LogError("Failed to declare Exchange.\n {Err}", e);
         }
+
         channel.Close();
         Logger.LogDebug("Exchange Channel Closed");
     }
@@ -204,6 +211,7 @@ public partial class Synapse
                         });
                     }
                 }
+
                 if (method.IsDefined(typeof(SynapseRpcAttribute), false))
                 {
                     var attribute =
@@ -220,6 +228,7 @@ public partial class Synapse
                 }
             }
         }
+
         var events = EventRegistry.Aggregate(string.Empty,
             (current, ev) => current + $"\n |- {ev.Key} -> {ev.Method}@{ev.Class.Name}");
         var rpcList = RpcRegistry.Aggregate(string.Empty,

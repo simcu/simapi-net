@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Swashbuckle.AspNetCore.SwaggerUI;
 
-namespace SimApi.Configs;
+namespace SimApi.Configurations;
 
 /// <summary>
 /// 文档组配置

@@ -1,4 +1,4 @@
-namespace SimApi.Configs;
+namespace SimApi.Configurations;
 
 public class SimApiSynapseOptions
 {

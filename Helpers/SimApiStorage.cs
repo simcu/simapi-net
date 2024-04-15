@@ -2,7 +2,7 @@
 using System.IO;
 using Microsoft.AspNetCore.Http;
 using Minio;
-using SimApi.Configs;
+using SimApi.Configurations;
 
 namespace SimApi.Helpers;
 
@@ -14,7 +14,7 @@ public class SimApiStorage
 
     private string ServeUrl { get; }
 
-    public string Bucket { get; }
+    private string Bucket { get; }
 
     private IHttpContextAccessor HttpContextAccessor { get; }
 
@@ -46,6 +46,7 @@ public class SimApiStorage
         {
             mcb = mcb.WithSSL();
         }
+
         Mc = mcb.Build();
 
         var found = Mc.BucketExistsAsync(new BucketExistsArgs().WithBucket(Bucket)).Result;
