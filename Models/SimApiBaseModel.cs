@@ -7,14 +7,11 @@ namespace SimApi.Models;
 
 public class SimApiBaseModel
 {
-    [Column(Order = 1)]
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    [Column(Order = 1)] public string Id { get; set; } = Guid.NewGuid().ToString();
 
-    [Column(Order = 9998)]
-    public DateTime UpdatedAt { get; set; } = SimApiUtil.CstNow;
+    [Column(Order = 9998)] public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
-    [Column(Order = 9999)]
-    public DateTime CreatedAt { get; set; } = SimApiUtil.CstNow;
+    [Column(Order = 9999)] public DateTime CreatedAt { get; set; } = DateTime.Now;
 
     protected virtual string[] MapperIgnoreField { get; set; } = { "Id", "CreatedAt", "UpdatedAt" };
 
@@ -84,6 +81,6 @@ public class SimApiBaseModel
     /// <returns></returns>
     public void UpdateTime()
     {
-        GetType().GetProperty(UpdatedTimeField)?.SetValue(this, SimApiUtil.CstNow);
+        GetType().GetProperty(UpdatedTimeField)?.SetValue(this, DateTime.Now);
     }
 }

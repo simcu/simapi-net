@@ -7,8 +7,11 @@ namespace SimApi.Communications;
 /// <summary>
 /// 基础相应
 /// </summary>
-public record SimApiBaseResponse(int Code = 200, string Message = "成功")
+public class SimApiBaseResponse(int code = 200, string message = "成功")
 {
+    public int Code { get; set; } = code;
+    public string Message { get; set; } = message;
+
     /// <summary>
     /// 默认错误代码对应提示信息
     /// </summary>
@@ -23,7 +26,7 @@ public record SimApiBaseResponse(int Code = 200, string Message = "成功")
         { 500, "服务器错误" }
     };
 
-    public SimApiBaseResponse(int code) : this(code, MsgBox.ContainsKey(code) ? MsgBox[code] : "未知错误")
+    public SimApiBaseResponse(int code) : this(code, MsgBox.GetValueOrDefault(code, "未知错误"))
     {
     }
 
@@ -49,17 +52,19 @@ public record SimApiBaseResponse(int Code = 200, string Message = "成功")
 /// 动态内容分页
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public record SimApiBasePageResponse<T>(
-    T List,
-    int Page = 1,
-    int Count = 1,
-    int Total = 1,
-    int Code = 200,
-    string Message = "成功") : SimApiBaseResponse(Code, Message);
+public class SimApiBasePageResponse<T> : SimApiBaseResponse
+{
+    public T List { get; set; }
+    public int Page { get; set; } = 1;
+    public int Count { get; set; } = 20;
+    public int Total { get; set; }
+}
 
 /// <summary>
 /// 动态Data返回
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public record SimApiBaseResponse<T>(T Data, int Code = 200, string Message = "成功") : SimApiBaseResponse(Code,
-    Message);
+public class SimApiBaseResponse<T> : SimApiBaseResponse
+{
+    public T Data { get; set; }
+}

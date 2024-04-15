@@ -23,11 +23,12 @@ public class SimApiLogger(string name) : ILogger
             _ => ConsoleColor.White
         };
         var message =
-            $"[ {name} ][ {SimApiUtil.CstNow.ToString("yyyy-MM-dd HH:mm:ss:ffff")} ][ {logLevel.ToString()} ]\n{state}\n";
+            $"[ {name} ][ {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:ffff")} ][ {logLevel.ToString()} ]\n{state}\n";
         if (exception != null)
         {
             message += $"{exception}\n";
         }
+
         Console.WriteLine(message);
     }
 }

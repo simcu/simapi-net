@@ -28,7 +28,10 @@ public class SimApiCommonController(SimApiAuth auth) : SimApiBaseController
     public SimApiBaseResponse<string> CheckLogin()
     {
         ErrorWhenNull(LoginInfo, 401);
-        return new SimApiBaseResponse<string>(LoginInfo.Id);
+        return new SimApiBaseResponse<string>
+        {
+            Data = LoginInfo.Id
+        };
     }
 
     /// <summary>
@@ -45,7 +48,7 @@ public class SimApiCommonController(SimApiAuth auth) : SimApiBaseController
             token = value;
         }
 
-        auth.Logout(token);
+        auth.Logout(token!);
         return new SimApiBaseResponse();
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -70,5 +71,22 @@ public static class SimApiUtil
     public static string Json(object obj)
     {
         return JsonSerializer.Serialize(obj, JsonOption);
+    }
+
+    /// <summary>
+    /// 分页
+    /// </summary>
+    /// <param name="query"></param>
+    /// <param name="page">页码</param>
+    /// <param name="count">每页数量</param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public static IQueryable<T> Paginate<T>(this IQueryable<T> query, int page, int count)
+    {
+        if (page < 1)
+            page = 1;
+        if (count <= 0)
+            count = 10;
+        return query.Skip((page - 1) * count).Take(count);
     }
 }

@@ -104,6 +104,6 @@ public class SimApiBaseController : Controller
     /// <returns></returns>
     protected SimApiBaseResponse<string> UploadFile()
     {
-        return new SimApiBaseResponse<string>(null);
+        return new SimApiBaseResponse<string>();
     }
 }

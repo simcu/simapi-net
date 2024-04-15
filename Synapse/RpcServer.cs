@@ -2,10 +2,6 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Text.Unicode;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client.Events;
@@ -52,8 +48,12 @@ public partial class Synapse
                         var paramObj = JsonSerializer.Deserialize(reqBody, pt, SimApiUtil.JsonOption);
                         param = new[] { paramObj };
                     }
+
                     var ret = mt.Invoke(callClass, param);
-                    res = new SimApiBaseResponse<object>(ret);
+                    res = new SimApiBaseResponse<object>
+                    {
+                        Data = ret
+                    };
                 }
                 catch (TargetInvocationException e)
                 {
