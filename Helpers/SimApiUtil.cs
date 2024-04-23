@@ -51,16 +51,15 @@ public static class SimApiUtil
     /// <returns></returns>
     public static string Md5(string source, string mode = "x2")
     {
-        var sor = Encoding.UTF8.GetBytes(source);
-        var md5 = MD5.Create();
-        var result = md5.ComputeHash(sor);
-        var strbul = new StringBuilder(40);
+        var sourceBytes = Encoding.UTF8.GetBytes(source);
+        var result = MD5.HashData(sourceBytes);
+        var stringBuilder = new StringBuilder(40);
         foreach (var t in result)
         {
-            strbul.Append(t.ToString(mode));
+            stringBuilder.Append(t.ToString(mode));
         }
 
-        return strbul.ToString();
+        return stringBuilder.ToString();
     }
 
     /// <summary>

@@ -55,7 +55,7 @@ public class SimApiBaseController : Controller
     /// <param name="condition">检测条件</param>
     /// <param name="code">错误代码</param>
     /// <param name="message">错误描述</param>
-    protected static void ErrorWhen(bool condition, int code = 500, string message = "")
+    protected static void ErrorWhen(bool condition, int code = 400, string message = "")
     {
         if (condition)
         {
@@ -70,7 +70,7 @@ public class SimApiBaseController : Controller
     /// <param name="condition">检测条件</param>
     /// <param name="code">错误代码</param>
     /// <param name="message">错误描述</param>
-    protected static void ErrorWhenTrue(bool condition, int code = 500, string message = "")
+    protected static void ErrorWhenTrue(bool condition, int code = 400, string message = "")
     {
         ErrorWhen(condition, code, message);
     }
@@ -82,7 +82,7 @@ public class SimApiBaseController : Controller
     /// <param name="condition"></param>
     /// <param name="code"></param>
     /// <param name="message"></param>
-    protected static void ErrorWhenFalse(bool condition, int code = 500, string message = "")
+    protected static void ErrorWhenFalse(bool condition, int code = 400, string message = "")
     {
         ErrorWhen(!condition, code, message);
     }
@@ -93,7 +93,7 @@ public class SimApiBaseController : Controller
     /// <param name="condition">检测条件</param>
     /// <param name="code">错误代码</param>
     /// <param name="message">错误描述</param>
-    protected static void ErrorWhenNull(object condition, int code = 404, string message = "")
+    protected static void ErrorWhenNull(object condition, int code = 404, string message = "请求的资源不存在")
     {
         ErrorWhen(condition == null, code, message);
     }

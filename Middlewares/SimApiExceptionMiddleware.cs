@@ -24,12 +24,17 @@ public class SimApiExceptionMiddleware(RequestDelegate next, ILogger<SimApiExcep
         try
         {
             await next(context);
-            if (context.Response.StatusCode != 200)
+            switch (context.Response.StatusCode)
             {
-                if (!new[] { 301, 302 }.Contains(context.Response.StatusCode))
-                {
+                case 200:
+                    break;
+                case 404:
+                    throw new SimApiException(context.Response.StatusCode, "请求的接口不存在");
+                case 301:
+                case 302:
+                    break;
+                default:
                     throw new SimApiException(context.Response.StatusCode);
-                }
             }
         }
         catch (SimApiException ex)
@@ -42,8 +47,8 @@ public class SimApiExceptionMiddleware(RequestDelegate next, ILogger<SimApiExcep
         }
         catch (Exception ex)
         {
-            log.LogError(ex.Message);
-            log.LogError(ex.StackTrace);
+            log.LogError("{Msg}", ex.Message);
+            log.LogError("{Msg}", ex.StackTrace);
             response = new SimApiBaseResponse(500, ex.Message);
             ErrorResponse(context, response);
         }
@@ -54,13 +59,11 @@ public class SimApiExceptionMiddleware(RequestDelegate next, ILogger<SimApiExcep
     /// </summary>
     /// <param name="context"></param>
     /// <param name="response"></param>
-    private void ErrorResponse(HttpContext context, SimApiBaseResponse response)
+    private static void ErrorResponse(HttpContext context, SimApiBaseResponse response)
     {
-        if (!context.Response.HasStarted)
-        {
-            context.Response.StatusCode = 200;
-            context.Response.Headers.Append("Content-Type", "application/json");
-            context.Response.WriteAsync(response.ToString());
-        }
+        if (context.Response.HasStarted) return;
+        context.Response.StatusCode = 200;
+        context.Response.Headers.Append("Content-Type", "application/json");
+        context.Response.WriteAsync(response.ToString());
     }
 }
