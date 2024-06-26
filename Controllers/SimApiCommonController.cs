@@ -51,4 +51,10 @@ public class SimApiCommonController(SimApiAuth auth) : SimApiBaseController
         auth.Logout(token!);
         return new SimApiBaseResponse();
     }
+    
+    [HttpPost("/logined"),SimApiAuth]
+    public SimApiBaseResponse<SimApiLoginItem> UserInfo()
+    {
+        return new SimApiBaseResponse<SimApiLoginItem>(LoginInfo);
+    }
 }

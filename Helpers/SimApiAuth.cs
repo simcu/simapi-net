@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
 using SimApi.Communications;
@@ -16,11 +17,12 @@ public class SimApiAuth(IDistributedCache cache)
     /// </summary>
     /// <param name="id"></param>
     /// <param name="type"></param>
+    /// <param name="meta"></param>
     /// <param name="token"></param>
     /// <returns></returns>
-    public string Login(string id, string type = "user", string token = null)
+    public string Login(string id, Dictionary<string, string>? meta = null, string type = "user", string? token = null)
     {
-        return Login(id, new[] { type }, token);
+        return Login(id, meta, new[] { type }, token);
     }
 
     /// <summary>
@@ -28,14 +30,31 @@ public class SimApiAuth(IDistributedCache cache)
     /// </summary>
     /// <param name="id"></param>
     /// <param name="type"></param>
+    /// <param name="meta"></param>
     /// <param name="uuid"></param>
     /// <returns></returns>
-    public string Login(string id, string[] type, string uuid = null)
+    // ReSharper disable once MemberCanBePrivate.Global
+    public string Login(string id, Dictionary<string, string>? meta, string[] type, string? uuid = null)
     {
         uuid ??= Guid.NewGuid().ToString();
-        var loginItem = new SimApiLoginItem(id, type);
+        var loginItem = new SimApiLoginItem(id, type, meta);
         cache.SetString(uuid, JsonSerializer.Serialize(loginItem));
         return uuid;
+    }
+
+    /// <summary>
+    /// 设置登录的Meta信息
+    /// </summary>
+    /// <param name="token"></param>
+    /// <param name="meta"></param>
+    /// <returns></returns>
+    public bool SetMeta(string token, Dictionary<string, string> meta)
+    {
+        var login = GetLogin(token);
+        if (login == null) { return false; }
+        var newLogin = new SimApiLoginItem(login.Id, login.Type, login.Meta);
+        cache.SetString(token,JsonSerializer.Serialize(newLogin));
+        return true;
     }
 
     /// <summary>

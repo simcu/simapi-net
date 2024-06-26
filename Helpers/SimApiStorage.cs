@@ -14,7 +14,7 @@ public class SimApiStorage
 
     private string ServeUrl { get; }
 
-    private string Bucket { get; }
+    public string Bucket { get; }
 
     private IHttpContextAccessor HttpContextAccessor { get; }
 
