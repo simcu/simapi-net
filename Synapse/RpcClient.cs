@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.Encodings.Web;
 using System.Text.Json;
-using System.Text.Unicode;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Serialization;
 using RabbitMQ.Client.Events;
 using SimApi.Communications;
 using SimApi.Helpers;

@@ -3,15 +3,16 @@ using System;
 using System.IO;
 using Microsoft.AspNetCore.Http;
 using Minio;
+using Minio.DataModel.Args;
 using SimApi.Configurations;
 
 namespace SimApi.Helpers;
 
 public class SimApiStorage
 {
-    private MinioClient Mc { get; }
+    private IMinioClient Mc { get; }
 
-    public MinioClient Client => Mc;
+    public IMinioClient Client => Mc;
 
     private string ServeUrl { get; }
 

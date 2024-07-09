@@ -25,10 +25,10 @@
         <Folder Include="Exceptions\"/>
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Minio" Version="4.0.7"/>
-        <PackageReference Include="RabbitMQ.Client" Version="6.6.0"/>
-        <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.5.0"/>
-        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.5.0"/>
+        <PackageReference Include="Minio" Version="6.0.3" />
+        <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
+        <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.6.2" />
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.6.2" />
     </ItemGroup>
     <ProjectExtensions>
         <MonoDevelop>
