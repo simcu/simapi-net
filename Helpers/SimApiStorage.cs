@@ -114,8 +114,9 @@ public class SimApiStorage
     /// <exception cref="Exception"></exception>
     public string FullUrl(string path)
     {
+        if (string.IsNullOrEmpty(path)) return path;
         if(path.StartsWith("http://") || path.StartsWith("https://")) return path;
-        if (!(path.StartsWith('/') || path.StartsWith("~/"))) throw new Exception("path must start with / or ~/");
+        if (!(path.StartsWith('/') || path.StartsWith("~/"))) return path;
         var httpRequest = HttpContextAccessor.HttpContext?.Request;
         var url = $"{httpRequest?.Scheme}://{httpRequest?.Host}";
         if (string.IsNullOrEmpty(path))
