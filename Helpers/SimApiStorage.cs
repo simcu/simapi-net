@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.IO;
 using Microsoft.AspNetCore.Http;
 using Minio;
@@ -14,6 +15,8 @@ public class SimApiStorage
 
     private string ServeUrl { get; }
 
+    private string Endpoint { get; }
+
     public string Bucket { get; }
 
     private IHttpContextAccessor HttpContextAccessor { get; }
@@ -22,6 +25,7 @@ public class SimApiStorage
     {
         var options = apiOptions.SimApiStorageOptions;
         HttpContextAccessor = httpContextAccessor;
+        Endpoint = options.Endpoint;
         var useSsl = false;
         string endpoint;
         if (options.Endpoint.StartsWith("http://"))
@@ -39,6 +43,7 @@ public class SimApiStorage
         }
 
         ServeUrl = options.ServeUrl;
+        if (ServeUrl.EndsWith('/')) throw new Exception("SimApiStorage: ServeUrl must not end with /");
         Bucket = options.Bucket;
         var mcb = new MinioClient().WithEndpoint(endpoint)
             .WithCredentials(options.AccessKey, options.SecretKey);
@@ -62,10 +67,13 @@ public class SimApiStorage
     /// <param name="path"></param>
     /// <param name="expire"></param>
     /// <returns></returns>
-    public string GetUploadUrl(string path, int expire = 7200)
+    public GetUploadUrlResponse GetUploadUrl(string path, int expire = 7200)
     {
-        return Mc.PresignedPutObjectAsync(new PresignedPutObjectArgs().WithBucket(Bucket)
-            .WithObject(path).WithExpiry(expire)).Result;
+        CheckPath(path);
+        var obj = path.TrimStart('/');
+        var uploadUrl = Mc.PresignedPutObjectAsync(new PresignedPutObjectArgs().WithBucket(Bucket)
+            .WithObject(obj).WithExpiry(expire)).Result;
+        return new GetUploadUrlResponse(uploadUrl, $"{ServeUrl}{path}", path);
     }
 
     /// <summary>
@@ -76,20 +84,37 @@ public class SimApiStorage
     /// <returns></returns>
     public string GetDownloadUrl(string path, int expire = 600)
     {
+        CheckPath(path);
+        path = path.TrimStart('/');
         return Mc.PresignedGetObjectAsync(new PresignedGetObjectArgs().WithBucket(Bucket).WithObject(path)
             .WithExpiry(expire)).Result;
     }
 
 
-    public string UploadFile(string path, Stream stream, string contentType = "image/png")
+    /// <summary>
+    /// 直接上传文件
+    /// </summary>
+    /// <param name="path"></param>
+    /// <param name="stream"></param>
+    /// <param name="contentType"></param>
+    public void UploadFile(string path, Stream stream, string contentType = "image/png")
     {
+        CheckPath(path);
+        path = path.TrimStart('/');
         Mc.PutObjectAsync(new PutObjectArgs().WithBucket(Bucket).WithObject(path).WithObjectSize(stream.Length)
             .WithStreamData(stream).WithContentType(contentType)).Wait();
-        return null;
     }
 
+    /// <summary>
+    /// 使用path获取完整的访问URL
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
     public string FullUrl(string path)
     {
+        if(path.StartsWith("http://") || path.StartsWith("https://")) return path;
+        if (!(path.StartsWith('/') || path.StartsWith("~/"))) throw new Exception("path must start with / or ~/");
         var httpRequest = HttpContextAccessor.HttpContext?.Request;
         var url = $"{httpRequest?.Scheme}://{httpRequest?.Host}";
         if (string.IsNullOrEmpty(path))
@@ -99,4 +124,21 @@ public class SimApiStorage
 
         return path.StartsWith('~') ? string.Concat(url, path.AsSpan(1, path.Length - 1)) : $"{ServeUrl}{path}";
     }
+
+    /// <summary>
+    /// 从URL中获取相对路径 (如果url不是当前服务器的url,则原样返回)
+    /// </summary>
+    /// <param name="url"></param>
+    /// <returns></returns>
+    public string? GetPath(string? url)
+    {
+        return url?.Replace(Endpoint, string.Empty);
+    }
+
+    private void CheckPath(string path)
+    {
+        if (!path.StartsWith('/')) throw new Exception("path must start with /");
+    }
 }
+
+public record GetUploadUrlResponse(string UploadUrl, string DownloadUrl, string Path);
