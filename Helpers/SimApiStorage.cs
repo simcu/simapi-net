@@ -128,6 +128,27 @@ public class SimApiStorage
     }
 
     /// <summary>
+    /// 获取一个Path得访问URL
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    public string? GetUrl(string? path)
+    {
+        if (string.IsNullOrEmpty(path)) return path;
+        if (path.StartsWith("~/"))
+        {
+            var httpRequest = HttpContextAccessor.HttpContext?.Request;
+            var url = $"{httpRequest?.Scheme}://{httpRequest?.Host}";
+            return string.Concat(url, path.AsSpan(1, path.Length - 1));
+        }
+        if (path.StartsWith('/'))
+        {
+            return $"{ServeUrl}{path}";
+        }
+        return path;
+    }
+
+    /// <summary>
     /// 从URL中获取相对路径 (如果url不是当前服务器的url,则原样返回)
     /// </summary>
     /// <param name="url"></param>
