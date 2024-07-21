@@ -155,7 +155,7 @@ public class SimApiStorage
     /// <returns></returns>
     public string? GetPath(string? url)
     {
-        return url?.Replace($"{Endpoint}/{Bucket}", string.Empty);
+        return url?.Replace($"{Endpoint}/{Bucket}", string.Empty).Replace(ServeUrl,string.Empty);
     }
 
     private void CheckPath(string path)
