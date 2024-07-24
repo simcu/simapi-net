@@ -13,7 +13,7 @@ public class SimApiLogger(string name) : ILogger
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception,
         Func<TState, Exception, string> formatter)
     {
-        Console.ForegroundColor = logLevel switch
+        var color = logLevel switch
         {
             LogLevel.Debug => ConsoleColor.DarkMagenta,
             LogLevel.Information => ConsoleColor.DarkCyan,
@@ -29,6 +29,6 @@ public class SimApiLogger(string name) : ILogger
             message += $"{exception}\n";
         }
 
-        Console.WriteLine(message);
+        Console.WriteLine(message, color);
     }
 }
