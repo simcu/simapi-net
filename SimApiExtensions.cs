@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using SimApi.Middlewares;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SimApi.Configurations;
 using SimApi.Logger;
@@ -186,6 +187,35 @@ public static class SimApiExtensions
         }
 
         builder.AddSingleton(simApiOptions);
+        return builder;
+    }
+
+    public static IHost UseSimApi(this IHost builder)
+    {
+       var options = builder.Services.GetRequiredService<SimApiOptions>();
+
+        var logger = builder.Services.GetRequiredService<ILogger<SimApiOptions>>();
+
+        logger.LogInformation("当前时区: {LocalId}", TimeZoneInfo.Local.Id);
+        
+        //请求一下检测存储错误
+        if (options.EnableSimApiStorage)
+        {
+            logger.LogInformation("开始配置SimApiStorage...");
+            builder.Services.GetService<SimApiStorage>();
+        }
+
+        if (options.EnableLowerUrl)
+        {
+            logger.LogInformation("开始配置使用URL小写...");
+        }
+
+        if (options.EnableSynapse)
+        {
+            var synapse = builder.Services.GetRequiredService<Synapse>();
+            synapse.Init();
+        }
+
         return builder;
     }
 

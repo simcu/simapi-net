@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Exceptions;
+using MQTTnet;
+using MQTTnet.Client;
+using MQTTnet.Formatter;
 using SimApi.Attributes;
 using SimApi.Communications;
 using SimApi.Configurations;
@@ -13,69 +16,51 @@ using SimApi.Helpers;
 
 namespace SimApi;
 
-public partial class Synapse
+public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logger, IServiceProvider sp)
 {
-    private IServiceProvider Sp { get; }
+    private IServiceProvider Sp { get; } = sp;
 
-    private SimApiSynapseOptions Options { get; }
+    private SimApiSynapseOptions Options { get; } = simApiOptions.SimApiSynapseOptions;
 
-    private ILogger<Synapse> Logger { get; }
-
-    private IConnection Connection { get; set; }
-
-    private IModel EventClientChannel { get; set; }
-
-    private IModel EventServerChannel { get; set; }
-
-    private IModel RpcClientChannel { get; set; }
-
-    private IModel RpcServerChannel { get; set; }
+    private MqttFactory MqttFactory { get; } = new();
+    public IMqttClient Client { get; set; }
 
     private List<RegisterItem> EventRegistry { get; set; }
 
     private List<RegisterItem> RpcRegistry { get; set; }
 
-    public Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logger, IServiceProvider sp)
-    {
-        Logger = logger;
-        Sp = sp;
-        Options = simApiOptions.SimApiSynapseOptions;
-    }
-
     public void Init()
     {
         ProcessAttribute();
-        Logger.LogDebug("Synapse初始化配置信息: {Json}", SimApiUtil.Json(Options));
+        logger.LogDebug("Synapse初始化配置信息: {Json}", SimApiUtil.Json(Options));
         if (string.IsNullOrEmpty(Options.AppName) || string.IsNullOrEmpty(Options.SysName))
         {
-            Logger.LogCritical("Synapse初始化失败: AppName or SysName 错误");
+            logger.LogCritical("Synapse初始化失败:  AppName 和 SysName 不能为空");
         }
 
         Options.AppId ??= Guid.NewGuid().ToString();
-        Logger.LogInformation("System Name: {SysName}\nApp Name: {AppName}\nAppId: {AppId}", Options.SysName,
-            Options.AppName, Options.AppId);
+        logger.LogInformation("Synapse Sys Name: {SysName}\nSynapse App Name: {AppName}\nSynapse App Id: {AppId}",
+            Options.SysName, Options.AppName, Options.AppId);
         CreateConnection();
-        CheckAndCreateExchange();
         //事件客户端
         if (Options.DisableEventClient)
         {
-            Logger.LogWarning("Event Client Disabled: DisableEventClient set true");
+            logger.LogWarning("Synapse Event Client Disabled: DisableEventClient set true");
         }
         else
         {
-            RunEventClient();
-            Logger.LogInformation("Event Client Ready");
+            logger.LogInformation("Synapse Event Client Ready");
         }
 
         //RPC客户端
         if (Options.DisableRpcClient)
         {
-            Logger.LogWarning("Rpc Client Disabled: DisableEventClient set true");
+            logger.LogWarning("Synapse Rpc Client Disabled: DisableEventClient set true");
         }
         else
         {
             RunRpcClient();
-            Logger.LogInformation("Rpc Client Ready, Client Timeout: {OptionsRpcTimeout}s", Options.RpcTimeout);
+            logger.LogInformation("Synapse Rpc Client Ready, Client Timeout: {OptionsRpcTimeout}s", Options.RpcTimeout);
         }
 
         if (RpcRegistry.Count > 0)
@@ -92,10 +77,10 @@ public partial class Synapse
 
     public SimApiBaseResponse<T> Rpc<T>(string appName, string method, dynamic param)
     {
-        var res = new SimApiBaseResponse(500, "Rpc Client Disabled!");
+        var res = new SimApiBaseResponse(500, "Synapse Rpc Client Disabled!");
         if (Options.DisableRpcClient)
         {
-            Logger.LogError("Rpc Client Disabled!");
+            logger.LogError("Synapse Rpc Client Disabled!");
         }
         else
         {
@@ -115,7 +100,7 @@ public partial class Synapse
     {
         if (Options.DisableEventClient)
         {
-            Logger.LogError("Event Client Disabled!");
+            logger.LogError("Synapse Event Client Disabled!");
         }
         else
         {
@@ -125,73 +110,43 @@ public partial class Synapse
 
     private void CreateConnection()
     {
-        var factory = new ConnectionFactory
+        Client = MqttFactory.CreateMqttClient();
+        var clientOpts = new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500)
+            .WithWebSocketServer(o => o.WithUri(Options.Websocket))
+            .WithCredentials(Options.Username, Options.Password)
+            .WithClientId($"{Options.AppName}:{Options.AppId}")
+            .Build();
+        Client!.ConnectAsync(clientOpts, CancellationToken.None).Wait();
+        Client.ConnectedAsync += _ =>
         {
-            HostName = Options.MqHost,
-            Port = Options.MqPort,
-            VirtualHost = Options.MqVHost,
-            UserName = Options.MqUser,
-            Password = Options.MqPass
+            logger.LogInformation("Synapse MQTT[{AppName}:{AppId}] 连接成功...", Options.AppName, Options.AppId);
+            return Task.CompletedTask;
         };
-        try
+        //重连
+        Client.DisconnectedAsync += async _ =>
         {
-            Connection = factory.CreateConnection();
-            Logger.LogInformation("连接RabbitMQ服务器成功");
-        }
-        catch (BrokerUnreachableException e)
-        {
-            Logger.LogError("连接RabbitMQ失败: \n{Err}", e);
-        }
-    }
-
-    private IModel CreateChannel(ushort processNum = 0, string desc = "unknow")
-    {
-        IModel channel = null;
-        try
-        {
-            var log = $"Channel [{desc}] 创建成功...";
-            channel = Connection.CreateModel();
-            if (processNum != 0)
+            logger.LogError("Synapse MQTT[{AppName}:{AppId}] 断开连接,开始重连...", Options.AppName, Options.AppId);
+            await Task.Delay(TimeSpan.FromSeconds(5));
+            try
             {
-                channel.BasicQos(0, processNum, false);
-                log += $"最大处理器数量: {processNum}";
+                logger.LogInformation("Synapse MQTT[{AppName}:{AppId}] 开始连接MQTT服务器...", Options.AppName, Options.AppId);
+                Client.ConnectAsync(clientOpts).Wait();
             }
-
-            Logger.LogInformation(log);
-        }
-        catch (ConnectFailureException e)
-        {
-            Logger.LogError("Channel [{{Desc}}] 创建失败...\n {0}", e);
-        }
-
-        return channel;
-    }
-
-    private void CheckAndCreateExchange()
-    {
-        var channel = CreateChannel(0, "Exchange");
-        try
-        {
-            channel.ExchangeDeclare(Options.SysName, ExchangeType.Topic, true, true, null);
-            Logger.LogDebug("Register Exchange Success");
-        }
-        catch (ConnectFailureException e)
-        {
-            Logger.LogError("Failed to declare Exchange.\n {Err}", e);
-        }
-
-        channel.Close();
-        Logger.LogDebug("Exchange Channel Closed");
+            catch
+            {
+                logger.LogError("Synapse MQTT[{AppName}:{AppId}] 重连失败...", Options.AppName, Options.AppId);
+            }
+        };
     }
 
     private void ProcessAttribute()
     {
-        EventRegistry = new List<RegisterItem>();
-        RpcRegistry = new List<RegisterItem>();
+        EventRegistry = [];
+        RpcRegistry = [];
         var stackTrace = new StackTrace();
-        var callingMethod = stackTrace.GetFrame(stackTrace.FrameCount - 1).GetMethod();
-        var assembly = callingMethod.DeclaringType.Assembly;
-        var types = assembly.GetTypes(); // 获取程序集中的所有类型
+        var callingMethod = stackTrace.GetFrame(stackTrace.FrameCount - 1)?.GetMethod();
+        var assembly = callingMethod?.DeclaringType?.Assembly;
+        var types = assembly!.GetTypes(); // 获取程序集中的所有类型
         foreach (var type in types)
         {
             var methods = type.GetMethods(); // 获取类型中的所有方法
@@ -233,15 +188,16 @@ public partial class Synapse
             (current, ev) => current + $"\n |- {ev.Key} -> {ev.Method}@{ev.Class.Name}");
         var rpcList = RpcRegistry.Aggregate(string.Empty,
             (current, ev) => current + $"\n |- {ev.Key} -> {ev.Method}@{ev.Class.Name}");
-        Logger.LogInformation(">>> Synapse System 读取Event方法:{Event}\n>>>Synapse System 读取RPC方法:{Rpc}", events, rpcList);
+        if (EventRegistry.Count > 0) logger.LogInformation(">>> Synapse System 读取Event方法:{Event}", events);
+        if (RpcRegistry.Count > 0) logger.LogInformation(">>> Synapse System 读取RPC方法:{Rpc}", rpcList);
     }
 }
 
 public class RegisterItem
 {
-    public string Key { get; set; }
+    public string Key { get; init; }
 
-    public Type Class { get; set; }
+    public Type Class { get; init; }
 
-    public string Method { get; set; }
+    public string Method { get; init; }
 }

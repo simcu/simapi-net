@@ -2,27 +2,21 @@ namespace SimApi.Configurations;
 
 public class SimApiSynapseOptions
 {
-    public string MqHost { get; set; }
+    /// <summary>
+    /// Mqtt服务器的Websocket地址
+    /// </summary>
+    public string Websocket { get; set; }
 
-    public int MqPort { get; set; }
+    public string Username { get; set; }
 
-    public string MqUser { get; set; }
-
-    public string MqPass { get; set; }
-
-    public string MqVHost { get; set; } = "/";
+    public string Password { get; set; }
 
     public string SysName { get; set; }
-
     public string AppName { get; set; }
 
     public string AppId { get; set; }
 
     public int RpcTimeout { get; set; } = 3;
-
-    public ushort EventProcessorNum { get; set; } = 20;
-
-    public ushort RpcProcessorNum { get; set; } = 20;
 
     public bool DisableEventClient { get; set; } = false;
 
