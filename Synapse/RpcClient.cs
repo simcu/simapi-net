@@ -12,7 +12,7 @@ namespace SimApi;
 
 public partial class Synapse
 {
-    private Dictionary<string, string> ResponseCache { get; } = new();
+    private Dictionary<string, TaskCompletionSource<string>> ResponseCompletionSources { get; } = new();
 
     private void RunRpcClient()
     {
@@ -24,8 +24,9 @@ public partial class Synapse
             if (!e.ApplicationMessage.Topic.StartsWith(rcTopic)) return Task.CompletedTask;
             var reqBody = e.ApplicationMessage.ConvertPayloadToString();
             var messageId = e.ApplicationMessage.Topic.Replace(rcTopic, string.Empty);
-            ResponseCache.Add(messageId, reqBody);
-            logger.LogDebug("Synapse RPC Client Message: ({BasicPropertiesCorrelationId}) => {S}", messageId, reqBody);
+            if (!ResponseCompletionSources.TryGetValue(messageId, out var tcs)) return Task.CompletedTask;
+            tcs.SetResult(reqBody);
+            ResponseCompletionSources.Remove(messageId);
             return Task.CompletedTask;
         };
         Client.SubscribeAsync(rcSubOpts).Wait();
@@ -34,9 +35,10 @@ public partial class Synapse
     private string FireRpc(string app, string action, object param)
     {
         var paramJson = JsonSerializer.Serialize(param, SimApiUtil.JsonOption);
-        string response;
         var topic = $"{Options.SysName}/{app}/rpc/server/{action}";
         var messageId = Guid.NewGuid().ToString();
+        var tcs = new TaskCompletionSource<string>();
+        ResponseCompletionSources.Add(messageId, tcs);
         var message = new MqttApplicationMessageBuilder()
             .WithTopic(topic)
             .WithPayload(paramJson)
@@ -47,24 +49,28 @@ public partial class Synapse
         if (!Client!.IsConnected) return null;
         Client!.PublishAsync(message, CancellationToken.None).Wait();
         logger.LogDebug(
-            "Synapse RPC Client Request: ({PropsMessageId}) {OptionsAppName} -> {Action}@{App}\n{ParamJson}",
-            messageId, Options.AppName, action, app, paramJson);
-        var ts = SimApiUtil.TimestampNow;
-        while (true)
+            "Synapse RPC Client Request: ({PropsMessageId}) {OptionsAppName} -> {Action}@{App}\n{ParamJson}", messageId,
+            Options.AppName, action, app, paramJson);
+
+        string response;
+        try
         {
-            if (SimApiUtil.TimestampNow - ts > Options.RpcTimeout)
+            if (tcs.Task.Wait(Options.RpcTimeout * 1000))
+            {
+                response = tcs.Task.Result;
+                logger.LogDebug(
+                    "Synapse RPC Client Response: ({BasicPropertiesCorrelationId}) {BasicPropertiesType}@{BasicPropertiesReplyTo} -> {OptionsAppName}\n{S}",
+                    messageId, action, app, Options.AppName, response);
+            }
+            else
             {
                 response = JsonSerializer.Serialize(new SimApiBaseResponse(502, "timeout"), SimApiUtil.JsonOption);
-                break;
             }
-
-            if (!ResponseCache.TryGetValue(messageId, out var value)) continue;
-            response = value;
-            ResponseCache.Remove(messageId);
-            logger.LogDebug(
-                "Synapse RPC Client Response: ({BasicPropertiesCorrelationId}) {BasicPropertiesType}@{BasicPropertiesReplyTo} -> {OptionsAppName}\n{S}",
-                messageId, action, app, Options.AppName, response);
-            break;
+        }
+        catch
+        {
+            response = JsonSerializer.Serialize(new SimApiBaseResponse(500, "Synapse RPC Client Error"),
+                SimApiUtil.JsonOption);
         }
 
         return response;
