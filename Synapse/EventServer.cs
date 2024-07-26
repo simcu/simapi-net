@@ -33,7 +33,7 @@ public partial class Synapse
                 {
                     if (mt!.GetParameters().Length == 2)
                     {
-                        var pt = mt!.GetParameters()[0].ParameterType;
+                        var pt = mt.GetParameters()[1].ParameterType;
                         mt.Invoke(callClass, pt == typeof(string)
                             ? [eventName, reqBody]
                             : [eventName, JsonSerializer.Deserialize(reqBody, pt, SimApiUtil.JsonOption)]);
@@ -45,7 +45,7 @@ public partial class Synapse
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError("Synapse Event Processor Error: {Err}", ex.InnerException);
+                    logger.LogError("Synapse Event Processor Error: {Err}\n{Stack}", ex.Message,ex.StackTrace);
                 }
             }
 

@@ -224,11 +224,11 @@ public static class SimApiExtensions
     /// </summary>
     /// <param name="builder"></param>
     /// <returns></returns>
-    public static IApplicationBuilder UseSimApi(this IApplicationBuilder builder)
+    public static WebApplication UseSimApi(this WebApplication builder)
     {
-        var options = builder.ApplicationServices.GetRequiredService<SimApiOptions>();
+        var options = builder.Services.GetRequiredService<SimApiOptions>();
 
-        var logger = builder.ApplicationServices.GetRequiredService<ILogger<SimApiOptions>>();
+        var logger = builder.Services.GetRequiredService<ILogger<SimApiOptions>>();
 
         logger.LogInformation("当前时区: {LocalId}", TimeZoneInfo.Local.Id);
         if (options.EnableForwardHeaders)
@@ -277,7 +277,7 @@ public static class SimApiExtensions
         if (options.EnableSimApiStorage)
         {
             logger.LogInformation("开始配置SimApiStorage...");
-            builder.ApplicationServices.GetService<SimApiStorage>();
+            builder.Services.GetService<SimApiStorage>();
         }
 
         if (options.EnableLowerUrl)
@@ -287,7 +287,7 @@ public static class SimApiExtensions
 
         if (options.EnableSynapse)
         {
-            var synapse = builder.ApplicationServices.GetRequiredService<Synapse>();
+            var synapse = builder.Services.GetRequiredService<Synapse>();
             synapse.Init();
         }
 
