@@ -10,7 +10,7 @@ public class SimApiLogger(string name) : ILogger
 
     public bool IsEnabled(LogLevel logLevel) => true;
 
-    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception,
+    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
         Func<TState, Exception, string> formatter)
     {
         Console.ForegroundColor = logLevel switch
@@ -23,7 +23,7 @@ public class SimApiLogger(string name) : ILogger
             _ => ConsoleColor.White
         };
         var message =
-            $"[ {name} ][ {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:ffff")} ][ {logLevel.ToString()} ]\n{state}\n";
+            $"[ {name} ][ {DateTime.Now:yyyy-MM-dd HH:mm:ss:ffff} ][ {logLevel.ToString()} ]\n{state}\n";
         if (exception != null)
         {
             message += $"{exception}\n";

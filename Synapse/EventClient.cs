@@ -8,18 +8,26 @@ namespace SimApi;
 
 public partial class Synapse
 {
-    private bool FireEvent(string eventName, object param, bool retain = false)
+    private bool FireEvent(string eventName, object? param)
     {
-        var paramJson = JsonSerializer.Serialize(param, SimApiUtil.JsonOption);
-        var topic = $"{Options.SysName}/{Options.AppName}/event/{eventName}";
+        string paramJson;
+        if (param is string strParam)
+        {
+            paramJson = strParam;
+        }
+        else
+        {
+            paramJson  = JsonSerializer.Serialize(param, SimApiUtil.JsonOption);
+        }
+        var topic = $"{Options.SysName}/event/{Options.AppName}/{eventName}";
         var message = new MqttApplicationMessageBuilder()
             .WithTopic(topic)
             .WithPayload(paramJson)
-            .WithRetainFlag(retain)
+            .WithRetainFlag(false)
             .Build();
         if (!Client!.IsConnected) return false;
-        Client!.PublishAsync(message, CancellationToken.None).Wait();
-        logger.LogDebug("Event Publish: {Event}@{App} {Json}", eventName, Options.AppName, paramJson);
+        Client.PublishAsync(message, CancellationToken.None).Wait();
+        logger.LogDebug("Synapse Event Publish: {Event}@{App} {Json}", eventName, Options.AppName, paramJson);
         return true;
     }
 }

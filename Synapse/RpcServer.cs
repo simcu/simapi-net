@@ -23,7 +23,7 @@ public partial class Synapse
             .WithTopicFilter(o =>
                 o.WithTopic($"$queue/{rsTopicPrefix}+").WithRetainHandling(MqttRetainHandling.SendAtSubscribe))
             .Build();
-        Client.ApplicationMessageReceivedAsync += e =>
+        Client!.ApplicationMessageReceivedAsync += e =>
         {
             if (!e.ApplicationMessage.Topic.StartsWith(rsTopicPrefix)) return Task.CompletedTask;
             var reqBody = e.ApplicationMessage.ConvertPayloadToString();
@@ -33,19 +33,29 @@ public partial class Synapse
                 "Synapse RPC Server Receive: ({BasicPropertiesMessageId}) {BasicPropertiesReplyTo} -> {BasicPropertiesType}@{OptionsAppName}\n{S}",
                 e.ApplicationMessage.ContentType, appInfo[0], action, Options.AppName,
                 reqBody);
-            var res = new SimApiBaseResponse(404, "method not found");
+            SimApiBaseResponse res;
             var method = RpcRegistry.FirstOrDefault(x => x.Key == action);
             if (method == null) return Task.CompletedTask;
-            var callClass = Sp.CreateScope().ServiceProvider.GetRequiredService(method.Class);
-            var mt = callClass.GetType().GetMethod(method.Method);
+            var callClass = sp.CreateScope().ServiceProvider.GetRequiredService(method.Class!);
+            var mt = callClass.GetType().GetMethod(method.Method!);
             try
             {
-                var pt = mt!.GetParameters()[0].ParameterType;
-                var param = pt == typeof(string)
-                    ? [reqBody]
-                    : new[] { JsonSerializer.Deserialize(reqBody, pt, SimApiUtil.JsonOption) };
-                var ret = mt.Invoke(callClass, param);
-                res = new SimApiBaseResponse<object>
+                var methodParams = mt!.GetParameters();
+                object? ret;
+                if (methodParams.Length == 0)
+                {
+                    ret = mt.Invoke(callClass, []);
+                }
+                else
+                {
+                    var pt = mt.GetParameters()[0].ParameterType;
+                    var param = pt == typeof(string)
+                        ? [reqBody]
+                        : new[] { JsonSerializer.Deserialize(reqBody, pt, SimApiUtil.JsonOption) };
+                    ret = mt.Invoke(callClass, param);
+                }
+
+                res = new SimApiBaseResponse<object?>
                 {
                     Data = ret
                 };
@@ -67,6 +77,7 @@ public partial class Synapse
                 logger.LogDebug("Synapse RPC调用失败: {Err}", ex.Message);
                 res = new SimApiBaseResponse(500, ex.Message);
             }
+
             var returnJson = JsonSerializer.Serialize((object)res, SimApiUtil.JsonOption);
             var reply = $"{Options.SysName}/{appInfo[0]}/rpc/client/{appInfo[1]}/{e.ApplicationMessage.ContentType}";
             var message = new MqttApplicationMessageBuilder()
@@ -74,8 +85,8 @@ public partial class Synapse
                 .WithPayload(returnJson)
                 .WithRetainFlag(false)
                 .Build();
-            if (!Client!.IsConnected) return Task.CompletedTask;
-            Client!.PublishAsync(message, CancellationToken.None).Wait();
+            if (!Client.IsConnected) return Task.CompletedTask;
+            Client.PublishAsync(message, CancellationToken.None).Wait();
             logger.LogDebug(
                 "Synapse Rpc Server Return: ({BasicPropertiesMessageId}) {BasicPropertiesType}@{OptionsAppName} -> {BasicPropertiesReplyTo}\n{ReturnJson}",
                 e.ApplicationMessage.ContentType, action, Options.AppName, appInfo[0], returnJson);

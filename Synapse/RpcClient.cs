@@ -19,7 +19,7 @@ public partial class Synapse
         var rcTopic = $"{Options.SysName}/{Options.AppName}/rpc/client/{Options.AppId}/";
         var rcSubOpts = MqttFactory.CreateSubscribeOptionsBuilder()
             .WithTopicFilter(o => o.WithTopic($"{rcTopic}+")).Build();
-        Client.ApplicationMessageReceivedAsync += e =>
+        Client!.ApplicationMessageReceivedAsync += e =>
         {
             if (!e.ApplicationMessage.Topic.StartsWith(rcTopic)) return Task.CompletedTask;
             var reqBody = e.ApplicationMessage.ConvertPayloadToString();
@@ -32,9 +32,18 @@ public partial class Synapse
         Client.SubscribeAsync(rcSubOpts).Wait();
     }
 
-    private string FireRpc(string app, string action, object param)
+    private string? FireRpc(string app, string action, object? param)
     {
-        var paramJson = JsonSerializer.Serialize(param, SimApiUtil.JsonOption);
+        string paramJson;
+        if (param is string strParam)
+        {
+            paramJson = strParam;
+        }
+        else
+        {
+            paramJson = JsonSerializer.Serialize(param, SimApiUtil.JsonOption);
+        }
+
         var topic = $"{Options.SysName}/{app}/rpc/server/{action}";
         var messageId = Guid.NewGuid().ToString();
         var tcs = new TaskCompletionSource<string>();
@@ -47,7 +56,7 @@ public partial class Synapse
             .WithRetainFlag(false)
             .Build();
         if (!Client!.IsConnected) return null;
-        Client!.PublishAsync(message, CancellationToken.None).Wait();
+        Client.PublishAsync(message, CancellationToken.None).Wait();
         logger.LogDebug(
             "Synapse RPC Client Request: ({PropsMessageId}) {OptionsAppName} -> {Action}@{App}\n{ParamJson}", messageId,
             Options.AppName, action, app, paramJson);

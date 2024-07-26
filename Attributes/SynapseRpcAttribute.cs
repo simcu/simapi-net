@@ -5,7 +5,7 @@ namespace SimApi.Attributes;
 [AttributeUsage(AttributeTargets.Method)]
 public class SynapseRpcAttribute : Attribute
 {
-    public string Name { get; }
+    public string? Name { get; }
 
     public SynapseRpcAttribute()
     {

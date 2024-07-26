@@ -20,7 +20,7 @@ public class SimApiBaseModel
     public void MapData<TS>(TS source, bool mapAll = false)
     {
         //获取要赋值的源数据不为null的项目
-        var sourceProps = source.GetType().GetProperties().Where(x => x.GetValue(source) != null)
+        var sourceProps = source!.GetType().GetProperties().Where(x => x.GetValue(source) != null)
             .Select(x => new
             {
                 x.Name,
@@ -49,7 +49,7 @@ public class SimApiBaseModel
     public void MapData<TS>(TS source, string[] mapFields)
     {
         //获取要赋值的源数据不为null的项目
-        var sourceProps = source.GetType().GetProperties().Where(x => x.GetValue(source) != null)
+        var sourceProps = source!.GetType().GetProperties().Where(x => x.GetValue(source) != null)
             .Select(x => new
             {
                 x.Name,

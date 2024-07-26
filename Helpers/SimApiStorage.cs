@@ -26,10 +26,10 @@ public class SimApiStorage
     {
         var options = apiOptions.SimApiStorageOptions;
         HttpContextAccessor = httpContextAccessor;
-        Endpoint = options.Endpoint;
+        Endpoint = options.Endpoint!;
         var useSsl = false;
         string endpoint;
-        if (options.Endpoint.StartsWith("http://"))
+        if (options.Endpoint!.StartsWith("http://"))
         {
             endpoint = options.Endpoint.Replace("http://", string.Empty);
         }
@@ -43,9 +43,9 @@ public class SimApiStorage
             throw new Exception("SimApiStorage: Error Endpoint");
         }
 
-        ServeUrl = options.ServeUrl;
+        ServeUrl = options.ServeUrl!;
         if (ServeUrl.EndsWith('/')) throw new Exception("SimApiStorage: ServeUrl must not end with /");
-        Bucket = options.Bucket;
+        Bucket = options.Bucket!;
         var mcb = new MinioClient().WithEndpoint(endpoint)
             .WithCredentials(options.AccessKey, options.SecretKey);
         if (useSsl)

@@ -18,7 +18,7 @@ public class SimApiBaseController : Controller
     /// <summary>
     /// 当前登录用户的ID
     /// </summary>
-    protected SimApiLoginItem LoginInfo => (SimApiLoginItem)HttpContext.Items["LoginInfo"];
+    protected SimApiLoginItem LoginInfo => (SimApiLoginItem)HttpContext.Items["LoginInfo"]!;
 
     /// <summary>
     /// 验证请求参数
@@ -93,7 +93,7 @@ public class SimApiBaseController : Controller
     /// <param name="condition">检测条件</param>
     /// <param name="code">错误代码</param>
     /// <param name="message">错误描述</param>
-    protected static void ErrorWhenNull(object condition, int code = 404, string message = "请求的资源不存在")
+    protected static void ErrorWhenNull(object? condition, int code = 404, string message = "请求的资源不存在")
     {
         ErrorWhen(condition == null, code, message);
     }

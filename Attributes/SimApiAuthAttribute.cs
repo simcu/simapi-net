@@ -43,7 +43,7 @@ public class SimApiAuthAttribute : ActionFilterAttribute
 
     public override void OnActionExecuting(ActionExecutingContext context)
     {
-        var loginInfo = (SimApiLoginItem)context.HttpContext.Items["LoginInfo"];
+        var loginInfo = (SimApiLoginItem)context.HttpContext.Items["LoginInfo"]!;
         //检测是否登录
         if (loginInfo == null)
         {

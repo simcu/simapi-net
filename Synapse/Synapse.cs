@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MQTTnet;
 using MQTTnet.Client;
@@ -18,20 +19,17 @@ namespace SimApi;
 
 public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logger, IServiceProvider sp)
 {
-    private IServiceProvider Sp { get; } = sp;
-
     private SimApiSynapseOptions Options { get; } = simApiOptions.SimApiSynapseOptions;
 
     private MqttFactory MqttFactory { get; } = new();
-    public IMqttClient Client { get; set; }
+    public IMqttClient? Client { get; set; }
 
-    private List<RegisterItem> EventRegistry { get; set; }
+    private List<RegisterItem> EventRegistry { get; set; } = new();
 
-    private List<RegisterItem> RpcRegistry { get; set; }
+    private List<RegisterItem> RpcRegistry { get; set; } = new();
 
     public void Init()
     {
-        ProcessAttribute();
         logger.LogDebug("Synapse初始化配置信息: {Json}", SimApiUtil.Json(Options));
         if (string.IsNullOrEmpty(Options.AppName) || string.IsNullOrEmpty(Options.SysName))
         {
@@ -42,6 +40,7 @@ public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logge
         logger.LogInformation("Synapse Sys Name: {SysName}\nSynapse App Name: {AppName}\nSynapse App Id: {AppId}",
             Options.SysName, Options.AppName, Options.AppId);
         CreateConnection();
+        ProcessAttribute();
         //事件客户端
         if (Options.DisableEventClient)
         {
@@ -72,10 +71,24 @@ public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logge
         {
             RunEventServer();
         }
+
+        if (Options.EnableConfigStore)
+        {
+            RunConfigStoreServer();
+            logger.LogInformation("Synapse Config Store Ready [{SysName}] ...", Options.SysName);
+        }
     }
 
 
-    public SimApiBaseResponse<T> Rpc<T>(string appName, string method, dynamic param)
+    /// <summary>
+    /// 调用RPC使用明确的返回值类型
+    /// </summary>
+    /// <param name="appName"></param>
+    /// <param name="method"></param>
+    /// <param name="param"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public SimApiBaseResponse<T> Rpc<T>(string appName, string method, dynamic? param = null)
     {
         var res = new SimApiBaseResponse(500, "Synapse Rpc Client Disabled!");
         if (Options.DisableRpcClient)
@@ -88,24 +101,56 @@ public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logge
             res = JsonSerializer.Deserialize<SimApiBaseResponse<T>>(data, SimApiUtil.JsonOption);
         }
 
-        return res as SimApiBaseResponse<T>;
+        return (res as SimApiBaseResponse<T>)!;
     }
 
-    public SimApiBaseResponse<object> Rpc(string appName, string method, dynamic param)
+    /// <summary>
+    /// 调用RPC使用object作为返回值类型
+    /// </summary>
+    /// <param name="appName"></param>
+    /// <param name="method"></param>
+    /// <param name="param"></param>
+    /// <returns></returns>
+    public SimApiBaseResponse<object> Rpc(string appName, string method, dynamic? param = null)
     {
         return Rpc<object>(appName, method, param);
     }
 
-    public void Event(string eventName, dynamic param)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="eventName"></param>
+    /// <param name="param"></param>
+    public bool Event(string eventName, dynamic? param = null)
     {
-        if (Options.DisableEventClient)
-        {
-            logger.LogError("Synapse Event Client Disabled!");
-        }
-        else
-        {
-            FireEvent(eventName, param);
-        }
+        if (!Options.DisableEventClient) return FireEvent(eventName, param);
+        logger.LogError("Synapse Event Client Disabled!");
+        return false;
+    }
+
+    /// <summary>
+    /// 设置一个系统配置项
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public bool SetConfig(string key, string value)
+    {
+        if (Options.EnableConfigStore) return FireSetConfig(key, value);
+        logger.LogError("Synapse Config Store Disabled!");
+        return false;
+    }
+
+    /// <summary>
+    /// 读取一个配置项,如果没有则为空
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public string? GetConfig(string key)
+    {
+        if (Options.EnableConfigStore) return FireGetConfig(key);
+        logger.LogError("Synapse Config Store Disabled!");
+        return null;
     }
 
     private void CreateConnection()
@@ -141,8 +186,6 @@ public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logge
 
     private void ProcessAttribute()
     {
-        EventRegistry = [];
-        RpcRegistry = [];
         var stackTrace = new StackTrace();
         var callingMethod = stackTrace.GetFrame(stackTrace.FrameCount - 1)?.GetMethod();
         var assembly = callingMethod?.DeclaringType?.Assembly;
@@ -155,49 +198,84 @@ public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logge
                 if (method.IsDefined(typeof(SynapseEventAttribute), false))
                 {
                     var attribute =
-                        (SynapseEventAttribute)Attribute.GetCustomAttribute(method, typeof(SynapseEventAttribute));
-                    if (attribute != null)
+                        (SynapseEventAttribute)Attribute.GetCustomAttribute(method, typeof(SynapseEventAttribute))!;
+                    var tmp = new RegisterItem
                     {
-                        EventRegistry.Add(new RegisterItem
-                        {
-                            Key = attribute.Name ?? method.Name,
-                            Class = type,
-                            Method = method.Name
-                        });
+                        Key = attribute.Name ?? method.Name,
+                        Class = type,
+                        Method = method.Name
+                    };
+                    if (tmp.Key.StartsWith('/') || tmp.Key.EndsWith('/'))
+                    {
+                        logger.LogError("Synapse Event Register Error: {Key} Can't start or end of '/'", tmp.Key);
+                        continue;
                     }
+                    
+                    var callClass = sp.CreateScope().ServiceProvider.GetRequiredService(tmp.Class!);
+                    var mt = callClass.GetType().GetMethod(tmp.Method);
+                    if (mt!.GetParameters().Length > 2 || mt.GetParameters().Length<1)
+                    {
+                        logger.LogError(
+                            "Synapse Event Register Error: Only one or two parameter supported. {Key} -> {Method}@{Class}",
+                            tmp.Key, tmp.Method, tmp.Class.Name);
+                        continue;
+                    }
+
+                    EventRegistry.Add(tmp);
                 }
 
                 if (method.IsDefined(typeof(SynapseRpcAttribute), false))
                 {
                     var attribute =
-                        (SynapseRpcAttribute)Attribute.GetCustomAttribute(method, typeof(SynapseRpcAttribute));
-                    if (attribute != null)
+                        (SynapseRpcAttribute)Attribute.GetCustomAttribute(method, typeof(SynapseRpcAttribute))!;
+                    var tmp = new RegisterItem
                     {
-                        RpcRegistry.Add(new RegisterItem
-                        {
-                            Key = attribute.Name ?? $"{type.Name}.{method.Name}",
-                            Class = type,
-                            Method = method.Name
-                        });
+                        Key = attribute.Name ?? $"{type.Name}.{method.Name}",
+                        Class = type,
+                        Method = method.Name
+                    };
+                    if (tmp.Key.Contains('/') || tmp.Key.Contains('#') || tmp.Key.Contains('+'))
+                    {
+                        logger.LogError("Synapse Rpc Register Error: {Key} contains '/' , '#' , '+'", tmp.Key);
+                        continue;
                     }
+
+                    var callClass = sp.CreateScope().ServiceProvider.GetRequiredService(tmp.Class!);
+                    var mt = callClass.GetType().GetMethod(tmp.Method);
+                    if (mt!.GetParameters().Length > 1)
+                    {
+                        logger.LogError(
+                            "Synapse Rpc Register Error: Only one or none parameter supported. {Key} -> {Method}@{Class}",
+                            tmp.Key, tmp.Method, tmp.Class.Name);
+                        continue;
+                    }
+
+                    if (RpcRegistry.Any(x => x.Key == tmp.Key))
+                    {
+                        logger.LogError("Synapse Rpc Register Error: {Key} Already Exists -> {Method}@{Class}", tmp.Key,
+                            tmp.Method, tmp.Class.Name);
+                        continue;
+                    }
+
+                    RpcRegistry.Add(tmp);
                 }
             }
         }
 
         var events = EventRegistry.Aggregate(string.Empty,
-            (current, ev) => current + $"\n |- {ev.Key} -> {ev.Method}@{ev.Class.Name}");
+            (current, ev) => current + $"\n |- {ev.Key} -> {ev.Method}@{ev.Class!.Name}");
         var rpcList = RpcRegistry.Aggregate(string.Empty,
-            (current, ev) => current + $"\n |- {ev.Key} -> {ev.Method}@{ev.Class.Name}");
-        if (EventRegistry.Count > 0) logger.LogInformation(">>> Synapse System 读取Event方法:{Event}", events);
-        if (RpcRegistry.Count > 0) logger.LogInformation(">>> Synapse System 读取RPC方法:{Rpc}", rpcList);
+            (current, ev) => current + $"\n |- {ev.Key} -> {ev.Method}@{ev.Class!.Name}");
+        if (EventRegistry.Count > 0) logger.LogInformation(" >> Synapse System 读取Event方法:{Event}", events);
+        if (RpcRegistry.Count > 0) logger.LogInformation(" >> Synapse System 读取RPC方法:{Rpc}", rpcList);
     }
 }
 
 public class RegisterItem
 {
-    public string Key { get; init; }
+    public string? Key { get; init; }
 
-    public Type Class { get; init; }
+    public Type? Class { get; init; }
 
-    public string Method { get; init; }
+    public string? Method { get; init; }
 }

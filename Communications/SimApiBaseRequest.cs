@@ -15,7 +15,7 @@ public class SimApiIdOnlyRequest
 /// </summary>
 public class SimApiStringIdOnlyRequest
 {
-    [Required] public string Id { get; set; }
+    [Required] public string? Id { get; set; }
 }
 
 /// <summary>
@@ -24,7 +24,7 @@ public class SimApiStringIdOnlyRequest
 /// <typeparam name="T"></typeparam>
 public class SimApiOneFieldRequest<T>
 {
-    [Required] public T Data { get; set; }
+    [Required] public T? Data { get; set; }
 }
 
 /// <summary>
