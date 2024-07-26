@@ -53,7 +53,12 @@ public partial class Synapse
         };
         foreach (var ev in EventRegistry)
         {
-            var topic = $"$queue/{esTopicPrefix}{ev.Key}";
+            
+            var topic = $"{esTopicPrefix}{ev.Key}";
+            if (Options.EventLoadBalancing)
+            {
+                topic = "$queue/" + topic;
+            }
             var evSubOpts = MqttFactory.CreateSubscribeOptionsBuilder()
                 .WithTopicFilter(o => o.WithTopic(topic)).Build();
             Client.SubscribeAsync(evSubOpts).Wait();

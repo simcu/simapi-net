@@ -13,6 +13,12 @@ public class SimApiSynapseOptions
     public string? AppId { get; set; }
     public int RpcTimeout { get; set; } = 3;
 
+    /// <summary>
+    /// Event是否使用负载均衡
+    /// 也就是订阅$queue主题,消息会分发给不同的AppId
+    /// 如果false,多个AppId都可以同时收到消息
+    /// </summary>
+    public bool EventLoadBalancing { get; set; } = false;
     public bool EnableConfigStore { get; set; } = true;
     public bool DisableEventClient { get; set; } = false;
     public bool DisableRpcClient { get; set; } = false;
