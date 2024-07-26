@@ -15,6 +15,7 @@ public partial class Synapse
 
     private bool FireSetConfig(string key, string value)
     {
+        if (key.Contains('#') || key.Contains('+')) return false;
         var topic = $"{Options.SysName}/synapse-config-store/{key}";
         var message = new MqttApplicationMessageBuilder()
             .WithTopic(topic)
@@ -37,7 +38,7 @@ public partial class Synapse
         var csTopicPrefix = $"{Options.SysName}/synapse-config-store/";
         var eventSubOpts = MqttFactory.CreateSubscribeOptionsBuilder()
             .WithTopicFilter(o =>
-                o.WithTopic($"{csTopicPrefix}+").WithRetainHandling(MqttRetainHandling.SendAtSubscribe))
+                o.WithTopic($"{csTopicPrefix}#").WithRetainHandling(MqttRetainHandling.SendAtSubscribe))
             .Build();
         Client!.ApplicationMessageReceivedAsync += e =>
         {
