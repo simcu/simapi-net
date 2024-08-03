@@ -41,45 +41,8 @@ public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logge
             Options.SysName, Options.AppName, Options.AppId);
         CreateConnection();
         ProcessAttribute();
-        //事件客户端
-        if (Options.DisableEventClient)
-        {
-            logger.LogWarning("Synapse Event Client Disabled: DisableEventClient set true");
-        }
-        else
-        {
-            logger.LogInformation("Synapse Event Client Ready");
-        }
-
-        //RPC客户端
-        if (Options.DisableRpcClient)
-        {
-            logger.LogWarning("Synapse Rpc Client Disabled: DisableEventClient set true");
-        }
-        else
-        {
-            RunRpcClient();
-            logger.LogInformation("Synapse Rpc Client Ready, Client Timeout: {OptionsRpcTimeout}s", Options.RpcTimeout);
-        }
-
-        if (RpcRegistry.Count > 0)
-        {
-            RunRpcServer();
-        }
-
-        if (EventRegistry.Count > 0)
-        {
-            RunEventServer();
-        }
-
-        if (Options.EnableConfigStore)
-        {
-            RunConfigStoreServer();
-            logger.LogInformation("Synapse Config Store Ready [{SysName}] ...", Options.SysName);
-        }
     }
-
-
+    
     /// <summary>
     /// 调用RPC使用明确的返回值类型
     /// </summary>
@@ -165,13 +128,49 @@ public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logge
         Client.ConnectedAsync += _ =>
         {
             logger.LogInformation("Synapse MQTT[{AppName}:{AppId}] 连接成功...", Options.AppName, Options.AppId);
+            //事件客户端
+            if (Options.DisableEventClient)
+            {
+                logger.LogWarning("Synapse Event Client Disabled: DisableEventClient set true");
+            }
+            else
+            {
+                logger.LogInformation("Synapse Event Client Ready");
+            }
+
+            //RPC客户端
+            if (Options.DisableRpcClient)
+            {
+                logger.LogWarning("Synapse Rpc Client Disabled: DisableEventClient set true");
+            }
+            else
+            {
+                RunRpcClient();
+                logger.LogInformation("Synapse Rpc Client Ready, Client Timeout: {OptionsRpcTimeout}s", Options.RpcTimeout);
+            }
+
+            if (RpcRegistry.Count > 0)
+            {
+                RunRpcServer();
+            }
+
+            if (EventRegistry.Count > 0)
+            {
+                RunEventServer();
+            }
+
+            if (Options.EnableConfigStore)
+            {
+                RunConfigStoreServer();
+                logger.LogInformation("Synapse Config Store Ready [{SysName}] ...", Options.SysName);
+            }
             return Task.CompletedTask;
         };
         //重连
         Client.DisconnectedAsync += async _ =>
         {
             logger.LogError("Synapse MQTT[{AppName}:{AppId}] 断开连接,开始重连...", Options.AppName, Options.AppId);
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            await Task.Delay(TimeSpan.FromSeconds(3));
             try
             {
                 logger.LogInformation("Synapse MQTT[{AppName}:{AppId}] 开始连接MQTT服务器...", Options.AppName, Options.AppId);
@@ -210,10 +209,10 @@ public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logge
                         logger.LogError("Synapse Event Register Error: {Key} Can't start or end of '/'", tmp.Key);
                         continue;
                     }
-                    
+
                     var callClass = sp.CreateScope().ServiceProvider.GetRequiredService(tmp.Class!);
                     var mt = callClass.GetType().GetMethod(tmp.Method);
-                    if (mt!.GetParameters().Length > 2 || mt.GetParameters().Length<1)
+                    if (mt!.GetParameters().Length > 2 || mt.GetParameters().Length < 1)
                     {
                         logger.LogError(
                             "Synapse Event Register Error: Only one or two parameter supported. {Key} -> {Method}@{Class}",

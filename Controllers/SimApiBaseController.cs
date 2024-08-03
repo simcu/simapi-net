@@ -26,14 +26,12 @@ public class SimApiBaseController : Controller
     /// <param name="context"></param>
     public override void OnActionExecuting(ActionExecutingContext context)
     {
-        if (!context.ModelState.IsValid)
+        if (context.ModelState.IsValid) return;
+        foreach (var item in context.ModelState.Values.Where(item =>
+                     item.ValidationState == ModelValidationState.Invalid))
         {
-            foreach (var item in context.ModelState.Values.Where(item =>
-                         item.ValidationState == ModelValidationState.Invalid))
-            {
-                Error(400, item.Errors.First().ErrorMessage);
-                break;
-            }
+            Error(400, item.Errors.First().ErrorMessage);
+            break;
         }
     }
 
