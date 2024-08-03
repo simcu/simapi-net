@@ -19,7 +19,7 @@ public static class SimApiExtensions
 {
     //**********快捷添加**************
     public static IServiceCollection AddSimApi(this IServiceCollection builder,
-        Action<SimApiOptions> options = null)
+        Action<SimApiOptions>? options = null)
     {
         var simApiOptions = new SimApiOptions();
         options?.Invoke(simApiOptions);

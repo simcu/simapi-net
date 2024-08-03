@@ -16,18 +16,15 @@ namespace SimApi;
 
 public partial class Synapse
 {
+    private string RpcServerTopicPrefix => $"{Options.SysName}/{Options.AppName}/rpc/server/";
+
     private void RunRpcServer()
     {
-        var rsTopicPrefix = $"{Options.SysName}/{Options.AppName}/rpc/server/";
-        var rsSubOpts = MqttFactory.CreateSubscribeOptionsBuilder()
-            .WithTopicFilter(o =>
-                o.WithTopic($"$queue/{rsTopicPrefix}+").WithRetainHandling(MqttRetainHandling.SendAtSubscribe))
-            .Build();
         Client!.ApplicationMessageReceivedAsync += e =>
         {
-            if (!e.ApplicationMessage.Topic.StartsWith(rsTopicPrefix)) return Task.CompletedTask;
+            if (!e.ApplicationMessage.Topic.StartsWith(RpcServerTopicPrefix)) return Task.CompletedTask;
             var reqBody = e.ApplicationMessage.ConvertPayloadToString();
-            var action = e.ApplicationMessage.Topic.Replace(rsTopicPrefix, string.Empty);
+            var action = e.ApplicationMessage.Topic.Replace(RpcServerTopicPrefix, string.Empty);
             var appInfo = e.ApplicationMessage.ResponseTopic.Split(",");
             logger.LogDebug(
                 "Synapse RPC Server Receive: ({BasicPropertiesMessageId}) {BasicPropertiesReplyTo} -> {BasicPropertiesType}@{OptionsAppName}\n{S}",
@@ -93,6 +90,15 @@ public partial class Synapse
 
             return Task.CompletedTask;
         };
-        Client.SubscribeAsync(rsSubOpts).Wait();
+        SubRpcServerTopic();
+    }
+
+    public void SubRpcServerTopic()
+    {
+        var rsSubOpts = MqttFactory.CreateSubscribeOptionsBuilder()
+            .WithTopicFilter(o =>
+                o.WithTopic($"$queue/{RpcServerTopicPrefix}+").WithRetainHandling(MqttRetainHandling.SendAtSubscribe))
+            .Build();
+        Client!.SubscribeAsync(rsSubOpts).Wait();
     }
 }

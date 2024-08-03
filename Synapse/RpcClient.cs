@@ -14,22 +14,28 @@ public partial class Synapse
 {
     private Dictionary<string, TaskCompletionSource<string>> ResponseCompletionSources { get; } = new();
 
+    private string EventClientTopicPrefix => $"{Options.SysName}/{Options.AppName}/rpc/client/{Options.AppId}/";
+
     private void RunRpcClient()
     {
-        var rcTopic = $"{Options.SysName}/{Options.AppName}/rpc/client/{Options.AppId}/";
-        var rcSubOpts = MqttFactory.CreateSubscribeOptionsBuilder()
-            .WithTopicFilter(o => o.WithTopic($"{rcTopic}+")).Build();
         Client!.ApplicationMessageReceivedAsync += e =>
         {
-            if (!e.ApplicationMessage.Topic.StartsWith(rcTopic)) return Task.CompletedTask;
+            if (!e.ApplicationMessage.Topic.StartsWith(EventClientTopicPrefix)) return Task.CompletedTask;
             var reqBody = e.ApplicationMessage.ConvertPayloadToString();
-            var messageId = e.ApplicationMessage.Topic.Replace(rcTopic, string.Empty);
+            var messageId = e.ApplicationMessage.Topic.Replace(EventClientTopicPrefix, string.Empty);
             if (!ResponseCompletionSources.TryGetValue(messageId, out var tcs)) return Task.CompletedTask;
             tcs.SetResult(reqBody);
             ResponseCompletionSources.Remove(messageId);
             return Task.CompletedTask;
         };
-        Client.SubscribeAsync(rcSubOpts).Wait();
+        SubRpcClientTopic();
+    }
+
+    private void SubRpcClientTopic()
+    {
+        var rcSubOpts = MqttFactory.CreateSubscribeOptionsBuilder()
+            .WithTopicFilter(o => o.WithTopic($"{EventClientTopicPrefix}+")).Build();
+        Client!.SubscribeAsync(rcSubOpts).Wait();
     }
 
     private string? FireRpc(string app, string action, object? param)

@@ -12,14 +12,16 @@ namespace SimApi;
 
 public partial class Synapse
 {
+    
+    private string EventServerTopicPrefix => $"{Options.SysName}/event/";
+
     private void RunEventServer()
     {
-        var esTopicPrefix = $"{Options.SysName}/event/";
         Client!.ApplicationMessageReceivedAsync += e =>
         {
-            if (!e.ApplicationMessage.Topic.StartsWith(esTopicPrefix)) return Task.CompletedTask;
+            if (!e.ApplicationMessage.Topic.StartsWith(EventServerTopicPrefix)) return Task.CompletedTask;
             var reqBody = e.ApplicationMessage.ConvertPayloadToString();
-            var eventName = e.ApplicationMessage.Topic.Replace(esTopicPrefix, string.Empty);
+            var eventName = e.ApplicationMessage.Topic.Replace(EventServerTopicPrefix, string.Empty);
             logger.LogDebug("Synapse Event Receive: {EventName}\n{Body}", eventName, reqBody);
             var methods = EventRegistry
                 .Where(x => Regex.IsMatch(eventName,
@@ -48,20 +50,23 @@ public partial class Synapse
                     logger.LogError("Synapse Event Processor Error: {Err}\n{Stack}", ex.Message,ex.StackTrace);
                 }
             }
-
             return Task.CompletedTask;
         };
+        SubRpcServerTopic();
+    }
+
+    private void SubEventServerTopic()
+    {
         foreach (var ev in EventRegistry)
         {
-            
-            var topic = $"{esTopicPrefix}{ev.Key}";
+            var topic = $"{EventServerTopicPrefix}{ev.Key}";
             if (Options.EventLoadBalancing)
             {
                 topic = "$queue/" + topic;
             }
             var evSubOpts = MqttFactory.CreateSubscribeOptionsBuilder()
                 .WithTopicFilter(o => o.WithTopic(topic)).Build();
-            Client.SubscribeAsync(evSubOpts).Wait();
+            Client!.SubscribeAsync(evSubOpts).Wait();
             logger.LogDebug("Synapse Event Register Event Success: {EventName}\nFull Topic: {Topic}", ev.Key, topic);
         }
     }

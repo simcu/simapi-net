@@ -11,17 +11,17 @@ public class SimApiDocGroupOption
     /// <summary>
     /// 文档标识
     /// </summary>
-    public string Id { get; set; }
+    public string Id { get; set; } = null!;
 
     /// <summary>
     /// 文档名称
     /// </summary>
-    public string Name { get; set; }
+    public string Name { get; set; } = null!;
 
     /// <summary>
     /// 文档描述
     /// </summary>
-    public string Description { get; set; }
+    public string Description { get; set; } = null!;
 }
 
 /// <summary>
@@ -33,11 +33,11 @@ public class SimApiAuthOption
 
     public string Description { get; set; } = "认证服务器颁发的AccessToken";
 
-    public string AuthorizationUrl { get; set; }
+    public string AuthorizationUrl { get; set; } = null!;
 
-    public string TokenUrl { get; set; }
+    public string TokenUrl { get; set; } = null!;
 
-    public Dictionary<string, string> Scopes { get; set; }
+    public Dictionary<string, string> Scopes { get; set; } = null!;
 }
 
 /// <summary>

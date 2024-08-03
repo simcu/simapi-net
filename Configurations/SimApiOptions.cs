@@ -14,13 +14,13 @@ public class SimApiOptions
     /// 启用SimApiAuth，一个简单的基于Header Token的认证方式。
     /// default: false
     /// </summary>
-    public bool EnableSimApiAuth { get; set; } = false;
+    public bool EnableSimApiAuth { get; set; }
 
     /// <summary>
     /// 启用在线文档，启用后 访问 /swagger 可以查看对应的api文档。
     /// default: false
     /// </summary>
-    public bool EnableSimApiDoc { get; set; } = false;
+    public bool EnableSimApiDoc { get; set; }
 
     /// <summary>
     /// 启用异常拦截,启用后，所有的异常将被通过json反馈。
@@ -32,7 +32,7 @@ public class SimApiOptions
     /// 开启S3兼容的存储系统。
     /// default: false
     /// </summary>
-    public bool EnableSimApiStorage { get; set; } = false;
+    public bool EnableSimApiStorage { get; set; }
 
     /// <summary>
     /// 开启ForwardHeaders,开启后可以透传负载均衡的Headers
@@ -50,12 +50,12 @@ public class SimApiOptions
     /// 启用格式化的 Console Logger
     /// default: false
     /// </summary>
-    public bool EnableLogger { get; set; } = false;
+    public bool EnableLogger { get; set; }
 
     /// <summary>
     /// 是否启用Synapse
     /// </summary>
-    public bool EnableSynapse { get; set; } = false;
+    public bool EnableSynapse { get; set; }
 
 
     /// <summary>
@@ -70,7 +70,7 @@ public class SimApiOptions
 
     public SimApiSynapseOptions SimApiSynapseOptions { get; set; } = new();
 
-    public void ConfigureSimApiSynapse(Action<SimApiSynapseOptions> options = null)
+    public void ConfigureSimApiSynapse(Action<SimApiSynapseOptions>? options = null)
     {
         options?.Invoke(SimApiSynapseOptions);
     }
@@ -80,12 +80,12 @@ public class SimApiOptions
         SimApiSynapseOptions = options;
     }
 
-    public void ConfigureSimApiDoc(Action<SimApiDocOptions> options = null)
+    public void ConfigureSimApiDoc(Action<SimApiDocOptions>? options = null)
     {
         options?.Invoke(SimApiDocOptions);
     }
 
-    public void ConfigureSimApiStorage(Action<SimApiStorageOptions> options = null)
+    public void ConfigureSimApiStorage(Action<SimApiStorageOptions>? options = null)
     {
         options?.Invoke(SimApiStorageOptions);
     }

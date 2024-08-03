@@ -1,13 +1,11 @@
 using System;
 using Microsoft.Extensions.Logging;
-using SimApi.Helpers;
 
 namespace SimApi.Logger;
 
 public class SimApiLogger(string name) : ILogger
 {
-    public IDisposable BeginScope<TState>(TState state) => default!;
-
+    public IDisposable BeginScope<TState>(TState state) where TState : notnull => default!;
     public bool IsEnabled(LogLevel logLevel) => true;
 
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
@@ -31,5 +29,14 @@ public class SimApiLogger(string name) : ILogger
 
         Console.WriteLine(message);
         Console.ResetColor();
+    }
+}
+
+public class EmptyDisposable : IDisposable
+{
+    public static EmptyDisposable Instance { get; } = new EmptyDisposable();
+
+    public void Dispose()
+    {
     }
 }
