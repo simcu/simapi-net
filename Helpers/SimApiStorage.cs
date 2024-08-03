@@ -112,7 +112,7 @@ public class SimApiStorage
     /// <param name="path"></param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
-    public string FullUrl(string path)
+    public string? FullUrl(string? path)
     {
         if (string.IsNullOrEmpty(path)) return path;
         if(path.StartsWith("http://") || path.StartsWith("https://")) return path;
