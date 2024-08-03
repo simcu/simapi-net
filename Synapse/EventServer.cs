@@ -52,7 +52,7 @@ public partial class Synapse
             }
             return Task.CompletedTask;
         };
-        SubRpcServerTopic();
+        SubEventServerTopic();
     }
 
     private void SubEventServerTopic()

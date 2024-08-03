@@ -93,7 +93,7 @@ public partial class Synapse
         SubRpcServerTopic();
     }
 
-    public void SubRpcServerTopic()
+    private void SubRpcServerTopic()
     {
         var rsSubOpts = MqttFactory.CreateSubscribeOptionsBuilder()
             .WithTopicFilter(o =>
