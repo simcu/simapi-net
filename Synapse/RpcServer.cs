@@ -32,47 +32,53 @@ public partial class Synapse
                 reqBody);
             SimApiBaseResponse res;
             var method = RpcRegistry.FirstOrDefault(x => x.Key == action);
-            if (method == null) return Task.CompletedTask;
-            var callClass = sp.CreateScope().ServiceProvider.GetRequiredService(method.Class!);
-            var mt = callClass.GetType().GetMethod(method.Method!);
-            try
+            if (method == null)
             {
-                var methodParams = mt!.GetParameters();
-                object? ret;
-                if (methodParams.Length == 0)
-                {
-                    ret = mt.Invoke(callClass, []);
-                }
-                else
-                {
-                    var pt = mt.GetParameters()[0].ParameterType;
-                    var param = pt == typeof(string)
-                        ? [reqBody]
-                        : new[] { JsonSerializer.Deserialize(reqBody, pt, SimApiUtil.JsonOption) };
-                    ret = mt.Invoke(callClass, param);
-                }
-
-                res = new SimApiBaseResponse<object?>
-                {
-                    Data = ret
-                };
+                res = new SimApiBaseResponse(404, "method not found");
             }
-            catch (TargetInvocationException ex)
+            else
             {
-                if (ex.InnerException is SimApiException ie)
+                var callClass = sp.CreateScope().ServiceProvider.GetRequiredService(method.Class!);
+                var mt = callClass.GetType().GetMethod(method.Method!);
+                try
                 {
-                    logger.LogDebug("Synapse RPC调用错误: {Err}", ie.Message);
-                    res = new SimApiBaseResponse(ie.Code, ie.Message);
+                    var methodParams = mt!.GetParameters();
+                    object? ret;
+                    if (methodParams.Length == 0)
+                    {
+                        ret = mt.Invoke(callClass, []);
+                    }
+                    else
+                    {
+                        var pt = mt.GetParameters()[0].ParameterType;
+                        var param = pt == typeof(string)
+                            ? [reqBody]
+                            : new[] { JsonSerializer.Deserialize(reqBody, pt, SimApiUtil.JsonOption) };
+                        ret = mt.Invoke(callClass, param);
+                    }
+
+                    res = new SimApiBaseResponse<object?>
+                    {
+                        Data = ret
+                    };
                 }
-                else
+                catch (TargetInvocationException ex)
                 {
+                    if (ex.InnerException is SimApiException ie)
+                    {
+                        logger.LogDebug("Synapse RPC调用错误: {Err}", ie.Message);
+                        res = new SimApiBaseResponse(ie.Code, ie.Message);
+                    }
+                    else
+                    {
+                        res = new SimApiBaseResponse(500, ex.Message);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogDebug("Synapse RPC调用失败: {Err}", ex.Message);
                     res = new SimApiBaseResponse(500, ex.Message);
                 }
-            }
-            catch (Exception ex)
-            {
-                logger.LogDebug("Synapse RPC调用失败: {Err}", ex.Message);
-                res = new SimApiBaseResponse(500, ex.Message);
             }
 
             var returnJson = JsonSerializer.Serialize((object)res, SimApiUtil.JsonOption);
