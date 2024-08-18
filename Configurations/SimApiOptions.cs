@@ -1,4 +1,5 @@
 using System;
+using SimApi.CoceSdk;
 
 namespace SimApi.Configurations;
 
@@ -15,6 +16,14 @@ public class SimApiOptions
     /// default: false
     /// </summary>
     public bool EnableSimApiAuth { get; set; }
+
+
+    /// <summary>
+    /// 是否使用CoceSdk
+    /// </summary>
+    public bool EnableCoceSdk { get; set; }
+
+    public CoceAppSdkOption CoceSdkOptions { get; set; } = new();
 
     /// <summary>
     /// 启用在线文档，启用后 访问 /swagger 可以查看对应的api文档。
@@ -75,9 +84,9 @@ public class SimApiOptions
         options?.Invoke(SimApiSynapseOptions);
     }
 
-    public void ConfigureSimApiSynapse(SimApiSynapseOptions options)
+    public void ConfigureCoceSdk(Action<CoceAppSdkOption>? options = null)
     {
-        SimApiSynapseOptions = options;
+        options?.Invoke(CoceSdkOptions);
     }
 
     public void ConfigureSimApiDoc(Action<SimApiDocOptions>? options = null)

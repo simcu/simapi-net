@@ -4,8 +4,6 @@ using SimApi.Communications;
 using SimApi.Helpers;
 
 namespace SimApi.Controllers;
-
-[ApiExplorerSettings(GroupName = "api")]
 public class SimApiCommonController(SimApiAuth auth) : SimApiBaseController
 {
     /// <summary>
@@ -24,10 +22,10 @@ public class SimApiCommonController(SimApiAuth auth) : SimApiBaseController
     /// 检测用户登陆的控制器
     /// </summary>
     /// <returns></returns>
-    [HttpPost("/auth/check"), SimApiDoc("认证", "检测登陆")]
+    [HttpPost, SimApiDoc("认证", "检测登陆")]
     public SimApiBaseResponse<string> CheckLogin()
     {
-        ErrorWhenNull(LoginInfo, 401);
+        ErrorWhenNull(LoginInfo, 401,"未登录");
         return new SimApiBaseResponse<string>
         {
             Data = LoginInfo.Id
@@ -38,7 +36,7 @@ public class SimApiCommonController(SimApiAuth auth) : SimApiBaseController
     /// 退出登陆
     /// </summary>
     /// <returns></returns>
-    [HttpPost("/auth/logout"), SimApiDoc("认证", "退出登陆")]
+    [HttpPost, SimApiDoc("认证", "退出登陆")]
     public SimApiBaseResponse Logout()
     {
         string? token = null;
@@ -51,8 +49,8 @@ public class SimApiCommonController(SimApiAuth auth) : SimApiBaseController
         auth.Logout(token!);
         return new SimApiBaseResponse();
     }
-    
-    [HttpPost("/logined"),SimApiAuth]
+
+    [HttpPost,SimApiAuth]
     public SimApiBaseResponse<SimApiLoginItem> UserInfo()
     {
         return new SimApiBaseResponse<SimApiLoginItem>(LoginInfo);

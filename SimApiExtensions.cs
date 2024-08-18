@@ -7,6 +7,7 @@ using SimApi.Middlewares;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using SimApi.CoceSdk;
 using SimApi.Configurations;
 using SimApi.Logger;
 
@@ -36,6 +37,11 @@ public static class SimApiExtensions
         if (simApiOptions.EnableSimApiAuth)
         {
             builder.AddSingleton<SimApiAuth>();
+        }
+
+        if (simApiOptions.EnableCoceSdk)
+        {
+            builder.AddSingleton<CoceApp>();
         }
 
         if (simApiOptions.EnableCors)
@@ -147,7 +153,7 @@ public static class SimApiExtensions
                                     Id = "oauth2"
                                 }
                             },
-                            new[] { "SimApiAuth" }
+                            ["SimApiAuth"]
                         }
                     });
                 }
@@ -192,17 +198,24 @@ public static class SimApiExtensions
 
     public static IHost UseSimApi(this IHost builder)
     {
-       var options = builder.Services.GetRequiredService<SimApiOptions>();
+        var options = builder.Services.GetRequiredService<SimApiOptions>();
 
         var logger = builder.Services.GetRequiredService<ILogger<SimApiOptions>>();
 
         logger.LogInformation("当前时区: {LocalId}", TimeZoneInfo.Local.Id);
-        
+
         //请求一下检测存储错误
         if (options.EnableSimApiStorage)
         {
             logger.LogInformation("开始配置SimApiStorage...");
             builder.Services.GetService<SimApiStorage>();
+        }
+
+        if (options.EnableCoceSdk)
+        {
+            logger.LogInformation("开始配置CoceAppSdk...\nApi入口: {ApiUrl}\nAuth入口:{AuthUrl}n\nAppId: {AppId}",
+                options.CoceSdkOptions.ApiEndpoint, options.CoceSdkOptions.AuthEndpoint,
+                options.CoceSdkOptions.AppId);
         }
 
         if (options.EnableLowerUrl)
@@ -247,6 +260,24 @@ public static class SimApiExtensions
         {
             logger.LogInformation("开始配置SimApiAuth...");
             builder.UseMiddleware<SimApiAuthMiddleware>();
+            builder.MapControllerRoute(name: "GetUserInfo", pattern: "/user/info",
+                defaults: new { controller = "SimApiCommon", action = "UserInfo" });
+            builder.MapControllerRoute(name: "CheckLogin", pattern: "/auth/check",
+                defaults: new { controller = "SimApiCommon", action = "CheckLogin" });
+            builder.MapControllerRoute(name: "Logout", pattern: "/auth/logout",
+                defaults: new { controller = "SimApiCommon", action = "Logout" });
+            if (options.EnableCoceSdk)
+            {
+                logger.LogInformation("开始配置CoceAppSdk...\nApi入口: {ApiUrl}\nAuth入口:{AuthUrl}n\nAppId: {AppId}",
+                    options.CoceSdkOptions.ApiEndpoint, options.CoceSdkOptions.AuthEndpoint,
+                    options.CoceSdkOptions.AppId);
+                builder.MapControllerRoute(name: "LoginUseCoce", pattern: "/auth/login",
+                    defaults: new { controller = "SimApiCoce", action = "Login" });
+                builder.MapControllerRoute(name: "LoginUseCoce", pattern: "/user/groups",
+                    defaults: new { controller = "SimApiCoce", action = "ListGroups" });
+                builder.MapControllerRoute(name: "LoginUseCoce", pattern: "/auth/config",
+                    defaults: new { controller = "SimApiCoce", action = "GetConfig" });
+            }
         }
 
         if (options.EnableSimApiDoc)
