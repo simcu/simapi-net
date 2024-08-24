@@ -130,6 +130,17 @@ public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logge
     }
 
     /// <summary>
+    /// 如果条件成立,则爆出错误
+    /// </summary>
+    /// <param name="condition"></param>
+    /// <param name="code"></param>
+    /// <param name="message"></param>
+    public void RpcErrorWhen(bool condition, int code, string message = "")
+    {
+        if (condition) RpcError(code, message);
+    }
+
+    /// <summary>
     /// 
     /// </summary>
     /// <param name="eventName"></param>
