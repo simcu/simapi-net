@@ -141,7 +141,7 @@ public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logge
     }
 
     /// <summary>
-    /// 
+    ///  发送一个事件
     /// </summary>
     /// <param name="eventName"></param>
     /// <param name="param"></param>
