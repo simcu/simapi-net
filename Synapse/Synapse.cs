@@ -13,6 +13,7 @@ using MQTTnet.Formatter;
 using SimApi.Attributes;
 using SimApi.Communications;
 using SimApi.Configurations;
+using SimApi.Exceptions;
 using SimApi.Helpers;
 
 namespace SimApi;
@@ -114,6 +115,18 @@ public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logge
     public SimApiBaseResponse<object> Rpc(string appName, string method, dynamic? param = null)
     {
         return Rpc<object>(appName, method, param);
+    }
+
+
+    /// <summary>
+    /// 只能在Rpc方法中使用,快捷抛出异常返回
+    /// </summary>
+    /// <param name="code"></param>
+    /// <param name="message"></param>
+    /// <exception cref="SimApiException"></exception>
+    public void RpcError(int code, string message = "")
+    {
+        throw new SimApiException(code, message);
     }
 
     /// <summary>

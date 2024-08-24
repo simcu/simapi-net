@@ -71,6 +71,7 @@ public partial class Synapse
                     }
                     else
                     {
+                        logger.LogError("Synapse RPC 方法异常: {Err}\n{Stack}", ex.Message,ex.StackTrace);
                         res = new SimApiBaseResponse(500, ex.Message);
                     }
                 }
