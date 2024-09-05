@@ -40,7 +40,8 @@ public partial class Synapse
         Client!.SubscribeAsync(rcSubOpts).Wait();
     }
 
-    private string? FireRpc(string app, string action, object? param, Dictionary<string, string>? headers = null)
+    private string? FireRpc(string app, string action, object? param, Dictionary<string, string>? headers = null,
+        int? timeout = null)
     {
         string paramJson;
         if (param is string strParam)
@@ -77,7 +78,8 @@ public partial class Synapse
         string response;
         try
         {
-            if (tcs.Task.Wait(Options.RpcTimeout * 1000))
+            timeout ??= Options.RpcTimeout;
+            if (tcs.Task.Wait(timeout.Value * 1000))
             {
                 response = tcs.Task.Result;
                 logger.LogDebug(

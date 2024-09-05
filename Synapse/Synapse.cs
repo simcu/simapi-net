@@ -88,10 +88,11 @@ public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logge
     /// <param name="method"></param>
     /// <param name="param"></param>
     /// <param name="headers"></param>
+    /// <param name="timeout"></param>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
     public SimApiBaseResponse<T> Rpc<T>(string appName, string method, dynamic? param = null,
-        Dictionary<string, string>? headers = null)
+        Dictionary<string, string>? headers = null, int? timeout = null)
     {
         var res = new SimApiBaseResponse(500, "Synapse Rpc Client Disabled!");
         if (Options.DisableRpcClient)
@@ -100,7 +101,7 @@ public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logge
         }
         else
         {
-            var data = FireRpc(appName, method, param, headers);
+            var data = FireRpc(appName, method, param, headers, timeout);
             res = JsonSerializer.Deserialize<SimApiBaseResponse<T>>(data, SimApiUtil.JsonOption);
         }
 
@@ -114,11 +115,12 @@ public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logge
     /// <param name="method"></param>
     /// <param name="param"></param>
     /// <param name="headers"></param>
+    /// <param name="timeout"></param>
     /// <returns></returns>
     public SimApiBaseResponse<object> Rpc(string appName, string method, dynamic? param = null,
-        Dictionary<string, string>? headers = null)
+        Dictionary<string, string>? headers = null, int? timeout = null)
     {
-        return Rpc<object>(appName, method, param, headers);
+        return Rpc<object>(appName, method, param, headers, timeout);
     }
 
 
