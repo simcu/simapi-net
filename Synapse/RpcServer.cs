@@ -28,8 +28,7 @@ public partial class Synapse
             var appInfo = e.ApplicationMessage.ResponseTopic.Split(",");
             logger.LogDebug(
                 "Synapse RPC Server Receive: ({BasicPropertiesMessageId}) {BasicPropertiesReplyTo} -> {BasicPropertiesType}@{OptionsAppName}\n{S}",
-                e.ApplicationMessage.ContentType, appInfo[0], action, Options.AppName,
-                reqBody);
+                appInfo[2], appInfo[0], action, Options.AppName, reqBody);
             SimApiBaseResponse res;
             var method = RpcRegistry.FirstOrDefault(x => x.Key == action);
             if (method == null)
@@ -44,17 +43,27 @@ public partial class Synapse
                 {
                     var methodParams = mt!.GetParameters();
                     object? ret;
-                    if (methodParams.Length == 0)
+                    switch (methodParams.Length)
                     {
-                        ret = mt.Invoke(callClass, []);
-                    }
-                    else
-                    {
-                        var pt = mt.GetParameters()[0].ParameterType;
-                        var param = pt == typeof(string)
-                            ? [reqBody]
-                            : new[] { JsonSerializer.Deserialize(reqBody, pt, SimApiUtil.JsonOption) };
-                        ret = mt.Invoke(callClass, param);
+                        case 1:
+                            var pt = mt.GetParameters()[0].ParameterType;
+                            var param = pt == typeof(string)
+                                ? [reqBody]
+                                : new[] { JsonSerializer.Deserialize(reqBody, pt, SimApiUtil.JsonOption) };
+                            ret = mt.Invoke(callClass, param);
+                            break;
+                        case 2:
+                            var headerData =
+                                e.ApplicationMessage.UserProperties.ToDictionary(x => x.Name, x => x.Value);
+                            var pt2 = mt.GetParameters()[0].ParameterType;
+                            var param2 = pt2 == typeof(string)
+                                ? [reqBody]
+                                : new[] { JsonSerializer.Deserialize(reqBody, pt2, SimApiUtil.JsonOption), headerData };
+                            ret = mt.Invoke(callClass, param2);
+                            break;
+                        default:
+                            ret = mt.Invoke(callClass, []);
+                            break;
                     }
 
                     res = new SimApiBaseResponse<object?>
@@ -71,7 +80,7 @@ public partial class Synapse
                     }
                     else
                     {
-                        logger.LogError("Synapse RPC 方法异常: {Err}\n{Stack}", ex.Message,ex.StackTrace);
+                        logger.LogError("Synapse RPC 方法异常: {Err}\n{Stack}", ex.Message, ex.StackTrace);
                         res = new SimApiBaseResponse(500, ex.Message);
                     }
                 }
@@ -83,7 +92,7 @@ public partial class Synapse
             }
 
             var returnJson = JsonSerializer.Serialize((object)res, SimApiUtil.JsonOption);
-            var reply = $"{Options.SysName}/{appInfo[0]}/rpc/client/{appInfo[1]}/{e.ApplicationMessage.ContentType}";
+            var reply = $"{Options.SysName}/{appInfo[0]}/rpc/client/{appInfo[1]}/{appInfo[2]}";
             var message = new MqttApplicationMessageBuilder()
                 .WithTopic(reply)
                 .WithPayload(returnJson)
@@ -93,7 +102,7 @@ public partial class Synapse
             Client.PublishAsync(message, CancellationToken.None).Wait();
             logger.LogDebug(
                 "Synapse Rpc Server Return: ({BasicPropertiesMessageId}) {BasicPropertiesType}@{OptionsAppName} -> {BasicPropertiesReplyTo}\n{ReturnJson}",
-                e.ApplicationMessage.ContentType, action, Options.AppName, appInfo[0], returnJson);
+                appInfo[2], action, Options.AppName, appInfo[0], returnJson);
 
             return Task.CompletedTask;
         };

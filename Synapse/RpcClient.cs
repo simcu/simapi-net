@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MQTTnet;
+using MQTTnet.Packets;
 using SimApi.Communications;
 using SimApi.Helpers;
 
@@ -38,7 +40,7 @@ public partial class Synapse
         Client!.SubscribeAsync(rcSubOpts).Wait();
     }
 
-    private string? FireRpc(string app, string action, object? param)
+    private string? FireRpc(string app, string action, object? param, Dictionary<string, string>? headers = null)
     {
         string paramJson;
         if (param is string strParam)
@@ -54,18 +56,23 @@ public partial class Synapse
         var messageId = Guid.NewGuid().ToString();
         var tcs = new TaskCompletionSource<string>();
         ResponseCompletionSources.Add(messageId, tcs);
-        var message = new MqttApplicationMessageBuilder()
+        var messageBuilder = new MqttApplicationMessageBuilder()
             .WithTopic(topic)
             .WithPayload(paramJson)
-            .WithResponseTopic($"{Options.AppName},{Options.AppId}")
-            .WithContentType(messageId)
-            .WithRetainFlag(false)
-            .Build();
+            .WithResponseTopic($"{Options.AppName},{Options.AppId},{messageId}")
+            .WithContentType("application/json")
+            .WithRetainFlag(false);
+        foreach (var h in headers ?? new Dictionary<string, string>())
+        {
+            messageBuilder.WithUserProperty(h.Key, h.Value);
+        }
+
+        var message = messageBuilder.Build();
         if (!Client!.IsConnected) return null;
         Client.PublishAsync(message, CancellationToken.None).Wait();
         logger.LogDebug(
-            "Synapse RPC Client Request: ({PropsMessageId}) {OptionsAppName} -> {Action}@{App}\n{ParamJson}", messageId,
-            Options.AppName, action, app, paramJson);
+            "Synapse RPC Client Request: ({PropsMessageId}) {OptionsAppName} -> {Action}@{App}\n{ParamJson}\nHeaders: {Headers}",
+            messageId, Options.AppName, action, app, paramJson, JsonSerializer.Serialize(headers));
 
         string response;
         try

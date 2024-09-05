@@ -87,9 +87,11 @@ public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logge
     /// <param name="appName"></param>
     /// <param name="method"></param>
     /// <param name="param"></param>
+    /// <param name="headers"></param>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
-    public SimApiBaseResponse<T> Rpc<T>(string appName, string method, dynamic? param = null)
+    public SimApiBaseResponse<T> Rpc<T>(string appName, string method, dynamic? param = null,
+        Dictionary<string, string>? headers = null)
     {
         var res = new SimApiBaseResponse(500, "Synapse Rpc Client Disabled!");
         if (Options.DisableRpcClient)
@@ -98,7 +100,7 @@ public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logge
         }
         else
         {
-            var data = FireRpc(appName, method, param);
+            var data = FireRpc(appName, method, param, headers);
             res = JsonSerializer.Deserialize<SimApiBaseResponse<T>>(data, SimApiUtil.JsonOption);
         }
 
@@ -111,10 +113,12 @@ public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logge
     /// <param name="appName"></param>
     /// <param name="method"></param>
     /// <param name="param"></param>
+    /// <param name="headers"></param>
     /// <returns></returns>
-    public SimApiBaseResponse<object> Rpc(string appName, string method, dynamic? param = null)
+    public SimApiBaseResponse<object> Rpc(string appName, string method, dynamic? param = null,
+        Dictionary<string, string>? headers = null)
     {
-        return Rpc<object>(appName, method, param);
+        return Rpc<object>(appName, method, param, headers);
     }
 
 
@@ -141,7 +145,7 @@ public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logge
     }
 
     /// <summary>
-    ///  发送一个事件
+    ///  发送一个事件x
     /// </summary>
     /// <param name="eventName"></param>
     /// <param name="param"></param>
@@ -271,10 +275,19 @@ public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logge
 
                     var callClass = sp.CreateScope().ServiceProvider.GetRequiredService(tmp.Class!);
                     var mt = callClass.GetType().GetMethod(tmp.Method);
-                    if (mt!.GetParameters().Length > 1)
+                    if (mt!.GetParameters().Length > 2)
                     {
                         logger.LogError(
-                            "Synapse Rpc Register Error: Only one or none parameter supported. {Key} -> {Method}@{Class}",
+                            "Synapse Rpc Register Error: Only 1,2 or none parameter supported. {Key} -> {Method}@{Class}",
+                            tmp.Key, tmp.Method, tmp.Class.Name);
+                        continue;
+                    }
+
+                    if (mt.GetParameters().Length == 2 &&
+                        mt.GetParameters()[1].ParameterType != typeof(Dictionary<string, string>))
+                    {
+                        logger.LogError(
+                            "Synapse Rpc Register Error: RpcMethod Parameter 2 must be Dictionary<string, string>. {Key} -> {Method}@{Class}",
                             tmp.Key, tmp.Method, tmp.Class.Name);
                         continue;
                     }
