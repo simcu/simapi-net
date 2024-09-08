@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
 using SimApi.Helpers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,6 +10,7 @@ using SimApi.Middlewares;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using SimApi.Attributes;
 using SimApi.CoceSdk;
 using SimApi.Configurations;
 using SimApi.Logger;
@@ -53,6 +57,19 @@ public static class SimApiExtensions
         if (simApiOptions.EnableSynapse)
         {
             builder.AddSingleton<Synapse>();
+            //自动依赖注入
+            var stackTrace = new StackTrace();
+            var callingMethod = stackTrace.GetFrame(stackTrace.FrameCount - 1)?.GetMethod();
+            var assembly = callingMethod?.DeclaringType?.Assembly;
+            var types = assembly?.GetTypes() ?? [];
+            foreach (var type in types)
+            {
+                var methodsWithSynapse = type.GetMethods()
+                    .Where(m => m.GetCustomAttribute<SynapseRpcAttribute>() != null ||
+                                m.GetCustomAttribute<SynapseEventAttribute>() != null);
+                if (!methodsWithSynapse.Any()) continue;
+                builder.AddScoped(type);
+            }
         }
 
         // 使用SimApiDoc
