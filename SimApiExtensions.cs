@@ -210,7 +210,7 @@ public static class SimApiExtensions
             builder.AddSingleton<SimApiStorage>();
         }
 
-        if (simApiOptions.EnableSimApiException)
+        if (simApiOptions.EnableSimApiResponseFilter)
         {
             builder.AddControllers(opt => opt.Filters.Add<SimApiResponseFilter>())
                 .AddJsonOptions(opt => opt.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase);
@@ -233,6 +233,11 @@ public static class SimApiExtensions
         {
             logger.LogInformation("开始配置SimApiStorage...");
             builder.Services.GetService<SimApiStorage>();
+        }
+
+        if (options.EnableSimApiResponseFilter)
+        {
+            logger.LogInformation("开始配置SimApiResponseFilter...");
         }
 
         if (options.EnableCoceSdk)
