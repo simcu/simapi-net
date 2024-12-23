@@ -19,9 +19,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Folder Include="Helpers\"/>
         <Folder Include="Communications\"/>
-        <Folder Include="Middlewares\"/>
         <Folder Include="Exceptions\"/>
     </ItemGroup>
     <ItemGroup>

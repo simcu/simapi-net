@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Linq;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using SimApi.Communications;
@@ -27,12 +27,11 @@ public class SimApiExceptionMiddleware(RequestDelegate next, ILogger<SimApiExcep
             switch (context.Response.StatusCode)
             {
                 case 200:
-                    break;
-                case 404:
-                    throw new SimApiException(context.Response.StatusCode, "请求的接口不存在");
                 case 301:
                 case 302:
                     break;
+                case 404:
+                    throw new SimApiException(context.Response.StatusCode, "请求的接口不存在");
                 default:
                     throw new SimApiException(context.Response.StatusCode);
             }
@@ -42,7 +41,6 @@ public class SimApiExceptionMiddleware(RequestDelegate next, ILogger<SimApiExcep
             response = string.IsNullOrEmpty(ex.Message)
                 ? new SimApiBaseResponse(ex.Code)
                 : new SimApiBaseResponse(ex.Code, ex.Message);
-
             ErrorResponse(context, response);
         }
         catch (Exception ex)
@@ -61,9 +59,8 @@ public class SimApiExceptionMiddleware(RequestDelegate next, ILogger<SimApiExcep
     /// <param name="response"></param>
     private static void ErrorResponse(HttpContext context, SimApiBaseResponse response)
     {
-        if (context.Response.HasStarted) return;
         context.Response.StatusCode = 200;
         context.Response.Headers.Append("Content-Type", "application/json");
-        context.Response.WriteAsync(response.ToString());
+        context.Response.WriteAsync(response.ToString()).Wait();
     }
 }

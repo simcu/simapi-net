@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using SimApi.Helpers;
 
 namespace SimApi.Communications;
 
@@ -36,15 +37,7 @@ public class SimApiBaseResponse(int code = 200, string message = "成功")
     /// <returns></returns>
     public override string ToString()
     {
-        return JsonSerializer.Serialize(this, new JsonSerializerOptions
-        {
-            IgnoreReadOnlyProperties = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            Converters =
-            {
-                new JsonStringEnumConverter()
-            }
-        });
+        return SimApiUtil.Json(this);
     }
 }
 

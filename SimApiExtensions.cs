@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 using SimApi.Helpers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -207,6 +208,12 @@ public static class SimApiExtensions
         {
             builder.AddHttpContextAccessor();
             builder.AddSingleton<SimApiStorage>();
+        }
+
+        if (simApiOptions.EnableSimApiException)
+        {
+            builder.AddControllers(opt => opt.Filters.Add<SimApiResponseFilter>())
+                .AddJsonOptions(opt => opt.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase);
         }
 
         builder.AddSingleton(simApiOptions);
