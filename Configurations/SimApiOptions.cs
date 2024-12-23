@@ -36,6 +36,11 @@ public class SimApiOptions
     /// default: true
     /// </summary>
     public bool EnableSimApiException { get; set; } = true;
+    
+    /// <summary>
+    /// 启用返回结果拦截
+    /// </summary>
+    public bool EnableSimApiResponseFilter { get; set; } = true;
 
     /// <summary>
     /// 开启S3兼容的存储系统。
