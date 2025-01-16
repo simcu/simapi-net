@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MQTTnet;
-using MQTTnet.Client;
 using MQTTnet.Formatter;
 using SimApi.Attributes;
 using SimApi.Communications;
@@ -22,7 +21,7 @@ public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logge
 {
     private SimApiSynapseOptions Options { get; } = simApiOptions.SimApiSynapseOptions;
 
-    private MqttFactory MqttFactory { get; } = new();
+    private MqttClientFactory MqttFactory { get; } = new();
     public IMqttClient? Client { get; set; }
 
     private List<RegisterItem> EventRegistry { get; set; } = new();

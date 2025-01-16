@@ -5,6 +5,13 @@ namespace SimApi.Configurations;
 
 public class SimApiOptions
 {
+    public string? RedisConfiguration { get; set; }
+
+    /// <summary>
+    /// 是否启用后台任务系统 *基于Hangfire
+    /// </summary>
+    public bool EnableJob { get; set; } = false;
+
     /// <summary>
     /// 启用全部Cors，对于开发前后分离的时候很有用。
     /// default: true
@@ -36,7 +43,7 @@ public class SimApiOptions
     /// default: true
     /// </summary>
     public bool EnableSimApiException { get; set; } = true;
-    
+
     /// <summary>
     /// 启用返回结果拦截
     /// </summary>
@@ -71,6 +78,10 @@ public class SimApiOptions
     /// </summary>
     public bool EnableSynapse { get; set; }
 
+    /// <summary>
+    /// 配置Job
+    /// </summary>
+    public SimApiJobOptions SimApiJobOptions { get; set; } = new();
 
     /// <summary>
     /// Swagger文档相关配置，需要启用 EnableSimApiDoc
@@ -102,5 +113,10 @@ public class SimApiOptions
     public void ConfigureSimApiStorage(Action<SimApiStorageOptions>? options = null)
     {
         options?.Invoke(SimApiStorageOptions);
+    }
+
+    public void ConfigureSimApiJob(Action<SimApiJobOptions>? options = null)
+    {
+        options?.Invoke(SimApiJobOptions);
     }
 }

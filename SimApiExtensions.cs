@@ -3,6 +3,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
+using Hangfire;
+using Hangfire.Console;
+using Hangfire.Redis.StackExchange;
 using SimApi.Helpers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +32,12 @@ public static class SimApiExtensions
     {
         var simApiOptions = new SimApiOptions();
         options?.Invoke(simApiOptions);
+        if (simApiOptions.RedisConfiguration != null)
+        {
+            builder.AddStackExchangeRedisCache(x => x.Configuration = simApiOptions.RedisConfiguration);
+            builder.AddSingleton<SimApiCache>();
+        }
+
         if (simApiOptions.EnableLogger)
         {
             builder.AddLogging(logger =>
@@ -47,6 +56,30 @@ public static class SimApiExtensions
         if (simApiOptions.EnableCoceSdk)
         {
             builder.AddSingleton<CoceApp>();
+        }
+
+        if (simApiOptions.EnableJob)
+        {
+            builder.AddHangfire(x =>
+            {
+                var redisOption = new RedisStorageOptions();
+                if (simApiOptions.SimApiJobOptions.Database.HasValue)
+                {
+                    redisOption.Db = simApiOptions.SimApiJobOptions.Database.Value;
+                }
+
+                x.UseRedisStorage(simApiOptions.SimApiJobOptions.RedisConfiguration ??
+                                  simApiOptions.RedisConfiguration, redisOption);
+                x.UseConsole();
+            });
+            foreach (var server in simApiOptions.SimApiJobOptions.Servers)
+            {
+                builder.AddHangfireServer(hfs =>
+                {
+                    hfs.Queues = server.Queues;
+                    hfs.WorkerCount = server.WorkerNum;
+                });
+            }
         }
 
         if (simApiOptions.EnableCors)
@@ -228,16 +261,16 @@ public static class SimApiExtensions
 
         logger.LogInformation("当前时区: {LocalId}", TimeZoneInfo.Local.Id);
 
+        if (options.RedisConfiguration != null)
+        {
+            logger.LogInformation("开始配置 RedisCache ...");
+        }
+
         //请求一下检测存储错误
         if (options.EnableSimApiStorage)
         {
             logger.LogInformation("开始配置SimApiStorage...");
             builder.Services.GetService<SimApiStorage>();
-        }
-
-        if (options.EnableSimApiResponseFilter)
-        {
-            logger.LogInformation("开始配置SimApiResponseFilter...");
         }
 
         if (options.EnableCoceSdk)
@@ -247,15 +280,15 @@ public static class SimApiExtensions
                 options.CoceSdkOptions.AppId);
         }
 
-        if (options.EnableLowerUrl)
-        {
-            logger.LogInformation("开始配置使用URL小写...");
-        }
-
         if (options.EnableSynapse)
         {
             var synapse = builder.Services.GetRequiredService<Synapse>();
             synapse.Init();
+        }
+
+        if (options.EnableJob)
+        {
+            logger.LogInformation("开始配置 SimApiJob ...");
         }
 
         return builder;
@@ -269,10 +302,8 @@ public static class SimApiExtensions
     public static WebApplication UseSimApi(this WebApplication builder)
     {
         var options = builder.Services.GetRequiredService<SimApiOptions>();
-
         var logger = builder.Services.GetRequiredService<ILogger<SimApiOptions>>();
-
-        logger.LogInformation("当前时区: {LocalId}", TimeZoneInfo.Local.Id);
+        UseSimApi((IHost)builder);
         if (options.EnableForwardHeaders)
         {
             logger.LogInformation("开始配置ForwardedHeaders...");
@@ -283,6 +314,11 @@ public static class SimApiExtensions
         {
             logger.LogInformation("开始配置Cors全部允许...");
             builder.UseCors("any");
+        }
+
+        if (options.EnableSimApiResponseFilter)
+        {
+            logger.LogInformation("开始配置SimApiResponseFilter...");
         }
 
         if (options.EnableSimApiAuth)
@@ -333,22 +369,22 @@ public static class SimApiExtensions
             builder.UseMiddleware<SimApiExceptionMiddleware>();
         }
 
-        //请求一下检测存储错误
-        if (options.EnableSimApiStorage)
-        {
-            logger.LogInformation("开始配置SimApiStorage...");
-            builder.Services.GetService<SimApiStorage>();
-        }
-
         if (options.EnableLowerUrl)
         {
             logger.LogInformation("开始配置使用URL小写...");
         }
 
-        if (options.EnableSynapse)
+        if (options is { EnableJob: true, SimApiJobOptions.DashboardUrl: not null })
         {
-            var synapse = builder.Services.GetRequiredService<Synapse>();
-            synapse.Init();
+            logger.LogInformation("开始配置 SimApiJob Web控制台...");
+            builder.UseHangfireDashboard(options.SimApiJobOptions.DashboardUrl, new DashboardOptions
+            {
+                Authorization =
+                [
+                    new SimApiJobWebAuth(options.SimApiJobOptions.DashboardAuthUser,
+                        options.SimApiJobOptions.DashboardAuthPass)
+                ]
+            });
         }
 
         return builder;
