@@ -10,13 +10,7 @@ public class SimApiOptions
     /// <summary>
     /// 是否启用后台任务系统 *基于Hangfire
     /// </summary>
-    public bool EnableJob { get; set; } = false;
-
-    /// <summary>
-    /// 启用全部Cors，对于开发前后分离的时候很有用。
-    /// default: true
-    /// </summary>
-    public bool EnableCors { get; set; } = true;
+    public bool EnableJob { get; set; }
 
     /// <summary>
     /// 启用SimApiAuth，一个简单的基于Header Token的认证方式。
@@ -24,19 +18,36 @@ public class SimApiOptions
     /// </summary>
     public bool EnableSimApiAuth { get; set; }
 
-
     /// <summary>
     /// 是否使用CoceSdk
     /// </summary>
     public bool EnableCoceSdk { get; set; }
 
-    public CoceAppSdkOption CoceSdkOptions { get; set; } = new();
+    /// <summary>
+    /// 开启S3兼容的存储系统。
+    /// default: false
+    /// </summary>
+    public bool EnableSimApiStorage { get; set; }
 
     /// <summary>
     /// 启用在线文档，启用后 访问 /swagger 可以查看对应的api文档。
     /// default: false
     /// </summary>
     public bool EnableSimApiDoc { get; set; }
+
+    /// <summary>
+    /// 是否启用Synapse
+    /// </summary>
+    public bool EnableSynapse { get; set; }
+
+    /// <summary>
+    /// 启用全部Cors，对于开发前后分离的时候很有用。
+    /// default: true
+    /// </summary>
+    public bool EnableCors { get; set; } = true;
+
+
+    public CoceAppSdkOption CoceSdkOptions { get; set; } = new();
 
     /// <summary>
     /// 启用异常拦截,启用后，所有的异常将被通过json反馈。
@@ -49,11 +60,6 @@ public class SimApiOptions
     /// </summary>
     public bool EnableSimApiResponseFilter { get; set; } = true;
 
-    /// <summary>
-    /// 开启S3兼容的存储系统。
-    /// default: false
-    /// </summary>
-    public bool EnableSimApiStorage { get; set; }
 
     /// <summary>
     /// 开启ForwardHeaders,开启后可以透传负载均衡的Headers
@@ -67,16 +73,13 @@ public class SimApiOptions
     /// </summary>
     public bool EnableLowerUrl { get; set; } = true;
 
+
     /// <summary>
     /// 启用格式化的 Console Logger
     /// default: false
     /// </summary>
-    public bool EnableLogger { get; set; }
+    public bool EnableLogger { get; set; } = true;
 
-    /// <summary>
-    /// 是否启用Synapse
-    /// </summary>
-    public bool EnableSynapse { get; set; }
 
     /// <summary>
     /// 配置Job

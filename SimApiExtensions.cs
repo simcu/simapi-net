@@ -246,6 +246,7 @@ public static class SimApiExtensions
         if (simApiOptions.EnableSimApiResponseFilter)
         {
             builder.AddControllers(opt => opt.Filters.Add<SimApiResponseFilter>())
+                .AddXmlSerializerFormatters()
                 .AddJsonOptions(opt => opt.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase);
         }
 
@@ -319,6 +320,7 @@ public static class SimApiExtensions
         if (options.EnableSimApiResponseFilter)
         {
             logger.LogInformation("开始配置SimApiResponseFilter...");
+            builder.MapControllers();
         }
 
         if (options.EnableSimApiAuth)
@@ -337,11 +339,11 @@ public static class SimApiExtensions
                     options.CoceSdkOptions.ApiEndpoint, options.CoceSdkOptions.AuthEndpoint,
                     options.CoceSdkOptions.AppId);
                 builder.MapControllerRoute(name: "LoginUseCoce", pattern: "/auth/login",
-                    defaults: new { controller = "SimApiCoce", action = "Login" });
+                    defaults: new { controller = "Coce", action = "Login" });
                 builder.MapControllerRoute(name: "LoginUseCoce", pattern: "/user/groups",
-                    defaults: new { controller = "SimApiCoce", action = "ListGroups" });
+                    defaults: new { controller = "Coce", action = "ListGroups" });
                 builder.MapControllerRoute(name: "LoginUseCoce", pattern: "/auth/config",
-                    defaults: new { controller = "SimApiCoce", action = "GetConfig" });
+                    defaults: new { controller = "Coce", action = "GetConfig" });
             }
         }
 

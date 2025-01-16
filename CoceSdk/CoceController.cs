@@ -1,14 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using SimApi.Attributes;
-using SimApi.CoceSdk;
 using SimApi.Communications;
+using SimApi.Controllers;
 using SimApi.Helpers;
 
-namespace SimApi.Controllers;
+namespace SimApi.CoceSdk;
 
-public class SimApiCoceController(CoceApp coce,SimApiAuth auth) : SimApiBaseController
+public class CoceController(CoceApp coce, SimApiAuth auth, IServiceProvider sp) : SimApiBaseController
 {
     [HttpPost]
     public SimApiBaseResponse<ConfigResponse> GetConfig()
@@ -33,8 +35,9 @@ public class SimApiCoceController(CoceApp coce,SimApiAuth auth) : SimApiBaseCont
         {
             Id = data.UserId,
             Meta = meta,
-            Extra = groups
         };
+        var processor = sp.GetService<ICoceLoginProcessor>();
+        processor?.Process(loginItem, groups.ToArray());
         return new SimApiBaseResponse<string>(auth.Login(loginItem));
     }
 
