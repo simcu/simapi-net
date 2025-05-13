@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -7,6 +8,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Text.Unicode;
+using System.Xml.Serialization;
 
 namespace SimApi.Helpers;
 
@@ -22,6 +24,7 @@ public static class SimApiUtil
     /// </summary>
     public static JsonSerializerOptions JsonOption => new()
     {
+        ReferenceHandler = ReferenceHandler.Preserve,
         Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
@@ -63,11 +66,42 @@ public static class SimApiUtil
     }
 
     /// <summary>
+    /// sha1加密字符串
+    /// </summary>
+    /// <param name="source">源字符串</param>
+    /// <param name="mode">加密结果"x2"结果为32位,"x3"结果为48位,"x4"结果为64位</param>
+    /// <returns></returns>
+    public static string Sha1(string source, string mode = "x2")
+    {
+        var hash = SHA1.HashData(Encoding.UTF8.GetBytes(source));
+        var sb = new StringBuilder(hash.Length * 2);
+        foreach (var b in hash)
+        {
+            sb.Append(b.ToString(mode));
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// 将XML字符串序列化为对象
+    /// </summary>
+    /// <param name="source"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public static T XmlDeserialize<T>(string source)
+    {
+        var xmlConvertor = new XmlSerializer(typeof(T));
+        using var reader = new StringReader(source);
+        return (T)xmlConvertor.Deserialize(reader)!;
+    }
+
+    /// <summary>
     /// 将对象序列化成JSON （控制台输出中文不会被编码）
     /// </summary>
     /// <param name="obj"></param>
     /// <returns></returns>
-    public static string Json(object obj)
+    public static string Json(object? obj)
     {
         return JsonSerializer.Serialize(obj, JsonOption);
     }

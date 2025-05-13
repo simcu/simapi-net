@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Hangfire;
 using Hangfire.Console;
 using Hangfire.Redis.StackExchange;
@@ -247,7 +248,11 @@ public static class SimApiExtensions
         {
             builder.AddControllers(opt => opt.Filters.Add<SimApiResponseFilter>())
                 .AddXmlSerializerFormatters()
-                .AddJsonOptions(opt => opt.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase);
+                .AddJsonOptions(opt =>
+                {
+                    opt.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                    opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+                });
         }
 
         builder.AddSingleton(simApiOptions);
@@ -328,22 +333,46 @@ public static class SimApiExtensions
             logger.LogInformation("开始配置SimApiAuth...");
             builder.UseMiddleware<SimApiAuthMiddleware>();
             builder.MapControllerRoute(name: "GetUserInfo", pattern: "/user/info",
-                defaults: new { controller = "SimApiCommon", action = "UserInfo" });
+                defaults: new
+                {
+                    controller = "SimApiCommon",
+                    action = "UserInfo"
+                });
             builder.MapControllerRoute(name: "CheckLogin", pattern: "/auth/check",
-                defaults: new { controller = "SimApiCommon", action = "CheckLogin" });
+                defaults: new
+                {
+                    controller = "SimApiCommon",
+                    action = "CheckLogin"
+                });
             builder.MapControllerRoute(name: "Logout", pattern: "/auth/logout",
-                defaults: new { controller = "SimApiCommon", action = "Logout" });
+                defaults: new
+                {
+                    controller = "SimApiCommon",
+                    action = "Logout"
+                });
             if (options.EnableCoceSdk)
             {
                 logger.LogInformation("开始配置CoceAppSdk...\nApi入口: {ApiUrl}\nAuth入口:{AuthUrl}n\nAppId: {AppId}",
                     options.CoceSdkOptions.ApiEndpoint, options.CoceSdkOptions.AuthEndpoint,
                     options.CoceSdkOptions.AppId);
                 builder.MapControllerRoute(name: "LoginUseCoce", pattern: "/auth/login",
-                    defaults: new { controller = "Coce", action = "Login" });
+                    defaults: new
+                    {
+                        controller = "Coce",
+                        action = "Login"
+                    });
                 builder.MapControllerRoute(name: "LoginUseCoce", pattern: "/user/groups",
-                    defaults: new { controller = "Coce", action = "ListGroups" });
+                    defaults: new
+                    {
+                        controller = "Coce",
+                        action = "ListGroups"
+                    });
                 builder.MapControllerRoute(name: "LoginUseCoce", pattern: "/auth/config",
-                    defaults: new { controller = "Coce", action = "GetConfig" });
+                    defaults: new
+                    {
+                        controller = "Coce",
+                        action = "GetConfig"
+                    });
             }
         }
 

@@ -7,8 +7,8 @@ namespace SimApi.Communications;
 /// </summary>
 public class SimApiLoginItem
 {
-    public string? Id { get; set; }
-    public string[] Type { get; set; } = new[] { "user" };
-    public Dictionary<string, string>? Meta { get; set; } = null;
-    public object? Extra { get; set; } = null;
+    public string Id { get; set; } = null!;
+    public string[] Type { get; set; } = ["user"];
+    public Dictionary<string, string> Meta { get; set; } = new();
+    public object? Extra { get; set; }
 };

@@ -1,6 +1,4 @@
-#nullable enable
 using System;
-using System.Collections.Generic;
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
 using SimApi.Communications;
@@ -33,7 +31,7 @@ public class SimApiAuth(IDistributedCache cache)
     public SimApiLoginItem? GetLogin(string token)
     {
         var login = cache.GetString(token);
-        return login != null ? JsonSerializer.Deserialize<SimApiLoginItem>(login) : default;
+        return login != null ? JsonSerializer.Deserialize<SimApiLoginItem>(login) : null;
     }
 
     /// <summary>

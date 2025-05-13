@@ -14,7 +14,7 @@ public class SimApiJobWebAuth(string user, string pass) : IDashboardAuthorizatio
         var authHeader = httpContext.Request.Headers["Authorization"].FirstOrDefault();
         if (authHeader != null && authHeader.StartsWith("Basic "))
         {
-            var encodedUsernamePassword = authHeader.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries)[1]?.Trim();
+            var encodedUsernamePassword = authHeader.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries)[1].Trim();
             var decodedUsernamePassword = Encoding.UTF8.GetString(Convert.FromBase64String(encodedUsernamePassword));
             var username = decodedUsernamePassword.Split(':', 2)[0];
             var password = decodedUsernamePassword.Split(':', 2)[1];

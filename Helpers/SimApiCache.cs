@@ -5,7 +5,7 @@ namespace SimApi.Helpers;
 
 public class SimApiCache(IDistributedCache cache)
 {
-    private const string Prefix = "SimApi:Cache";
+    private const string Prefix = "SimApi:Cache:";
 
     public void Set(string key, object value, DistributedCacheEntryOptions? options = null)
     {
