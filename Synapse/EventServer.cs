@@ -19,39 +19,42 @@ public partial class Synapse
     {
         Client!.ApplicationMessageReceivedAsync += async e =>
         {
-            if (!e.ApplicationMessage.Topic.StartsWith(EventServerTopicPrefix)) return;
-            var reqBody = e.ApplicationMessage.ConvertPayloadToString();
-            var eventName = e.ApplicationMessage.Topic.Replace(EventServerTopicPrefix, string.Empty);
-            logger.LogDebug("Synapse Event Receive: {EventName}\n{Body}", eventName, reqBody);
-            var methods = EventRegistry
-                .Where(x => Regex.IsMatch(eventName,
-                    "^" + Regex.Escape(x.Key!).Replace("\\+", "[^/]+").Replace("\\#", ".*") + "$"))
-                .ToArray();
-            var tasks = methods.Select(method => Task.Run(() =>
-                {
-                    var callClass = sp.CreateScope().ServiceProvider.GetRequiredService(method.Class!);
-                    var mt = callClass.GetType().GetMethod(method.Method!);
-                    try
+            await Task.Run(async () =>
+            {
+                if (!e.ApplicationMessage.Topic.StartsWith(EventServerTopicPrefix)) return;
+                var reqBody = e.ApplicationMessage.ConvertPayloadToString();
+                var eventName = e.ApplicationMessage.Topic.Replace(EventServerTopicPrefix, string.Empty);
+                logger.LogDebug("Synapse Event Receive: {EventName}\n{Body}", eventName, reqBody);
+                var methods = EventRegistry
+                    .Where(x => Regex.IsMatch(eventName,
+                        "^" + Regex.Escape(x.Key!).Replace("\\+", "[^/]+").Replace("\\#", ".*") + "$"))
+                    .ToArray();
+                var tasks = methods.Select(method => Task.Run(() =>
                     {
-                        if (mt!.GetParameters().Length == 2)
+                        var callClass = sp.CreateScope().ServiceProvider.GetRequiredService(method.Class!);
+                        var mt = callClass.GetType().GetMethod(method.Method!);
+                        try
                         {
-                            var pt = mt.GetParameters()[1].ParameterType;
-                            mt.Invoke(callClass, pt == typeof(string)
-                                ? new object?[] { eventName, reqBody }
-                                : new object?[] { eventName, JsonSerializer.Deserialize(reqBody, pt, SimApiUtil.JsonOption) });
+                            if (mt!.GetParameters().Length == 2)
+                            {
+                                var pt = mt.GetParameters()[1].ParameterType;
+                                mt.Invoke(callClass, pt == typeof(string)
+                                    ? [eventName, reqBody]
+                                    : [eventName, JsonSerializer.Deserialize(reqBody, pt, SimApiUtil.JsonOption)]);
+                            }
+                            else
+                            {
+                                mt.Invoke(callClass, new object[] { eventName });
+                            }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            mt.Invoke(callClass, new object[] { eventName });
+                            logger.LogError("Synapse Event Processor Error: {Err}\n{Stack}", ex.Message, ex.StackTrace);
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.LogError("Synapse Event Processor Error: {Err}\n{Stack}", ex.Message, ex.StackTrace);
-                    }
-                }))
-                .ToList();
-            await Task.WhenAll(tasks);
+                    }))
+                    .ToList();
+                await Task.WhenAll(tasks);
+            });
         };
         SubEventServerTopic();
     }
