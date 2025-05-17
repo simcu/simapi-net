@@ -20,9 +20,9 @@ public partial class Synapse
 
     private void RunRpcServer()
     {
-        Client!.ApplicationMessageReceivedAsync += e =>
+        Client!.ApplicationMessageReceivedAsync += async e =>
         {
-            Task.Run(() =>
+            await Task.Run(() =>
             {
                 if (!e.ApplicationMessage.Topic.StartsWith(RpcServerTopicPrefix)) return;
                 var reqBody = e.ApplicationMessage.ConvertPayloadToString();
@@ -109,7 +109,6 @@ public partial class Synapse
                     "Synapse Rpc Server Return: ({BasicPropertiesMessageId}) {BasicPropertiesType}@{OptionsAppName} -> {BasicPropertiesReplyTo}\n{ReturnJson}",
                     appInfo[2], action, Options.AppName, appInfo[0], returnJson);
             });
-            return Task.CompletedTask;
         };
         SubRpcServerTopic();
     }
