@@ -1,20 +1,19 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MQTTnet;
-using MQTTnet.Packets;
 using SimApi.Communications;
 using SimApi.Helpers;
+using System.Collections.Concurrent;
 
 namespace SimApi;
 
 public partial class Synapse
 {
-    private Dictionary<string, TaskCompletionSource<string>> ResponseCompletionSources { get; } = new();
+    private ConcurrentDictionary<string, TaskCompletionSource<string>> ResponseCompletionSources { get; } = new();
 
     private string EventClientTopicPrefix => $"{Options.SysName}/{Options.AppName}/rpc/client/{Options.AppId}/";
 
@@ -27,7 +26,7 @@ public partial class Synapse
             var messageId = e.ApplicationMessage.Topic.Replace(EventClientTopicPrefix, string.Empty);
             if (!ResponseCompletionSources.TryGetValue(messageId, out var tcs)) return Task.CompletedTask;
             tcs.SetResult(reqBody);
-            ResponseCompletionSources.Remove(messageId);
+            ResponseCompletionSources.Remove(messageId, out _);
             return Task.CompletedTask;
         };
         SubRpcClientTopic();
@@ -43,64 +42,61 @@ public partial class Synapse
     private string? FireRpc(string app, string action, object? param, Dictionary<string, string>? headers = null,
         int? timeout = null)
     {
-        // 检查并发情况下的线程安全问题，使用锁保证字典操作的原子性
-        lock (ResponseCompletionSources)
+        // 移除锁语句
+        string paramJson;
+        if (param is string strParam)
         {
-            string paramJson;
-            if (param is string strParam)
+            paramJson = strParam;
+        }
+        else
+        {
+            paramJson = JsonSerializer.Serialize(param, SimApiUtil.JsonOption);
+        }
+
+        var topic = $"{Options.SysName}/{app}/rpc/server/{action}";
+        var messageId = Guid.NewGuid().ToString();
+        var tcs = new TaskCompletionSource<string>();
+        ResponseCompletionSources.TryAdd(messageId, tcs);
+        var messageBuilder = new MqttApplicationMessageBuilder()
+            .WithTopic(topic)
+            .WithPayload(paramJson)
+            .WithResponseTopic($"{Options.AppName},{Options.AppId},{messageId}")
+            .WithContentType("application/json")
+            .WithRetainFlag(false);
+        foreach (var h in headers ?? new Dictionary<string, string>())
+        {
+            messageBuilder.WithUserProperty(h.Key, h.Value);
+        }
+
+        var message = messageBuilder.Build();
+        if (!Client!.IsConnected) return null;
+        Client.PublishAsync(message, CancellationToken.None).Wait();
+        logger.LogDebug(
+            "Synapse RPC Client Request: ({PropsMessageId}) {OptionsAppName} -> {Action}@{App}\n{ParamJson}\nHeaders: {Headers}",
+            messageId, Options.AppName, action, app, paramJson, JsonSerializer.Serialize(headers));
+
+        string response;
+        try
+        {
+            timeout ??= Options.RpcTimeout;
+            if (tcs.Task.Wait(timeout.Value * 1000))
             {
-                paramJson = strParam;
+                response = tcs.Task.Result;
+                logger.LogDebug(
+                    "Synapse RPC Client Response: ({BasicPropertiesCorrelationId}) {BasicPropertiesType}@{BasicPropertiesReplyTo} -> {OptionsAppName}\n{S}",
+                    messageId, action, app, Options.AppName, response);
             }
             else
             {
-                paramJson = JsonSerializer.Serialize(param, SimApiUtil.JsonOption);
+                response = JsonSerializer.Serialize(new SimApiBaseResponse(502, "timeout"), SimApiUtil.JsonOption);
             }
-
-            var topic = $"{Options.SysName}/{app}/rpc/server/{action}";
-            var messageId = Guid.NewGuid().ToString();
-            var tcs = new TaskCompletionSource<string>();
-            ResponseCompletionSources.Add(messageId, tcs);
-            var messageBuilder = new MqttApplicationMessageBuilder()
-                .WithTopic(topic)
-                .WithPayload(paramJson)
-                .WithResponseTopic($"{Options.AppName},{Options.AppId},{messageId}")
-                .WithContentType("application/json")
-                .WithRetainFlag(false);
-            foreach (var h in headers ?? new Dictionary<string, string>())
-            {
-                messageBuilder.WithUserProperty(h.Key, h.Value);
-            }
-
-            var message = messageBuilder.Build();
-            if (!Client!.IsConnected) return null;
-            Client.PublishAsync(message, CancellationToken.None).Wait();
-            logger.LogDebug(
-                "Synapse RPC Client Request: ({PropsMessageId}) {OptionsAppName} -> {Action}@{App}\n{ParamJson}\nHeaders: {Headers}",
-                messageId, Options.AppName, action, app, paramJson, JsonSerializer.Serialize(headers));
-
-            string response;
-            try
-            {
-                timeout ??= Options.RpcTimeout;
-                if (tcs.Task.Wait(timeout.Value * 1000))
-                {
-                    response = tcs.Task.Result;
-                    logger.LogDebug(
-                        "Synapse RPC Client Response: ({BasicPropertiesCorrelationId}) {BasicPropertiesType}@{BasicPropertiesReplyTo} -> {OptionsAppName}\n{S}",
-                        messageId, action, app, Options.AppName, response);
-                }
-                else
-                {
-                    response = JsonSerializer.Serialize(new SimApiBaseResponse(502, "timeout"), SimApiUtil.JsonOption);
-                }
-            }
-            catch
-            {
-                response = JsonSerializer.Serialize(new SimApiBaseResponse(500, "Synapse RPC Client Error"),
-                    SimApiUtil.JsonOption);
-            }
-
-            return response;
         }
+        catch
+        {
+            response = JsonSerializer.Serialize(new SimApiBaseResponse(500, "Synapse RPC Client Error"),
+                SimApiUtil.JsonOption);
+        }
+
+        return response;
     }
 }
