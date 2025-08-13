@@ -251,7 +251,6 @@ public static class SimApiExtensions
                 .AddJsonOptions(opt =>
                 {
                     opt.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-                    opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
                 });
         }
 
