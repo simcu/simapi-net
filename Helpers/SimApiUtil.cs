@@ -24,10 +24,10 @@ public static class SimApiUtil
     /// </summary>
     public static JsonSerializerOptions JsonOption => new()
     {
-        ReferenceHandler = ReferenceHandler.Preserve,
+        // ReferenceHandler = ReferenceHandler.Preserve,
         Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        // DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
     /// <summary>
