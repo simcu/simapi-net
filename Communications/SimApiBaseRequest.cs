@@ -1,13 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace SimApi.Communications;
+﻿namespace SimApi.Communications;
 
 /// <summary>
 /// 只有ID的请求
 /// </summary>
 public class SimApiIdOnlyRequest
 {
-    [Required] public int Id { get; set; }
+    public required int Id { get; set; }
 }
 
 /// <summary>
@@ -15,7 +13,7 @@ public class SimApiIdOnlyRequest
 /// </summary>
 public class SimApiStringIdOnlyRequest
 {
-    [Required] public string? Id { get; set; }
+    public required string Id { get; set; }
 }
 
 /// <summary>
@@ -24,7 +22,7 @@ public class SimApiStringIdOnlyRequest
 /// <typeparam name="T"></typeparam>
 public class SimApiOneFieldRequest<T>
 {
-    [Required] public T? Data { get; set; }
+    public required T Data { get; set; }
 }
 
 /// <summary>
@@ -32,6 +30,6 @@ public class SimApiOneFieldRequest<T>
 /// </summary>
 public class SimApiBasePageRequest
 {
-    [Required] public int Page { get; set; }
-    [Required] public int Count { get; set; }
+    public required int Page { get; set; }
+    public required int Count { get; set; }
 }

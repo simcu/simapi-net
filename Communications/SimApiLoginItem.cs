@@ -9,6 +9,6 @@ public class SimApiLoginItem
 {
     public string Id { get; set; } = null!;
     public string[] Type { get; set; } = ["user"];
-    public Dictionary<string, string> Meta { get; set; } = new();
+    public Dictionary<string, string> Meta { get; set; } = [];
     public object? Extra { get; set; }
 };
