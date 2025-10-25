@@ -24,6 +24,18 @@ public class SimApiAuth(IDistributedCache cache)
     }
 
     /// <summary>
+    /// 更新登陆信息
+    /// </summary>
+    /// <param name="loginItem"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
+    public string Update(SimApiLoginItem loginItem, string token)
+    {
+        cache.SetString(token, JsonSerializer.Serialize(loginItem));
+        return token;
+    }
+
+    /// <summary>
     /// 获取登陆信息
     /// </summary>
     /// <param name="token"></param>
