@@ -122,7 +122,7 @@ public static class SimApiExtensions
                 }
 
                 x.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
-                x.OperationFilter<WrapResponseSchemaFilter>();
+                x.OperationFilter<SimApiResponseSchemaFilter>();
                 if (simApiOptions.EnableSimApiAuth)
                 {
                     x.OperationFilter<SimApiAuthOperationFilter>();

@@ -11,7 +11,7 @@ using SimApi.Communications;
 
 namespace SimApi.Helpers;
 
-public class WrapResponseSchemaFilter : IOperationFilter
+public class SimApiResponseSchemaFilter : IOperationFilter
 {
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {
