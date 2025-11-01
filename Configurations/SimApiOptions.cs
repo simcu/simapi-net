@@ -75,6 +75,14 @@ public class SimApiOptions
 
 
     /// <summary>
+    /// 应用可以通过 /versions 显示出应用版本和SimApi包版本
+    /// default: true
+    /// </summary>
+    public bool EnableVersionUrl { get; set; } = true;
+
+
+
+    /// <summary>
     /// 启用格式化的 Console Logger
     /// default: false
     /// </summary>

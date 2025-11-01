@@ -16,7 +16,7 @@ public class SimApiDocAttribute : SwaggerOperationAttribute
     /// <param name="name">接口名称</param>
     public SimApiDocAttribute(string tag, string name)
     {
-        Tags = new[] { tag };
+        Tags = [tag];
         Summary = name;
         // Consumes = new[] {"application/json"};
         // Produces = new[] {"application/json"};

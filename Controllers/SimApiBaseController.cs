@@ -14,6 +14,9 @@ namespace SimApi.Controllers;
 /// 2. 报错返回
 /// 3. 错误回馈页面
 /// </summary>
+///
+[Consumes("application/json")]
+[Produces("application/json")]
 public class SimApiBaseController : Controller
 {
     /// <summary>

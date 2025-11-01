@@ -13,6 +13,10 @@ public class SimApiBaseResponse(int code = 200, string message = "成功")
     public int Code { get; set; } = code;
     public string Message { get; set; } = message;
 
+    public SimApiBaseResponse() : this(200, "成功")
+    {
+    }
+
     /// <summary>
     /// 默认错误代码对应提示信息
     /// </summary>

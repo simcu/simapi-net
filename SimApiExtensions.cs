@@ -121,30 +121,27 @@ public static class SimApiExtensions
                     });
                 }
 
+                x.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
+                x.OperationFilter<WrapResponseSchemaFilter>();
+                if (simApiOptions.EnableSimApiAuth)
+                {
+                    x.OperationFilter<SimApiAuthOperationFilter>();
+                }
+
                 x.EnableAnnotations();
                 var haveOauth = false;
-                var haveSimApiAuth = false;
                 var oauthFlows = new OpenApiOAuthFlows();
                 foreach (var auth in docOptions.ApiAuth.Type)
                 {
                     switch (auth)
                     {
                         case "SimApiAuth":
-                            x.AddSecurityRequirement(new OpenApiSecurityRequirement
-                            {
+                            x.AddSecurityDefinition("HeaderToken",
+                                new OpenApiSecurityScheme
                                 {
-                                    new OpenApiSecurityScheme
-                                    {
-                                        Reference = new OpenApiReference
-                                        {
-                                            Type = ReferenceType.SecurityScheme,
-                                            Id = "HeaderToken"
-                                        }
-                                    },
-                                    new[] { "readAccess", "writeAccess" }
-                                }
-                            });
-                            haveSimApiAuth = true;
+                                    Name = "Token",
+                                    In = ParameterLocation.Header
+                                });
                             break;
                         case "ClientCredentials":
                             oauthFlows.ClientCredentials = new OpenApiOAuthFlow
@@ -193,30 +190,6 @@ public static class SimApiExtensions
                         Description = docOptions.ApiAuth.Description,
                         In = ParameterLocation.Header
                     });
-                    x.AddSecurityRequirement(new OpenApiSecurityRequirement
-                    {
-                        {
-                            new OpenApiSecurityScheme
-                            {
-                                Reference = new OpenApiReference
-                                {
-                                    Type = ReferenceType.SecurityScheme,
-                                    Id = "oauth2"
-                                }
-                            },
-                            ["SimApiAuth"]
-                        }
-                    });
-                }
-
-                if (haveSimApiAuth)
-                {
-                    x.AddSecurityDefinition("HeaderToken",
-                        new OpenApiSecurityScheme
-                        {
-                            Name = "Token",
-                            In = ParameterLocation.Header
-                        });
                 }
             });
         }
@@ -264,6 +237,8 @@ public static class SimApiExtensions
         var logger = builder.Services.GetRequiredService<ILogger<SimApiOptions>>();
 
         logger.LogInformation("当前时区: {LocalId}", TimeZoneInfo.Local.Id);
+        logger.LogInformation("主应用版本: {AppVersion}\nSimApi版本: {SimApiVersion}", SimApiUtil.AppVersion,
+            SimApiUtil.SimApiVersion);
 
         if (options.RedisConfiguration != null)
         {
@@ -374,22 +349,33 @@ public static class SimApiExtensions
             }
         }
 
+        if (options.EnableVersionUrl)
+        {
+            builder.MapControllerRoute(name: "Versions", pattern: "/versions",
+                defaults: new
+                {
+                    controller = "SimApiCommon",
+                    action = "Versions"
+                });
+        }
+
         if (options.EnableSimApiDoc)
         {
             logger.LogInformation("开始配置SimApiDoc...");
             var docOptions = options.SimApiDocOptions;
-            builder.UseSwagger(x => x.RouteTemplate = "/swagger/{documentName}.json").UseSwaggerUI(x =>
-            {
-                x.DocumentTitle = docOptions.DocumentTitle;
-                foreach (var group in docOptions.ApiGroups)
+            builder.UseSwagger(x => x.RouteTemplate = "/swagger/{documentName}.json")
+                .UseSwaggerUI(x =>
                 {
-                    x.SwaggerEndpoint($"/swagger/{group.Id}.json", name: group.Name);
-                }
+                    x.DocumentTitle = docOptions.DocumentTitle;
+                    foreach (var group in docOptions.ApiGroups)
+                    {
+                        x.SwaggerEndpoint($"/swagger/{group.Id}.json", name: group.Name);
+                    }
 
-                x.EnableValidator();
-                x.SupportedSubmitMethods(docOptions.SupportedMethod);
-                x.DisplayRequestDuration();
-            });
+                    x.EnableValidator();
+                    x.SupportedSubmitMethods(docOptions.SupportedMethod);
+                    x.DisplayRequestDuration();
+                });
         }
 
         if (options.EnableSimApiException)

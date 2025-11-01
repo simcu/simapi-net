@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
 using SimApi.Attributes;
 using SimApi.Communications;
 using SimApi.Helpers;
 
 namespace SimApi.Controllers;
+
 public class SimApiCommonController(SimApiAuth auth) : SimApiBaseController
 {
     /// <summary>
@@ -25,7 +27,7 @@ public class SimApiCommonController(SimApiAuth auth) : SimApiBaseController
     [HttpPost, SimApiDoc("认证", "检测登陆")]
     public SimApiBaseResponse<string> CheckLogin()
     {
-        ErrorWhenNull(LoginInfo, 401,"未登录");
+        ErrorWhenNull(LoginInfo, 401, "未登录");
         return new SimApiBaseResponse<string>
         {
             Data = LoginInfo.Id
@@ -50,7 +52,20 @@ public class SimApiCommonController(SimApiAuth auth) : SimApiBaseController
         return new SimApiBaseResponse();
     }
 
-    [HttpPost,SimApiAuth]
+    [HttpPost, HttpGet]
+    public SimApiBaseResponse<Dictionary<string, string>> Versions()
+    {
+        return new SimApiBaseResponse<Dictionary<string, string>>()
+        {
+            Data = new Dictionary<string, string>
+            {
+                { "SimApi", SimApiUtil.SimApiVersion },
+                { "App", SimApiUtil.AppVersion }
+            }
+        };
+    }
+
+    [HttpPost, SimApiAuth]
     public SimApiBaseResponse<SimApiLoginItem> UserInfo()
     {
         return new SimApiBaseResponse<SimApiLoginItem>(LoginInfo);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -29,6 +30,53 @@ public static class SimApiUtil
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         // DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
+
+    public static string SimApiVersion
+    {
+        get
+        {
+            // 这里使用当前类（属于 NuGet 包）的程序集
+            var assembly = typeof(SimApiUtil).Assembly;
+
+            // 优先获取 AssemblyInformationalVersion（通常对应 NuGet 包版本，可能包含预发布标签）
+            var informationalVersion =
+                assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+            if (!string.IsNullOrEmpty(informationalVersion))
+            {
+                return informationalVersion;
+            }
+
+            // 若不存在，则获取 AssemblyVersion（编译时版本）
+            var version = assembly.GetName().Version?.ToString();
+            return version ?? "Unknown";
+        }
+    }
+
+    public static string AppVersion
+    {
+        get
+        {
+            // 获取外层应用的入口程序集（通常是启动项目的程序集）
+            var entryAssembly = Assembly.GetEntryAssembly();
+            if (entryAssembly == null)
+            {
+                // 特殊场景（如单元测试、某些宿主环境）下，入口程序集可能为 null，可尝试获取调用栈中的上层程序集
+                entryAssembly = Assembly.GetCallingAssembly(); // 或 Assembly.GetExecutingAssembly() 视场景调整
+            }
+
+            // 优先获取应用的 AssemblyInformationalVersion
+            var informationalVersion = entryAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                ?.InformationalVersion;
+            if (!string.IsNullOrEmpty(informationalVersion))
+            {
+                return informationalVersion;
+            }
+
+            // 若不存在，则获取 AssemblyVersion
+            var version = entryAssembly.GetName().Version?.ToString();
+            return version ?? "Unknown";
+        }
+    }
 
     /// <summary>
     /// 当前秒级时间戳
