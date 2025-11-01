@@ -6,22 +6,22 @@ namespace SimApi.Configurations;
 /// <summary>
 /// 文档组配置
 /// </summary>
-public class SimApiDocGroupOption
+public class SimApiDocGroupOption(string id, string name, string description = "")
 {
     /// <summary>
     /// 文档标识
     /// </summary>
-    public string Id { get; set; } = null!;
+    public string Id { get; set; } = id;
 
     /// <summary>
     /// 文档名称
     /// </summary>
-    public string Name { get; set; } = null!;
+    public string Name { get; set; } = name;
 
     /// <summary>
     /// 文档描述
     /// </summary>
-    public string Description { get; set; } = null!;
+    public string Description { get; set; } = description!;
 }
 
 /// <summary>
@@ -29,7 +29,7 @@ public class SimApiDocGroupOption
 /// </summary>
 public class SimApiAuthOption
 {
-    public string[] Type { get; set; } = new[] { "SimApiAuth" };
+    public string[] Type { get; set; } = ["SimApiAuth"];
 
     public string Description { get; set; } = "认证服务器颁发的AccessToken";
 
@@ -48,20 +48,15 @@ public class SimApiDocOptions
     /// <summary>
     /// 文档组配置
     /// </summary>
-    public SimApiDocGroupOption[] ApiGroups { get; set; } = new[]
-    {
-        new SimApiDocGroupOption
-        {
-            Id = "api",
-            Name = "Api",
-            Description = "Api接口文档"
-        }
-    };
+    public SimApiDocGroupOption[] ApiGroups { get; set; } =
+    [
+        new("api", "Api", "Api接口文档")
+    ];
 
     /// <summary>
     /// 授权配置
     /// </summary>
-    public SimApiAuthOption ApiAuth { get; set; } = new SimApiAuthOption();
+    public SimApiAuthOption ApiAuth { get; set; } = new();
 
     /// <summary>
     /// 文档页面标题
@@ -71,5 +66,5 @@ public class SimApiDocOptions
     /// <summary>
     /// 接口支持的调用方式
     /// </summary>
-    public SubmitMethod[] SupportedMethod { get; set; } = new[] { SubmitMethod.Post };
+    public SubmitMethod[] SupportedMethod { get; set; } = [SubmitMethod.Post];
 }

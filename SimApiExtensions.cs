@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using SimApi.Middlewares;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SimApi.Attributes;
@@ -127,6 +128,21 @@ public static class SimApiExtensions
                 {
                     x.OperationFilter<SimApiAuthOperationFilter>();
                 }
+
+                x.DocInclusionPredicate((docName, apiDesc) =>
+                {
+                    // 获取接口标记的 GroupName（未标记则为 null）
+                    var actionGroupName = apiDesc.ActionDescriptor.EndpointMetadata
+                        .OfType<ApiExplorerSettingsAttribute>()
+                        .FirstOrDefault()?.GroupName;
+
+                    // 情况1：接口未标记任何 GroupName（actionGroupName 为 null）
+                    if (actionGroupName == null)
+                    {
+                        return docName == "api"; // 未分组接口只属于默认分组v1
+                    }
+                    return docName == actionGroupName;
+                });
 
                 x.EnableAnnotations();
                 var haveOauth = false;
