@@ -141,6 +141,7 @@ public static class SimApiExtensions
                     {
                         return docName == "api"; // 未分组接口只属于默认分组v1
                     }
+
                     return docName == actionGroupName;
                 });
 
@@ -324,19 +325,19 @@ public static class SimApiExtensions
             builder.MapControllerRoute(name: "GetUserInfo", pattern: "/user/info",
                 defaults: new
                 {
-                    controller = "SimApiCommon",
+                    controller = "SimApiAuth",
                     action = "UserInfo"
                 });
             builder.MapControllerRoute(name: "CheckLogin", pattern: "/auth/check",
                 defaults: new
                 {
-                    controller = "SimApiCommon",
+                    controller = "SimApiAuth",
                     action = "CheckLogin"
                 });
             builder.MapControllerRoute(name: "Logout", pattern: "/auth/logout",
                 defaults: new
                 {
-                    controller = "SimApiCommon",
+                    controller = "SimApiAuth",
                     action = "Logout"
                 });
             if (options.EnableCoceSdk)
