@@ -9,9 +9,9 @@ using Microsoft.AspNetCore.Mvc;
 using SimApi.Attributes;
 using SimApi.Communications;
 
-namespace SimApi.Helpers;
+namespace SimApi.SwaggerFilters;
 
-public class SimApiResponseSchemaFilter : IOperationFilter
+public class SimApiResponseOperationFilter : IOperationFilter
 {
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {

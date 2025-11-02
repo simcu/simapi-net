@@ -19,6 +19,7 @@ using SimApi.Attributes;
 using SimApi.CoceSdk;
 using SimApi.Configurations;
 using SimApi.Logger;
+using SimApi.SwaggerFilters;
 
 namespace SimApi;
 
@@ -123,7 +124,9 @@ public static class SimApiExtensions
                 }
 
                 x.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
-                x.OperationFilter<SimApiResponseSchemaFilter>();
+                x.OperationFilter<SimApiResponseOperationFilter>();
+                x.OperationFilter<SimApiSignOperationFilter>();
+                x.OperationFilter<AesBodyOperationFilter>();
                 if (simApiOptions.EnableSimApiAuth)
                 {
                     x.OperationFilter<SimApiAuthOperationFilter>();

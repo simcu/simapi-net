@@ -1,3 +1,5 @@
+using SimApi.Exceptions;
+
 namespace SimApi.ModelBinders;
 
 /// <summary>
@@ -5,7 +7,7 @@ namespace SimApi.ModelBinders;
 /// </summary>
 public abstract class AesBodyProviderBase
 {
-    public string? AppIdName { get; set; } = "appId";
+    public virtual string? AppIdName { get; set; } = "appId";
 
 
     /// <summary>

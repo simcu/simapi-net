@@ -12,7 +12,7 @@ namespace SimApi.Attributes;
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
 public class SimApiSignAttribute : ActionFilterAttribute
 {
-    protected Type KeyProvider { get; set; } = typeof(SimApiSignProviderBase);
+    public Type KeyProvider { get; set; } = typeof(SimApiSignProviderBase);
 
     public override void OnActionExecuting(ActionExecutingContext context)
     {
@@ -99,6 +99,11 @@ public class SimApiSignAttribute : ActionFilterAttribute
                 .FirstOrDefault() ?? context.HttpContext.Request.Headers[item]
                 .FirstOrDefault();
             signStr += "&";
+        }
+
+        if (!string.IsNullOrEmpty(keyProvider.AppIdName))
+        {
+            signStr += $"{keyProvider.AppIdName}={appId}&";
         }
 
         signStr += $"{keyProvider.TimestampName}={ts}&{keyProvider.NonceName}={nonce}&{key}";

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -6,7 +5,7 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using SimApi.Attributes;
 
-namespace SimApi.Helpers
+namespace SimApi.SwaggerFilters
 {
     public class SimApiAuthOperationFilter : IOperationFilter
     {

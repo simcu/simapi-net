@@ -1,5 +1,6 @@
 using System;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using SimApi.ModelBinders;
 
 namespace SimApi.Attributes;
@@ -8,6 +9,7 @@ namespace SimApi.Attributes;
 public class AesBodyAttribute : ModelBinderAttribute
 {
     public Type KeyProvider { get; set; } = typeof(AesBodyProviderBase);
+    public override BindingSource BindingSource => BindingSource.Body;
 
     public AesBodyAttribute()
     {
