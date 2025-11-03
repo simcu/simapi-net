@@ -11,7 +11,7 @@ public class SimApiJobWebAuth(string user, string pass) : IDashboardAuthorizatio
     public bool Authorize(DashboardContext context)
     {
         var httpContext = context.GetHttpContext();
-        var authHeader = httpContext.Request.Headers["Authorization"].FirstOrDefault();
+        var authHeader = httpContext.Request.Headers.Authorization.FirstOrDefault();
         if (authHeader != null && authHeader.StartsWith("Basic "))
         {
             var encodedUsernamePassword = authHeader.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries)[1].Trim();

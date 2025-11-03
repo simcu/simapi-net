@@ -24,16 +24,19 @@ public class SimApiExceptionMiddleware(RequestDelegate next, ILogger<SimApiExcep
         try
         {
             await next(context);
-            switch (context.Response.StatusCode)
+            if (!context.Response.HasStarted)
             {
-                case 200:
-                case 301:
-                case 302:
-                    break;
-                case 404:
-                    throw new SimApiException(context.Response.StatusCode, "请求的接口不存在");
-                default:
-                    throw new SimApiException(context.Response.StatusCode);
+                switch (context.Response.StatusCode)
+                {
+                    case 200:
+                    case 301:
+                    case 302:
+                        break;
+                    case 404:
+                        throw new SimApiException(context.Response.StatusCode, "请求的接口不存在");
+                    default:
+                        throw new SimApiException(context.Response.StatusCode);
+                }
             }
         }
         catch (SimApiException ex)
