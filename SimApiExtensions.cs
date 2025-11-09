@@ -127,6 +127,7 @@ public static class SimApiExtensions
                 x.OperationFilter<SimApiResponseOperationFilter>();
                 x.OperationFilter<SimApiSignOperationFilter>();
                 x.OperationFilter<AesBodyOperationFilter>();
+                x.SchemaFilter<GlobalDynamicObjectSchemaFilter>();
                 if (simApiOptions.EnableSimApiAuth)
                 {
                     x.OperationFilter<SimApiAuthOperationFilter>();
@@ -239,7 +240,6 @@ public static class SimApiExtensions
         if (simApiOptions.EnableSimApiResponseFilter)
         {
             builder.AddControllers(opt => opt.Filters.Add<SimApiResponseFilter>())
-                .AddXmlSerializerFormatters()
                 .AddJsonOptions(opt =>
                 {
                     opt.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
