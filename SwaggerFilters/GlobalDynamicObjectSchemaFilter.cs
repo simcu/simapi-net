@@ -1,27 +1,26 @@
 using System;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
-using Microsoft.OpenApi.Any;
+using System.Text.Json.Nodes;
 
 namespace SimApi.SwaggerFilters;
 
 public class GlobalDynamicObjectSchemaFilter : ISchemaFilter
 {
-    public void Apply(OpenApiSchema schema, SchemaFilterContext context)
+    public void Apply(IOpenApiSchema schema, SchemaFilterContext context)
     {
         if (!IsDynamicObjectType(context.Type)) return;
-        schema.AdditionalPropertiesAllowed = true;
-        schema.AdditionalProperties = new OpenApiSchema
+        var oaSchema = schema as OpenApiSchema;
+        oaSchema.AdditionalPropertiesAllowed = true;
+        oaSchema.AdditionalProperties = new OpenApiSchema
         {
-            Type = "object", // 表示 value 可以是任意类型（兼容所有类型）
-            Nullable = true
+            Type = JsonSchemaType.Object, // 表示 value 可以是任意类型（兼容所有类型）
         };
 
         // 2. 覆盖默认示例，使用包含多种类型的示例
-        schema.Example = CreateMultiTypeExample();
+        oaSchema.Example = CreateMultiTypeExample();
     }
 
     // 判断是否为需要处理的“动态对象”类型
@@ -33,30 +32,39 @@ public class GlobalDynamicObjectSchemaFilter : ISchemaFilter
         {
             return true;
         }
+
         if (type == typeof(object))
         {
             return true;
         }
+
         return type.Name.Contains("AnonymousType") && type.Namespace == null;
     }
 
     // 创建包含多种类型的示例（覆盖默认的 string 示例）
-    private OpenApiObject CreateMultiTypeExample()
+    private JsonNode CreateMultiTypeExample()
     {
-        return new OpenApiObject
+        return new JsonObject
         {
-            ["stringProp"] = new OpenApiString("example string"), // 字符串
-            ["numberProp"] = new OpenApiInteger(123), // 数字
-            ["boolProp"] = new OpenApiBoolean(true), // 布尔值
-            ["objectProp"] = new OpenApiObject // 嵌套对象
+            // 字符串类型：JsonValue.Create 包装字符串
+            ["stringProp"] = JsonValue.Create("example string"),
+            // 数字类型：支持 int/long/double 等，JsonValue 自动适配
+            ["numberProp"] = JsonValue.Create(123),
+            // 布尔类型
+            ["boolProp"] = JsonValue.Create(true),
+            // 嵌套对象：JsonObject 对应 OpenApiObject
+            ["objectProp"] = new JsonObject
             {
-                ["nestedKey"] = new OpenApiString("nested value")
+                ["nestedKey"] = JsonValue.Create("nested value")
             },
-            ["arrayProp"] = new OpenApiArray // 数组
+            // 数组类型：JsonArray 对应 OpenApiArray
+            ["arrayProp"] = new JsonArray
             {
-                new OpenApiInteger(1),
-                new OpenApiString("two")
-            }
+                JsonValue.Create(1), // 数组内数字
+                JsonValue.Create("two") // 数组内字符串
+            },
+            // 可选：添加 null 值示例（若需要）
+            ["nullProp"] = null
         };
     }
 }

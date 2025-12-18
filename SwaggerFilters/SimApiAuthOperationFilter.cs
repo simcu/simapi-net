@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using SimApi.Attributes;
 
@@ -18,28 +18,24 @@ namespace SimApi.SwaggerFilters
                 ||
                 // 控制器上有 [SimApiAuth]（继承到所有方法）
                 context.MethodInfo.DeclaringType?.GetCustomAttributes<SimApiAuthAttribute>(true).Any() == true;
-            if (requiresAuth)
+            if (!requiresAuth) return;
+
+            // 关键修复：正确构造 OpenApiSecuritySchemeReference（匹配键类型要求）
+            var securitySchemeRef = new OpenApiSecuritySchemeReference(
+                referenceId: "SimApiAuth", // 必须与 AddSecurityDefinition 的 ID 一致
+                hostDocument: null,
+                externalResource: null
+            );
+
+            // 给 Security 赋值（确保键类型是 OpenApiSecuritySchemeReference）
+            operation.Security ??= new List<OpenApiSecurityRequirement>();
+            operation.Security.Add(new OpenApiSecurityRequirement
             {
-                // 添加授权要求：关联步骤 2 中定义的 "SimApiAuth" 安全方案
-                operation.Security = new List<OpenApiSecurityRequirement>
                 {
-                    new OpenApiSecurityRequirement
-                    {
-                        {
-                            new OpenApiSecurityScheme
-                            {
-                                Reference = new OpenApiReference
-                                {
-                                    Type = ReferenceType.SecurityScheme,
-                                    Id = "SimApiAuth" // 必须与 AddSecurityDefinition 的第一个参数一致
-                                }
-                            },
-                            [] // 无需指定作用域（scope）时留空
-                        }
-                    }
-                };
-            }
-            // 未标记 [SimApiAuth] 的接口：不添加安全要求，Swagger 不显示锁图标
+                    securitySchemeRef,
+                    []
+                }
+            });
         }
     }
 }

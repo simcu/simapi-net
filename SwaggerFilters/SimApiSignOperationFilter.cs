@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using SimApi.Attributes;
 using SimApi.ModelBinders;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -67,20 +67,24 @@ public class SimApiSignOperationFilter(IServiceProvider serviceProvider) : IOper
         signParameters.AddRange(keyProvider.SignFields.Where(x => x != keyProvider.AppIdName)
             .Select(f => (f, string.Empty, true)));
 
+        operation.Parameters ??= new List<IOpenApiParameter>();
+
         foreach (var (name, description, required) in signParameters)
         {
             if (operation.Parameters?.Any(p => p.Name == name) == true)
             {
                 var tmp = operation.Parameters?.FirstOrDefault(p => p.Name == name);
-                if (tmp != null)
+                if (tmp is OpenApiParameter concreteParam)
                 {
-                    tmp.Required = required;
-                    tmp.Description = description;
+                    // 重新赋值只读属性（通过实例化新对象覆盖，或直接修改具体类的可写属性）
+                    concreteParam.Required = required; // OpenApiParameter 的 Required 有 setter
+                    concreteParam.Description = description;
                 }
+
                 continue;
             }
 
-            operation.Parameters ??= new List<OpenApiParameter>();
+            operation.Parameters ??= new List<IOpenApiParameter>();
             operation.Parameters.Add(new OpenApiParameter
             {
                 Name = name,
@@ -89,7 +93,7 @@ public class SimApiSignOperationFilter(IServiceProvider serviceProvider) : IOper
                 Required = required,
                 Schema = new OpenApiSchema
                 {
-                    Type = "string" // 签名相关参数通常为字符串类型
+                    Type = JsonSchemaType.String // 签名相关参数通常为字符串类型
                 }
             });
         }

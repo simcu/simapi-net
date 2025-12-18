@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.OpenApi;
 using SimApi.Attributes;
 
 namespace SimApi.SwaggerFilters;
 
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
 
