@@ -8,7 +8,7 @@ using SimApi.Exceptions;
 
 namespace SimApi.Helpers;
 
-public class SimApiHttpClient(string? appId, string appKey)
+public class SimApiHttpClient(string? appId, string appKey, bool debug = false)
 {
     public string Server { get; init; } = string.Empty;
     public string SignName { get; init; } = "sign";
@@ -16,7 +16,6 @@ public class SimApiHttpClient(string? appId, string appKey)
     public string NonceName { get; init; } = "nonce";
     public string? AppIdName { get; init; } = "appId";
     public string[] SignFields { get; init; } = [];
-
 
     public T? SignQuery<T>(string url, object? body = null, Dictionary<string, string>? queries = null)
     {
@@ -68,7 +67,17 @@ public class SimApiHttpClient(string? appId, string appKey)
     private T? Query<T>(string url, object? req)
     {
         var http = new HttpClient();
+        if (debug)
+        {
+            Console.WriteLine($"[HTTPCLIENT请求] {url}\n{SimApiUtil.Json(req)}\n");
+        }
+
         var resp = http.PostAsJsonAsync(url, req).Result;
+        if (debug)
+        {
+            Console.WriteLine($"[HTTPCLIENT响应] {resp.Content.ReadAsStringAsync().Result}\n");
+        }
+
         var res = resp.Content.ReadFromJsonAsync<SimApiBaseResponse<T>>().Result;
         if (res == null)
         {
