@@ -9,6 +9,7 @@ namespace SimApi.Helpers;
 
 public class SimApiHttpClient(string? appId, string appKey)
 {
+    public string Server { get; init; } = string.Empty;
     public string SignName { get; init; } = "sign";
     public string TimestampName { get; init; } = "timestamp";
     public string NonceName { get; init; } = "nonce";
@@ -18,6 +19,7 @@ public class SimApiHttpClient(string? appId, string appKey)
 
     public T? SignQuery<T>(string url, object body, Dictionary<string, string>? queries = null)
     {
+        url = Server + url;
         var queryUrl = SignFields.Aggregate(string.Empty,
             (current, signField) => current + $"{signField}={queries?[signField]}&");
         if (!string.IsNullOrEmpty(AppIdName))
@@ -42,6 +44,7 @@ public class SimApiHttpClient(string? appId, string appKey)
 
     public T? AesQuery<T>(string url, object body)
     {
+        url = Server + url;
         if (!string.IsNullOrEmpty(AppIdName))
         {
             url += $"?{AppIdName}={appId}";
