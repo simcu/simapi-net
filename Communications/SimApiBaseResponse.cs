@@ -46,23 +46,15 @@ public class SimApiBaseResponse(int code = 200, string message = "成功")
 }
 
 /// <summary>
-/// 动态内容分页
+/// 分页内容返回
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public class SimApiBasePageResponse<T>() : SimApiBaseResponse
+public class PageResponse<T>
 {
     public T? List { get; set; }
     public int Page { get; set; } = 1;
     public int Count { get; set; } = 20;
     public int Total { get; set; }
-
-    public SimApiBasePageResponse(T list, int page, int count, int total) : this()
-    {
-        List = list;
-        Page = page;
-        Count = count;
-        Total = total;
-    }
 }
 
 /// <summary>

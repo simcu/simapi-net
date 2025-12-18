@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using SimApi.Communications;
+using SimApi.Exceptions;
 
 namespace SimApi.Helpers;
 
@@ -37,9 +38,7 @@ public class SimApiHttpClient(string? appId, string appKey)
                 .Aggregate(path, (current, q) => current + $"&{q.Key}={q.Value}");
         }
 
-        var http = new HttpClient();
-        var resp = http.PostAsJsonAsync(path, body).Result;
-        return resp.Content.ReadFromJsonAsync<T>().Result;
+        return Query<T>(path, body);
     }
 
     public T? AesQuery<T>(string url, object body)
@@ -54,9 +53,7 @@ public class SimApiHttpClient(string? appId, string appKey)
         {
             Data = SimApiAesUtil.Encrypt(SimApiUtil.Json(body), appKey)
         };
-        var http = new HttpClient();
-        var resp = http.PostAsJsonAsync(url, req).Result;
-        return resp.Content.ReadFromJsonAsync<T>().Result;
+        return Query<T>(url, req);
     }
 
     public T? AesSignQuery<T>(string url, object body, Dictionary<string, string>? queries = null)
@@ -66,5 +63,18 @@ public class SimApiHttpClient(string? appId, string appKey)
             Data = SimApiAesUtil.Encrypt(SimApiUtil.Json(body), appKey)
         };
         return SignQuery<T>(url, req, queries);
+    }
+
+    private T? Query<T>(string url, object? req)
+    {
+        var http = new HttpClient();
+        var resp = http.PostAsJsonAsync(url, req).Result;
+        var res = resp.Content.ReadFromJsonAsync<SimApiBaseResponse<T>>().Result;
+        if (res == null)
+        {
+            throw new SimApiException(500, "请求发生错误");
+        }
+
+        return res.Code != 200 ? throw new SimApiException(res.Code, res.Message) : res.Data;
     }
 }
