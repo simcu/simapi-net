@@ -10,11 +10,11 @@ jobs:
     name: Publish Project to Nuget
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
       - name: Setup .NET Core
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: "9.0.305"
+          dotnet-version: "10.x.x"
       - name: Publish
         run: |
           version=`git describe --tags`
