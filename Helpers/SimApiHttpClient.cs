@@ -17,7 +17,7 @@ public class SimApiHttpClient(string? appId, string appKey)
     public string[] SignFields { get; init; } = [];
 
 
-    public T? SignQuery<T>(string url, object body, Dictionary<string, string>? queries = null)
+    public T? SignQuery<T>(string url, object? body = null, Dictionary<string, string>? queries = null)
     {
         url = Server + url;
         var queryUrl = SignFields.Aggregate(string.Empty,
