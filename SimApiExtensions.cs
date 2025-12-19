@@ -122,12 +122,12 @@ public static class SimApiExtensions
                         Description = group.Description
                     });
                 }
-
                 x.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
                 x.OperationFilter<SimApiResponseOperationFilter>();
                 x.OperationFilter<SimApiSignOperationFilter>();
                 x.OperationFilter<AesBodyOperationFilter>();
                 x.SchemaFilter<GlobalDynamicObjectSchemaFilter>();
+                x.DocumentFilter<RemoveEmptyTagsFilter>();
                 if (simApiOptions.EnableSimApiAuth)
                 {
                     x.OperationFilter<SimApiAuthOperationFilter>();
@@ -392,7 +392,6 @@ public static class SimApiExtensions
                         x.SwaggerEndpoint($"/swagger/{group.Id}.json", name: group.Name);
                     }
 
-                    x.EnableValidator();
                     x.SupportedSubmitMethods(docOptions.SupportedMethod);
                     x.DisplayRequestDuration();
                 });
