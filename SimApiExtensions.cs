@@ -124,7 +124,42 @@ public static class SimApiExtensions
                     });
                 }
 
-                x.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
+                x.CustomSchemaIds(type =>
+                {
+                    string GetSimpleTypeName(Type t)
+                    {
+                        if (t.IsArray)
+                        {
+                            var elementType = t.GetElementType();
+                            return $"{GetSimpleTypeName(elementType)}[]";
+                        }
+
+                        if (t.IsPrimitive || t == typeof(string) || t == typeof(DateTime) || t == typeof(Guid))
+                        {
+                            return t.Name switch
+                            {
+                                "String" => "string",
+                                "Int32" => "int",
+                                "Int64" => "long",
+                                "Boolean" => "boolean",
+                                "DateTime" => "DateTime",
+                                "Guid" => "Guid",
+                                _ => t.Name
+                            };
+                        }
+
+                        return t.Name;
+                    }
+
+                    if (!type.IsGenericType) return GetSimpleTypeName(type);
+                    var baseName = type.GetGenericTypeDefinition().Name.Split('`')[0];
+                    var genericArgs = type.GetGenericArguments()
+                        .Select(GetSimpleTypeName)
+                        .ToArray();
+                    return genericArgs.Length > 0
+                        ? $"{baseName}<{string.Join(",", genericArgs)}>"
+                        : baseName;
+                });
                 x.OperationFilter<SimApiResponseOperationFilter>();
                 x.OperationFilter<SimApiSignOperationFilter>();
                 x.OperationFilter<AesBodyOperationFilter>();
@@ -159,19 +194,13 @@ public static class SimApiExtensions
                     switch (auth)
                     {
                         case "SimApiAuth":
-                            x.AddSecurityDefinition("HeaderToken",
+                            x.AddSecurityDefinition("SimApiAuth",
                                 new OpenApiSecurityScheme
                                 {
                                     Name = "Token",
                                     In = ParameterLocation.Header,
                                     Type = SecuritySchemeType.ApiKey
                                 });
-                            x.AddSecurityRequirement(docs => new OpenApiSecurityRequirement
-                            {
-                                {
-                                    new OpenApiSecuritySchemeReference("HeaderToken"), new List<string>()
-                                }
-                            });
                             break;
                         case "ClientCredentials":
                             oauthFlows.ClientCredentials = new OpenApiOAuthFlow
@@ -219,12 +248,6 @@ public static class SimApiExtensions
                         Flows = oauthFlows,
                         Description = docOptions.ApiAuth.Description,
                         In = ParameterLocation.Header
-                    });
-                    x.AddSecurityRequirement(docs => new OpenApiSecurityRequirement
-                    {
-                        {
-                            new OpenApiSecuritySchemeReference("oauth2"), new List<string>()
-                        }
                     });
                 }
             });
