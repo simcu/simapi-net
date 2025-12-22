@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -122,6 +123,7 @@ public static class SimApiExtensions
                         Description = group.Description
                     });
                 }
+
                 x.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
                 x.OperationFilter<SimApiResponseOperationFilter>();
                 x.OperationFilter<SimApiSignOperationFilter>();
@@ -161,8 +163,15 @@ public static class SimApiExtensions
                                 new OpenApiSecurityScheme
                                 {
                                     Name = "Token",
-                                    In = ParameterLocation.Header
+                                    In = ParameterLocation.Header,
+                                    Type = SecuritySchemeType.ApiKey
                                 });
+                            x.AddSecurityRequirement(docs => new OpenApiSecurityRequirement
+                            {
+                                {
+                                    new OpenApiSecuritySchemeReference("HeaderToken"), new List<string>()
+                                }
+                            });
                             break;
                         case "ClientCredentials":
                             oauthFlows.ClientCredentials = new OpenApiOAuthFlow
@@ -210,6 +219,12 @@ public static class SimApiExtensions
                         Flows = oauthFlows,
                         Description = docOptions.ApiAuth.Description,
                         In = ParameterLocation.Header
+                    });
+                    x.AddSecurityRequirement(docs => new OpenApiSecurityRequirement
+                    {
+                        {
+                            new OpenApiSecuritySchemeReference("oauth2"), new List<string>()
+                        }
                     });
                 }
             });
