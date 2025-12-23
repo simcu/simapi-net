@@ -126,14 +126,38 @@ public static class SimApiExtensions
 
                 x.CustomSchemaIds(type =>
                 {
-                    string GetSimpleTypeName(Type t)
+                    // 递归解析类型名称（处理嵌套泛型/数组/可空 + 保证唯一性）
+                    string GetSimpleTypeName(Type t, int depth = 0)
                     {
+                        // 防止无限递归
+                        if (depth > 5) return t.Name.Split('`')[0];
+
+                        // 处理数组类型
                         if (t.IsArray)
                         {
                             var elementType = t.GetElementType();
-                            return $"{GetSimpleTypeName(elementType)}[]";
+                            return $"{GetSimpleTypeName(elementType, depth + 1)}[]";
                         }
 
+                        // 处理可空类型
+                        if (Nullable.GetUnderlyingType(t) != null)
+                        {
+                            var underlyingType = Nullable.GetUnderlyingType(t);
+                            return GetSimpleTypeName(underlyingType, depth + 1);
+                        }
+
+                        // 处理泛型类型（递归解析嵌套泛型）
+                        if (t.IsGenericType)
+                        {
+                            var genericBaseName = t.GetGenericTypeDefinition().Name.Split('`')[0];
+                            var genericArgs = t.GetGenericArguments()
+                                .Select(arg => GetSimpleTypeName(arg, depth + 1))
+                                .Where(arg => !string.IsNullOrEmpty(arg))
+                                .ToArray();
+                            return $"{genericBaseName}<{string.Join(",", genericArgs)}>";
+                        }
+
+                        // 处理基础类型（小写）
                         if (t.IsPrimitive || t == typeof(string) || t == typeof(DateTime) || t == typeof(Guid))
                         {
                             return t.Name switch
@@ -142,23 +166,32 @@ public static class SimApiExtensions
                                 "Int32" => "int",
                                 "Int64" => "long",
                                 "Boolean" => "boolean",
-                                "DateTime" => "DateTime",
-                                "Guid" => "Guid",
-                                _ => t.Name
+                                "DateTime" => "datetime",
+                                "Guid" => "guid",
+                                _ => t.Name.ToLower()
                             };
                         }
 
-                        return t.Name;
+                        // 核心修复：生成唯一名称（处理嵌套类/同名不同类）
+                        var typeName = t.Name;
+
+                        // 步骤1：处理嵌套类（如 ApplicationDto+ApplicationEditRequest → ApplicationDto_ApplicationEditRequest）
+                        if (t.DeclaringType != null)
+                        {
+                            typeName = $"{GetSimpleTypeName(t.DeclaringType)}.{typeName}";
+                        }
+
+                        // 步骤2：（可选）处理同命名空间下的同名类（拼接命名空间前缀，避免全局重复）
+                        // 如需更严格的唯一性，取消注释下面这行
+                        // typeName = $"{t.Namespace?.Replace(".", "_")}_{typeName}";
+
+                        return typeName;
                     }
 
-                    if (!type.IsGenericType) return GetSimpleTypeName(type);
-                    var baseName = type.GetGenericTypeDefinition().Name.Split('`')[0];
-                    var genericArgs = type.GetGenericArguments()
-                        .Select(GetSimpleTypeName)
-                        .ToArray();
-                    return genericArgs.Length > 0
-                        ? $"{baseName}<{string.Join(",", genericArgs)}>"
-                        : baseName;
+                    // 根调用：解析当前类型
+                    var uniqueSchemaId = GetSimpleTypeName(type);
+                    // 可选：移除特殊字符（如 $、+），避免 Swagger 解析问题
+                    return uniqueSchemaId.Replace("$", "").Replace("+", "_");
                 });
                 x.OperationFilter<SimApiResponseOperationFilter>();
                 x.OperationFilter<SimApiSignOperationFilter>();

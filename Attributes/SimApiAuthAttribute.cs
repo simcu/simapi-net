@@ -13,13 +13,13 @@ namespace SimApi.Attributes;
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
 public class SimApiAuthAttribute : ActionFilterAttribute
 {
-    private string[] Types { get; }
+    private string[]? Types { get; }
 
 
     //默认是user登录类型
     public SimApiAuthAttribute()
     {
-        Types = new[] { "user" };
+        Types = null;
     }
 
     //只检测一种用户类型的快捷方式
@@ -34,13 +34,6 @@ public class SimApiAuthAttribute : ActionFilterAttribute
         Types = types;
     }
 
-    //只检测一种用户类型的快捷方式
-    public SimApiAuthAttribute(string type, string url)
-    {
-        Types = new[] { type };
-        new HttpPostAttribute(url);
-    }
-
     public override void OnActionExecuting(ActionExecutingContext context)
     {
         var loginInfo = (SimApiLoginItem)context.HttpContext.Items["LoginInfo"]!;
@@ -49,6 +42,8 @@ public class SimApiAuthAttribute : ActionFilterAttribute
         {
             throw new SimApiException(401);
         }
+
+        if (Types == null) return;
         //检测用户类型
         if (!Types.Intersect(loginInfo.Type).Any())
         {
