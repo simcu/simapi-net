@@ -12,12 +12,12 @@ public class SimApiDocAttribute : SwaggerOperationAttribute
     /// <summary>
     /// 定义接口说明
     /// </summary>
-    /// <param name="tag">接口分组</param>
+    /// <param name="tags">接口分组列表</param>
     /// <param name="name">接口名称</param>
     /// <param name="description">接口描述</param>
-    public SimApiDocAttribute(string tag, string name, string? description = null)
+    public SimApiDocAttribute(string[] tags, string name, string? description = null)
     {
-        Tags = [tag];
+        Tags = tags;
         Summary = name;
         if (description != null)
         {
@@ -25,5 +25,15 @@ public class SimApiDocAttribute : SwaggerOperationAttribute
         }
         // Consumes = new[] {"application/json"};
         // Produces = new[] {"application/json"};
+    }
+
+    /// <summary>
+    /// 定义接口说明
+    /// </summary>
+    /// <param name="tag">接口分组</param>
+    /// <param name="name">接口名称</param>
+    /// <param name="description">接口描述</param>
+    public SimApiDocAttribute(string tag, string name, string? description = null) : this([tag], name, description)
+    {
     }
 }
