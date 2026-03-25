@@ -9,16 +9,21 @@ jobs:
   publish:
     name: Publish Project to Nuget
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "10.x.x"
+      - name: NuGet login (OIDC → temp API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
       - name: Publish
         run: |
           version=`git describe --tags`
           dotnet build --configuration release -p:Version=$version
-          dotnet nuget push bin/release/Simcu.SimApi.$version.nupkg -k ${NUGET_APIKEY} -s https://www.nuget.org/api/v2/package
-        env:
-          NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
+          dotnet nuget push bin/release/Simcu.SimApi.$version.nupkg -k ${{steps.login.outputs.NUGET_API_KEY}} -s https://api.nuget.org/v3/index.json

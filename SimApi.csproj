@@ -26,6 +26,9 @@
         <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="10.1.0" />
         <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.1.0" />
     </ItemGroup>
+    <ItemGroup>
+      <Content Include=".github\workflows\nuget-publish.yml" />
+    </ItemGroup>
     <ProjectExtensions>
         <MonoDevelop>
             <Properties>
