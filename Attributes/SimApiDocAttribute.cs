@@ -14,10 +14,15 @@ public class SimApiDocAttribute : SwaggerOperationAttribute
     /// </summary>
     /// <param name="tag">接口分组</param>
     /// <param name="name">接口名称</param>
-    public SimApiDocAttribute(string tag, string name)
+    /// <param name="description">接口描述</param>
+    public SimApiDocAttribute(string tag, string name, string? description = null)
     {
         Tags = [tag];
         Summary = name;
+        if (description != null)
+        {
+            Description = description;
+        }
         // Consumes = new[] {"application/json"};
         // Produces = new[] {"application/json"};
     }
