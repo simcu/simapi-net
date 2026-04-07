@@ -29,11 +29,12 @@ public class SimApiJobOptions
     /// 设置为null 使用默认redis配置
     /// </summary>
     public int? Database { get; set; } = null;
+
     public SimApiJobServerConfig[] Servers { get; set; } = [new()];
 }
 
 public class SimApiJobServerConfig()
 {
     public string[] Queues { get; set; } = ["default"];
-    public int WorkerNum { get; set; } = 50;
+    public int WorkerNum { get; set; } = 5;
 }
