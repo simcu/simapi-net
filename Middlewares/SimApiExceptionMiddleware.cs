@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using SimApi.Communications;
@@ -20,7 +19,6 @@ public class SimApiExceptionMiddleware(RequestDelegate next, ILogger<SimApiExcep
             context.Response.Headers["Query-Id"] = header;
         }
 
-        SimApiBaseResponse response;
         try
         {
             await next(context);
@@ -39,31 +37,48 @@ public class SimApiExceptionMiddleware(RequestDelegate next, ILogger<SimApiExcep
                 }
             }
         }
-        catch (SimApiException ex)
-        {
-            response = string.IsNullOrEmpty(ex.Message)
-                ? new SimApiBaseResponse(ex.Code)
-                : new SimApiBaseResponse(ex.Code, ex.Message);
-            ErrorResponse(context, response);
-        }
         catch (Exception ex)
         {
-            log.LogError("{Msg}", ex.Message);
-            log.LogError("{Msg}", ex.StackTrace);
-            response = new SimApiBaseResponse(500, ex.Message);
-            ErrorResponse(context, response);
+            // 解包异步异常
+            ex = UnwrapAggregateException(ex);
+            SimApiBaseResponse response;
+            if (ex is SimApiException simEx)
+            {
+                response = string.IsNullOrEmpty(simEx.Message)
+                    ? new SimApiBaseResponse(simEx.Code)
+                    : new SimApiBaseResponse(simEx.Code, simEx.Message);
+            }
+            else
+            {
+                log.LogError(ex, "服务器异常");
+                response = new SimApiBaseResponse(500, "服务器错误");
+            }
+
+            await ErrorResponseAsync(context, response);
         }
     }
 
-    /// <summary>
-    /// 异常抛出错误
-    /// </summary>
-    /// <param name="context"></param>
-    /// <param name="response"></param>
-    private static void ErrorResponse(HttpContext context, SimApiBaseResponse response)
+    private static Exception UnwrapAggregateException(Exception ex)
     {
+        while (ex is AggregateException aggEx && aggEx.InnerException != null)
+        {
+            ex = aggEx.InnerException;
+        }
+
+        return ex;
+    }
+
+    /// <summary>
+    /// 异步输出错误响应（修复异步异常捕获核心）
+    /// </summary>
+    private static async Task ErrorResponseAsync(HttpContext context, SimApiBaseResponse response)
+    {
+        // 响应已开始则直接返回，不修改
+        if (context.Response.HasStarted)
+            return;
+
         context.Response.StatusCode = 200;
-        context.Response.Headers.Append("Content-Type", "application/json");
-        context.Response.WriteAsync(response.ToString()).Wait();
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsync(response.ToString());
     }
 }
