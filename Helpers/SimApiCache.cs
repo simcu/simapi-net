@@ -19,6 +19,11 @@ public class SimApiCache(IDistributedCache cache)
         }
     }
 
+    public void Remove(string key)
+    {
+        cache.Remove(Prefix + key);
+    }
+
     public string? Get(string key)
     {
         return cache.GetString(Prefix + key);
