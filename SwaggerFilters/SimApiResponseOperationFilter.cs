@@ -46,7 +46,7 @@ public class SimApiResponseOperationFilter : IOperationFilter
         var schema = context.SchemaGenerator.GenerateSchema(wrappedType, context.SchemaRepository);
 
         // 5. 替换 Swagger 文档中的响应类型（只保留 200 OK 的响应，匹配过滤器逻辑）
-        operation.Responses.Clear(); // 清除默认响应（如 200 返回原始类型）
+        operation.Responses!.Clear(); // 清除默认响应（如 200 返回原始类型）
         operation.Responses.Add("200", new OpenApiResponse
         {
             Description = "请求成功",

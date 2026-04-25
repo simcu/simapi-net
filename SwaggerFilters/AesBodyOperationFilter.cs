@@ -22,11 +22,11 @@ public class AesBodyOperationFilter : IOperationFilter
                 .GetCustomAttribute<AesBodyAttribute>() != null;
             if (!hasAesBodyAttr) continue;
             // 1. 移除默认的 Query 参数描述（如果存在）
-            var queryParam = operation.Parameters
+            var queryParam = operation.Parameters!
                 .FirstOrDefault(p => p.Name == parameter.Name);
             if (queryParam != null)
             {
-                operation.Parameters.Remove(queryParam);
+                operation.Parameters!.Remove(queryParam);
             }
 
             // 2. 添加 Body 参数描述

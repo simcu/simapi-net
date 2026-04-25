@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using SimApi.Attributes;
 using SimApi.Communications;
 using SimApi.Helpers;

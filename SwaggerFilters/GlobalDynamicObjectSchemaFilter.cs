@@ -13,7 +13,7 @@ public class GlobalDynamicObjectSchemaFilter : ISchemaFilter
     {
         if (!IsDynamicObjectType(context.Type)) return;
         var oaSchema = schema as OpenApiSchema;
-        oaSchema.AdditionalPropertiesAllowed = true;
+        oaSchema!.AdditionalPropertiesAllowed = true;
         oaSchema.AdditionalProperties = new OpenApiSchema
         {
             Type = JsonSchemaType.Object, // 表示 value 可以是任意类型（兼容所有类型）

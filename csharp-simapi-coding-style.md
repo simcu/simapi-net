@@ -323,7 +323,7 @@ string appId
 
 ### 7.7 错误处理
 
-使用基类的 `ErrorWhen` 系列方法，**不手动 throw、不返回错误码**：
+使用基类的 `ErrorWhen` 系列方法，**不手动 throw、不返回错误码**：(全局扩展,任何地方都可以这样抛出异常)
 
 ```csharp
 ErrorWhenNull(entity);                           // null 则报错（默认 404）

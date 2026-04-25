@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -136,14 +135,14 @@ public static class SimApiExtensions
                         if (t.IsArray)
                         {
                             var elementType = t.GetElementType();
-                            return $"{GetSimpleTypeName(elementType, depth + 1)}[]";
+                            return $"{GetSimpleTypeName(elementType!, depth + 1)}[]";
                         }
 
                         // 处理可空类型
                         if (Nullable.GetUnderlyingType(t) != null)
                         {
                             var underlyingType = Nullable.GetUnderlyingType(t);
-                            return GetSimpleTypeName(underlyingType, depth + 1);
+                            return GetSimpleTypeName(underlyingType!, depth + 1);
                         }
 
                         // 处理泛型类型（递归解析嵌套泛型）
