@@ -17,6 +17,14 @@ public class SimApiHttpClient(string? appId, string appKey, bool debug = false)
     public string? AppIdName { get; init; } = "appId";
     public string[] SignFields { get; init; } = [];
 
+    /// <summary>
+    /// 发起签名请求
+    /// </summary>
+    /// <param name="url"></param>
+    /// <param name="body"></param>
+    /// <param name="queries"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
     public T? SignQuery<T>(string url, object? body = null, Dictionary<string, string>? queries = null)
     {
         url = Server + url;
@@ -40,6 +48,13 @@ public class SimApiHttpClient(string? appId, string appKey, bool debug = false)
         return Query<T>(path, body);
     }
 
+    /// <summary>
+    /// 发起AES加密请求
+    /// </summary>
+    /// <param name="url"></param>
+    /// <param name="body"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
     public T? AesQuery<T>(string url, object body)
     {
         url = Server + url;
@@ -55,6 +70,14 @@ public class SimApiHttpClient(string? appId, string appKey, bool debug = false)
         return Query<T>(url, req);
     }
 
+    /// <summary>
+    /// 发起AES加密以及签名请求
+    /// </summary>
+    /// <param name="url"></param>
+    /// <param name="body"></param>
+    /// <param name="queries"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
     public T? AesSignQuery<T>(string url, object body, Dictionary<string, string>? queries = null)
     {
         var req = new SimApiOneFieldRequest<string>
@@ -64,6 +87,14 @@ public class SimApiHttpClient(string? appId, string appKey, bool debug = false)
         return SignQuery<T>(url, req, queries);
     }
 
+    /// <summary>
+    /// 发起请求
+    /// </summary>
+    /// <param name="url"></param>
+    /// <param name="req"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    /// <exception cref="SimApiException"></exception>
     private T? Query<T>(string url, object? req)
     {
         var http = new HttpClient();

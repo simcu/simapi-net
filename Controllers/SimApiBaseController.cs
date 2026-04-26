@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Linq;
-using SimApi.Exceptions;
+using static SimApi.Helpers.SimApiError;
 
 namespace SimApi.Controllers;
 

@@ -7,6 +7,12 @@ public class SimApiCache(IDistributedCache cache)
 {
     private const string Prefix = "SimApi:Cache:";
 
+    /// <summary>
+    /// 设置缓存
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <param name="options"></param>
     public void Set(string key, object value, DistributedCacheEntryOptions? options = null)
     {
         if (options is not null)
@@ -19,16 +25,31 @@ public class SimApiCache(IDistributedCache cache)
         }
     }
 
+    /// <summary>
+    /// 移除缓存
+    /// </summary>
+    /// <param name="key"></param>
     public void Remove(string key)
     {
         cache.Remove(Prefix + key);
     }
 
+    /// <summary>
+    /// 获取string类型缓存
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns></returns>
     public string? Get(string key)
     {
         return cache.GetString(Prefix + key);
     }
 
+    /// <summary>
+    /// 获取特定类型缓存
+    /// </summary>
+    /// <param name="key"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
     public T? Get<T>(string key)
     {
         var data = cache.GetString(Prefix + key);

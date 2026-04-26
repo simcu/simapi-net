@@ -7,6 +7,7 @@ using SimApi.Attributes;
 using SimApi.Communications;
 using SimApi.Controllers;
 using SimApi.Helpers;
+using static SimApi.Helpers.SimApiError;
 
 namespace SimApi.CoceSdk;
 

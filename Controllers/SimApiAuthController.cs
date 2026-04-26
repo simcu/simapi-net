@@ -5,6 +5,8 @@ using SimApi.Helpers;
 
 namespace SimApi.Controllers;
 
+using static SimApiError;
+
 public class SimApiAuthController(SimApiAuth auth) : SimApiBaseController
 {
     /// <summary>
@@ -28,6 +30,7 @@ public class SimApiAuthController(SimApiAuth auth) : SimApiBaseController
     [HttpPost, SimApiDoc("认证", "退出登陆")]
     public SimApiBaseResponse Logout()
     {
+        ErrorWhenNull(null);
         string? token = null;
 
         if (Request.Headers.TryGetValue("Token", out var value))

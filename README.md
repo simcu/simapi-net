@@ -1,49 +1,16 @@
-# SimApi 使用说明书
+# SimApi 完整 AI 编码参考
 
-> **NuGet 包名**：`Simcu.SimApi`  
-> **目标框架**：`net8.0` / `net9.0` / `net10.0`  
-> **作者**：xRain@SimcuTeam
-
----
-
-## 1. 项目概述
-
-SimApi 是一个基于 ASP.NET Core 的 **API 开发基础辅助库**，核心理念是**一行注册、一行启用**。通过 `AddSimApi()` + `UseSimApi()` 即可获得统一响应格式、认证、文档、对象存储、任务调度、MQTT 消息通信等全套能力。
-
-### 主要功能特性
-
-| 功能 | 说明 |
-|------|------|
-| **统一响应格式** | 自动封装所有接口响应为 `{code, message, data}` 格式 |
-| **全局异常处理** | 捕获所有异常并以 JSON 格式返回，HTTP 状态码始终为 200 |
-| **Token 认证** | 基于 Redis + Header Token 的简单认证机制 |
-| **在线 API 文档** | 基于 Swagger 的多分组文档，含认证标注、签名参数自动注入 |
-| **S3 对象存储** | MinIO 兼容的文件存储，支持预签名上传/下载 |
-| **任务调度** | 基于 Hangfire + Redis 的后台任务管理，带 Web 控制台 |
-| **MQTT 消息通信** | 基于 MQTTnet v5 的事件发布/订阅与 RPC 调用（Synapse 模块） |
-| **API 签名验证** | MD5 签名 + 时间戳过期 + 防重放攻击 |
-| **AES 加密传输** | 自动解密 AES-256-CBC 加密的请求体 |
-| **Redis 缓存** | 统一封装的分布式缓存操作 |
-| **Coce 统一身份** | 集成 Coce 第三方身份认证平台 |
-| **彩色控制台日志** | 按级别着色的格式化控制台日志 |
-| **CORS** | 开发/生产环境全量跨域支持 |
-| **反向代理支持** | ForwardedHeaders 透传，获取真实 IP |
+> **NuGet**: `Simcu.SimApi` | **目标框架**: `net8.0` / `net9.0` / `net10.0`
+> **作者**: xRain@SimcuTeam | **性质**: ASP.NET Core API 基础辅助库
+>
+> **使用方式**: 将本文档作为上下文提供给 AI，或粘贴到对话开头。
 
 ---
 
-## 2. 安装
-
-```bash
-dotnet add package Simcu.SimApi
-```
-
----
-
-## 3. 快速开始
-
-`Program.cs` 中两步完成集成：
+## 0. 快速开始
 
 ```csharp
+// Program.cs — 两步启动
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSimApi(options =>
@@ -64,202 +31,527 @@ builder.Services.AddSimApi(options =>
 });
 
 var app = builder.Build();
-app.UseSimApi();  // 一行启用全部中间件和路由
+app.UseSimApi();
 app.Run();
 ```
 
 ---
 
-## 4. 配置选项（SimApiOptions）
+## 1. 核心概念（必读）
 
-所有配置通过 `AddSimApi(options => { ... })` 设置。
+### 1.1 统一响应格式
 
-### 4.1 功能开关
+**所有接口统一输出 JSON，HTTP 状态码始终 `200`，错误信息在 `code` 字段：**
 
-| 属性 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `RedisConfiguration` | `string?` | `null` | Redis 连接字符串（多个模块依赖） |
-| `EnableSimApiAuth` | `bool` | `false` | 启用 Token 认证体系 |
-| `EnableSimApiDoc` | `bool` | `false` | 启用 Swagger 文档（`/swagger`） |
-| `EnableSimApiStorage` | `bool` | `false` | 启用 S3 对象存储 |
-| `EnableJob` | `bool` | `false` | 启用 Hangfire 任务调度 |
-| `EnableSynapse` | `bool` | `false` | 启用 MQTT 消息/RPC 通信 |
-| `EnableCoceSdk` | `bool` | `false` | 启用 Coce 统一身份平台 |
-| `EnableCors` | `bool` | **`true`** | 启用 CORS 全部允许 |
-| `EnableSimApiException` | `bool` | **`true`** | 启用全局异常拦截 |
-| `EnableSimApiResponseFilter` | `bool` | **`true`** | 启用响应统一封装 |
-| `EnableForwardHeaders` | `bool` | **`true`** | 启用反向代理 Header 转发 |
-| `EnableLowerUrl` | `bool` | **`true`** | URL 强制小写 |
-| `EnableVersionUrl` | `bool` | **`true`** | 启用 `/versions` 接口 |
-| `EnableLogger` | `bool` | **`true`** | 启用彩色控制台日志 |
+```json
+{ "code": 200, "message": "成功", "data": { ... } }
+```
 
-### 4.2 子模块配置方法
+| code 含义 |
+|-----------|
+| 200 成功 | 204 无数据 | 400 参数错误 |
+| 401 需要登录 | 403 无权访问 | 404 不存在 | 500 服务器错误 |
+
+### 1.2 异常处理流程
+
+```
+请求进入
+ └─ SimApiExceptionMiddleware（捕获所有异常 → HTTP 200 + code）
+     └─ SimApiAuthMiddleware（解析 Token → HttpContext.Items["LoginInfo"]）
+         └─ [SimApiSign] Filter（签名验证）
+             └─ [SimApiAuth] Filter（登录/角色检查）
+                 └─ OnActionExecuting（模型验证 → code 400）
+                     └─ Action 执行
+                         └─ SimApiResponseFilter（封装响应）
+```
+
+### 1.3 GOTCHAS（AI 最容易犯的错）
+
+| ❌ 错误 | ✅ 正确 |
+|---------|---------|
+| `SupportedMethod` 写多种方法 | 默认仅 **POST**，按需显式添加 |
+| `WorkerNum = 50` | 默认是 **5** |
+| 存储路径 `/avatars/file.jpg`（无前导斜杠） | 路径必须以 **`/`** 开头 |
+| `s.Endpoint = "http://minio:9000/"` | `ServeUrl`/`Endpoint` **不能以 `/` 结尾** |
+| `synapse.PublishEvent(...)` | 方法名是 **`synapse.Event(...)`** |
+| `synapse.CallRpcAsync(...)` | 方法名是 **`synapse.Rpc<T>(...)`** |
+| HTTP 状态码 4xx/5xx 表示错误 | 所有错误均 **HTTP 200**，错误在 JSON `code` |
+| `SimApiStorageOptions = Configuration.GetSection(...)` | 用 **`options.ConfigureSimApiStorage(s => {...})`** |
+| MQTT 用 RabbitMQ | **MQTTnet v5，通过 WebSocket 连接** |
+
+---
+
+## 2. C# 语言与编码规范
+
+### 2.1 技术栈基础
+
+```
+NuGet: Simcu.SimApi
+.NET 8 / 9 / 10    C# 12 / 14
+Nullable: enable    ImplicitUsings: enable
+```
+
+### 2.2 命名空间
+
+使用**文件范围命名空间**：
 
 ```csharp
-options.ConfigureSimApiDoc(doc => { ... });
-options.ConfigureSimApiStorage(s => { ... });
-options.ConfigureSimApiJob(job => { ... });
-options.ConfigureSimApiSynapse(s => { ... });
-options.ConfigureCoceSdk(coce => { ... });
+// ✅
+namespace MyApp.Controllers;
+
+// ❌
+namespace MyApp.Controllers { }
+```
+
+### 2.3 主构造函数（依赖注入）
+
+```csharp
+// ✅ 主构造函数
+public class OrderController(DataContext db) : SimApiBaseController { }
+
+// ❌ 传统构造函数
+public class OrderController : SimApiBaseController {
+    private readonly DataContext _db;
+    public OrderController(DataContext db) { _db = db; }
+}
+```
+
+### 2.4 集合表达式
+
+优先 `[]`：
+```csharp
+string[] tags = [];                          // ✅
+string[] roles = ["admin", "manager"];       // ✅
+// var tags = new string[] { };               // ❌
+```
+
+### 2.5 Null 处理
+
+```csharp
+var key = app?.Key;                         // 安全访问
+var name = user?.Name ?? "匿名";            // 空合并
+config ??= new Dictionary<string, string>(); // 空合并赋值
+```
+
+### 2.6 命名规范
+
+| 类型 | 规则 | 示例 |
+|------|------|------|
+| 类、接口、枚举 | PascalCase | `AdminController`、`ResPermission` |
+| 方法名 | PascalCase | `UserList`、`ApplicationEdit` |
+| 属性名 | PascalCase | `AccountId`、`LicenseTotal` |
+| 私有字段 | `_camelCase`（如有） | `_logger` |
+| 局部变量、参数 | camelCase | `var user`、`var appId` |
+| 常量 | PascalCase | `MaxRetryCount`、`DefaultRole` |
+| 路由路径 | 全小写 + 连字符 | `/device/refresh-context` |
+| 配置键 | PascalCase:PascalCase | `"Sms:Templates:Verify"` |
+| Redis 缓存 Key | `模块:子类型:标识` | `"Sms:Verify:登陆:手机号"` |
+
+---
+
+## 3. 项目目录结构
+
+推荐**极简扁平化**：
+
+```
+项目名/
+├── Controllers/          # 控制器（含业务逻辑）
+│   └── Dtos/             # 请求/响应 DTO
+├── Models/               # EF Core 实体 + DataContext
+├── Helpers/              # 工具类 / 框架扩展点
+├── Migrations/           # EF Core 迁移（自动生成，勿手改）
+└── Program.cs            # 入口 + DI + 中间件（无 Startup.cs）
+```
+
+业务逻辑直接在 Controller 中通过 `db`（EF Core DbContext）操作数据库。可复用横切逻辑抽取到 `Helpers/`。
+
+> 如果项目较复杂也可选标准分层（Controllers → Services → Models），但需项目内保持一致不混用。
+
+---
+
+## 4. 错误处理系统（SimApiError）
+
+### 4.1 概述
+
+报错方法已从 BaseController 移出，独立为静态类 `SimApi.Helpers.SimApiError`。可在任何地方使用。
+
+**使用方式**：每个需要用的文件加一行 `using static SimApiHelpers.SimApiError;` 即可直接调用：
+
+```csharp
+using static SimApi.Helpers.SimApiError;
+```
+
+> 业务项目可在根目录建 `GlobalUsings.cs` 加 `global using static SimApi.Helpers.SimApiError;` 实现全项目免 import。
+
+### 4.2 方法签名
+
+```csharp
+// 直接抛出错误
+Error(int code = 500, string message = "");
+
+// condition 为 true 时抛出（默认 code=400）
+ErrorWhen([DoesNotReturnIf(true)] bool condition, int code = 400, string message = "");
+
+// ErrorWhen 的别名
+ErrorWhenTrue(bool condition, int code = 400, string message = "");
+
+// condition 为 false 时抛出
+ErrorWhenFalse([DoesNotReturnIf(false)] bool condition, int code = 400, string message = "");
+
+// obj 为 null 时抛出（默认 code=404）
+ErrorWhenNull([NotNull] object? condition, int code = 404,
+    string message = "请求的资源不存在");
+
+// 泛型版本（编译器 null 流分析更精准）
+ErrorWhenNull<T>([NotNull] T? condition, int code = 404,
+    string message = "请求的资源不存在") where T : class;
+```
+
+所有方法最终都 `throw new SimApiException(code, message)`，由全局中间件捕获转为 `{code, message}` 响应。
+
+### 4.3 使用示例
+
+```csharp
+using static SimApi.Helpers.SimApiError;
+
+// Controller 内
+[HttpPost]
+public UserDto GetUser(string id)
+{
+    var user = db.Users.Find(id);
+    ErrorWhenNull(user, 404, "用户不存在");          // null → 404
+    ErrorWhen(user.Status == 0, 403, "账号已被禁用"); // 条件成立 → 报错
+    return user;
+}
+
+// Helper / Service 中同样可用
+Error(500, "内部错误");
+ErrorWhen(isDuplicated, 400, "数据已存在");
+ErrorWhenFalse(hasPermission, 403, "无权操作");
 ```
 
 ---
 
-## 5. 核心模块
+## 5. 控制器规范
 
-### 5.1 统一响应格式
+### 5.1 基类
 
-#### 5.1.1 响应结构
+所有业务控制器继承 `SimApiBaseController`：
 
-所有接口统一返回以下 JSON 格式：
+```csharp
+using static SimApi.Helpers.SimApiError;
 
-```json
+[ApiController]
+[Route("[controller]")]
+public class UserController(DataContext db) : SimApiBaseController
 {
-  "code": 200,
-  "message": "成功",
-  "data": { ... }
+    // 获取当前登录用户（需 EnableSimApiAuth）
+    protected SimApiLoginItem LoginInfo => (SimApiLoginItem)HttpContext.Items["LoginInfo"]!;
 }
 ```
 
-#### 5.1.2 状态码映射
+`SimApiBaseController` 已内置：
+- `[Consumes("application/json")]` + `[Produces("application/json")]`
+- `OnActionExecuting` 自动验证 ModelState，无效时抛 `code 400`
+- `LoginInfo` 属性获取当前登录信息
 
-| code | 默认 message |
-|------|-------------|
-| 200  | 成功 |
-| 204  | 没有数据 |
-| 400  | 参数错误 |
-| 401  | 需要登录 |
-| 403  | 无权访问 |
-| 404  | 接口不存在 |
-| 500  | 服务器错误 |
+### 5.2 路由规则
 
-#### 5.1.3 响应类
+**默认全部 POST**（除非在 `SupportedMethod` 显式添加）：
 
 ```csharp
-// 无数据响应
-return new SimApiBaseResponse();
-return new SimApiBaseResponse(400, "参数错误");
-return new SimApiBaseResponse(404);  // 自动映射消息：接口不存在
+// 方法上写完整路径
+[HttpPost("/device/list")]
+[HttpPost("/application/refresh-key")]
 
-// 带数据响应
-return new SimApiBaseResponse<User>(user);
-
-// 分页响应
-return new SimApiBaseResponse<PageResponse<List<User>>>(new PageResponse<List<User>>
+// 类上前缀 + 方法相对路径
+[Route("/platform")]
+public class PlatformController(DataContext db) : SimApiBaseController
 {
-    List = users,
-    Page = 1,
-    Count = 20,
-    Total = 100
-});
+    [HttpPost("device/detail")]    // 最终路由：/platform/device/detail
+    [HttpPost("bot/generate")]     // 最终路由：/platform/bot/generate
+}
 ```
 
-#### 5.1.4 响应过滤器行为（SimApiResponseFilter）
+路由路径全小写，多词用连字符 `-` 分隔。
+
+### 5.3 鉴权 Attribute
+
+| Attribute | 用途 |
+|-----------|------|
+| `[SimApiAuth]` | 要求登录 |
+| `[SimApiAuth("admin")]` | 要求 admin 角色 |
+| `[SimApiAuth("admin,manager")]` | OR 关系 |
+| `[SimApiSign(KeyProvider = typeof(Xxx))]` | 签名验证 |
+
+> 鉴权 Attribute 加在 **Controller 类** 上，不加在方法上。
+
+### 5.4 接口分组与文档
+
+```csharp
+// 参数1: 分组Tag（对应 ApiExplorerSettings.GroupName）
+// 参数2: 接口名称（必填）
+// 参数3: 接口详细描述（可选）
+[ApiExplorerSettings(GroupName = "platform")]
+[SimApiDoc("设备", "获取设备详情")]
+[SimApiDoc("设备", "获取设备详情", "根据设备ID查询设备的完整信息，含关联应用列表")]
+[HttpPost("device/detail")]
+public Device DeviceDetail(...) { ... }
+```
+
+> 每个接口都应标注 `[SimApiDoc]`，至少填写前两个参数。复杂业务接口建议补充第三参数。
+
+### 5.5 返回值规范
+
+| 场景 | 返回类型 | 说明 |
+|------|----------|------|
+| 写操作（增删改） | `void` | 框架自动返回 `{"code":200}` |
+| 单条查询 | 直接返回 Entity | 如 `Account`、`Device` |
+| 列表查询 | `Entity[]` 数组 | 不用 `List<T>` |
+| 分页查询 | `PageResponse<Entity[]>` | 含 Total/Page/Count/List |
+| 有状态响应 | `SimApiBaseResponse` | 自定义 code+message |
+| 复杂组合 | 对应 DTO | 自定义结构 |
+
+> **不使用** `ActionResult<T>` 或 `IActionResult`（除非用了 `[AesBody]` 等框架 Attribute）。
+
+### 5.6 参数规范
+
+```csharp
+// 普通请求体
+[FromBody] DeviceDto.SerialAddRequest request
+
+// AES 加密请求体
+[AesBody(KeyProvider = typeof(AesBodyProvider))] BotDto.BotChatRequest request
+
+// 查询参数（直接写，不加 Attribute）
+string appId
+```
+
+### 5.7 当前登录信息
+
+```csharp
+var userId = LoginInfo?.Id;           // 用户唯一标识
+var userRole = LoginInfo?.Type;        // string[] 角色列表
+```
+
+> **⚠️ 权限检查一律使用 `[SimApiAuth]` Attribute，禁止在代码中手动判断 `LoginInfo.Type.Contains(...)` 来控制权限。**
+>
+> 需要角色权限的 Controller 直接标注：`[SimApiAuth("admin")]`
+> 需要数据归属校验（如"只能操作自己的资源"）在路由方法中直接写条件判断即可。
+
+### 5.8 控制器方法规范
+
+**Controller 中只保留路由方法（即带 `[HttpPost]`/`[HttpGet]` 等路由 Attribute 的 public 方法）。**
+
+不要在 Controller 里写非路由的 private 辅助方法。可复用的横切逻辑应抽取到 `Helpers/` 目录下的独立类中。
+
+```csharp
+// ✅ 控制器保持简洁，只有路由方法
+[SimApiAuth]
+public class UserController(DataContext db) : SimApiBaseController
+{
+    [HttpPost("list")]
+    public User[] GetUserList() => db.Users.OrderBy(x => x.CreatedAt).ToArray();
+
+    [HttpPost("detail")]
+    public User GetUser([FromBody] StringIdOnlyRequest req)
+    {
+        var user = db.Users.Find(req.Id);
+        ErrorWhenNull(user);
+        return user;
+    }
+}
+
+// ✅ 复杂逻辑抽到 Helper
+// Helpers/UserHelper.cs
+public static class UserHelper
+{
+    public static void ValidateOwnership(DataContext db, string loginId, string resourceId)
+    {
+        ErrorWhen(!db.Resources.Any(x => x.Id == resourceId && x.OwnerId == loginId),
+            403, "无权操作此资源");
+    }
+}
+```
+
+---
+
+## 6. 响应格式详解
+
+### 6.1 结构
+
+```json
+{ "code": 200, "message": "成功", "data": { ... } }
+```
+
+### 6.2 构造方式
+
+```csharp
+// 无数据
+return new SimApiBaseResponse();                    // {"code":200,"message":"成功"}
+return new SimApiBaseResponse(400, "参数错误");     // {"code":400,"message":"参数错误"}
+return new SimApiBaseResponse(404);                // {"code":404,"message":"接口不存在"}
+
+// 带数据
+return new SimApiBaseResponse<User>(user);         // data = user
+
+// 分页
+return new PageResponse<Device[]>
+{
+    List = devices, Page = 1, Count = 20, Total = 100
+};
+```
+
+### 6.3 响应过滤器行为
 
 | 控制器返回值 | 最终 JSON 输出 |
-|------------|--------------|
+|-------------|--------------|
 | `null` | `{"code":200,"message":"成功"}` |
 | 普通对象 | `{"code":200,"message":"成功","data":对象}` |
 | `SimApiBaseResponse` | 原样输出 |
-| 标注 `[OriginResponse]` | 完全不封装，原始输出 |
+| `[OriginResponse]` 方法 | 完全不封装，原始输出 |
 
-#### 5.1.5 跳过封装
+---
+
+## 7. SimApiOptions 完整配置
+
+通过 `AddSimApi(options => { ... })` 设置：
+
+### 7.1 功能开关
 
 ```csharp
-[HttpGet]
-[OriginResponse]
+options.RedisConfiguration = "localhost:6379";      // 多模块共用
+options.EnableSimApiAuth    = false;                // Token 认证
+options.EnableSimApiDoc     = false;                // Swagger 文档
+options.EnableSimApiStorage = false;                // S3 对象存储
+options.EnableJob           = false;                // Hangfire 任务调度
+options.EnableSynapse       = false;                // MQTT 通信
+options.EnableCoceSdk       = false;                // Coce 统一身份
+// 以下默认 true，通常不改：
+options.EnableCors                    = true;       // 全量 CORS
+options.EnableSimApiException         = true;       // 全局异常拦截
+options.EnableSimApiResponseFilter    = true;       // 响应统一封装
+options.EnableForwardHeaders          = true;       // 反向代理 Header
+options.EnableLowerUrl                = true;       // URL 小写化
+options.EnableVersionUrl              = true;       // /versions 接口
+options.EnableLogger                  = true;       // 彩色控制台日志
+```
+
+### 7.2 子模块配置
+
+```csharp
+options.ConfigureSimApiDoc(doc => { ... });        // Swagger
+options.ConfigureSimApiStorage(s => { ... });      // S3 存储
+options.ConfigureSimApiJob(job => { ... });        // 任务调度
+options.ConfigureSimApiSynapse(s => { ... });      // MQTT
+options.ConfigureCoceSdk(coce => { ... });         // Coce 身份
+```
+
+---
+
+## 8. Attributes 完整参考
+
+### 8.1 [SimApiAuth] — 身份认证
+
+```csharp
+[SimApiAuth]                     // 仅检查登录
+[SimApiAuth("admin")]            // Type 包含 "admin"
+[SimApiAuth("admin,manager")]    // 逗号分隔 OR 关系
+[SimApiAuth(new[]{"a", "b"})]    // 数组形式
+```
+
+### 8.2 [SimApiDoc] — Swagger 文档注解
+
+```csharp
+[SimApiDoc("分组名", "接口名称")]
+[SimApiDoc("分组名", "接口名称", "详细描述")]
+[SimApiDoc(new[]{"tag1","tag2"}, "接口名称")]
+```
+
+### 8.3 [SynapseEvent] — MQTT 事件处理
+
+```csharp
+// 参数规则：0个 / 1个(eventName string) / 2个(eventName string, T data)
+[SynapseEvent("order/created")]
+public void OnOrderCreated(string eventName) { }
+
+[SynapseEvent("order/+/status")]   // 支持 MQTT 通配符 + 和 #
+public void OnOrderStatus(string eventName, OrderStatusDto data) { }
+```
+
+### 8.4 [SynapseRpc] — MQTT RPC 方法
+
+```csharp
+[SynapseRpc]                    // 注册名为 "ClassName.MethodName"
+[SynapseRpc("customRpcName")]   // 自定义名
+
+// 支持 0~2 个参数，第2个固定为 Dictionary<string,string>(headers)
+public UserDto GetUserInfo(GetUserRequest req) { }
+public UserDto GetUserInfo(GetUserRequest req, Dictionary<string, string> headers) { }
+```
+
+### 8.5 [AesBody] — AES 解密请求体
+
+```csharp
+[HttpPost]
+public IActionResult Submit([AesBody(KeyProvider = typeof(MyAesKeyProvider))] MyRequest req)
+{ /* request 已自动解密 */ }
+
+// 客户端提交: {"data": "Base64(AES-256-CBC加密JSON)"}
+```
+
+### 8.6 [OriginResponse] — 跳过响应封装
+
+```csharp
+[HttpGet][OriginResponse]
 public string GetRaw() => "raw string";
 ```
 
----
-
-### 5.2 基础控制器（SimApiBaseController）
-
-所有业务控制器建议继承 `SimApiBaseController`：
+### 8.7 [SimApiSign] — API 签名验证
 
 ```csharp
-[ApiController]
-[Route("[controller]")]
-public class UserController : SimApiBaseController
-{
-    // 获取当前登录用户（需配合 EnableSimApiAuth）
-    // protected SimApiLoginItem LoginInfo => ...
-}
-```
-
-#### 错误处理方法（均为 `protected static`）
-
-| 方法 | 触发条件 | 默认参数 |
-|------|----------|---------|
-| `Error(code, message)` | 直接抛出 | `500, ""` |
-| `ErrorWhen(condition, code, message)` | condition == `true` | `400, ""` |
-| `ErrorWhenTrue(condition, code, message)` | 同上（别名） | `400, ""` |
-| `ErrorWhenFalse(condition, code, message)` | condition == `false` | `400, ""` |
-| `ErrorWhenNull(obj, code, message)` | obj == `null` | `404, "请求的资源不存在"` |
-
-```csharp
-public SimApiBaseResponse<User> GetUser(int id)
-{
-    var user = _db.Users.Find(id);
-    ErrorWhenNull(user, 404, "用户不存在");
-
-    ErrorWhen(user.Age < 18, 403, "未满18岁");
-
-    return new SimApiBaseResponse<User>(user);
-}
+[SimApiSign(KeyProvider = typeof(MySignProvider))]
+public IActionResult SecureApi(...) { }
+// 签名算法: MD5(field1=v1&...&appId=xxx&timestamp=ts&nonce=nnn&密钥)
 ```
 
 ---
 
-### 5.3 认证模块（SimApiAuth）
+## 9. 模块详解：认证系统（SimApiAuth）
 
-#### 5.3.1 配置
+### 9.1 配置
 
 ```csharp
-options.EnableSimApiAuth = true;  // 需同时配置 RedisConfiguration
+options.EnableSimApiAuth = true;   // 必须同时配置 RedisConfiguration
+// Token 通过 Header 传入：Token: <value>
 ```
 
-#### 5.3.2 工作原理
-
-1. 客户端请求时在 Header 中携带 `Token: <token_value>`
-2. `SimApiAuthMiddleware` 从 Redis 读取登录信息存入 `HttpContext.Items["LoginInfo"]`
-3. `[SimApiAuth]` Attribute 检查是否已登录及角色权限
-
-#### 5.3.3 SimApiLoginItem 结构
+### 9.2 DI 注入与 API
 
 ```csharp
-public class SimApiLoginItem
-{
-    public required string Id { get; set; }               // 用户唯一标识
-    public string[] Type { get; set; } = ["user"];        // 用户类型（支持多角色）
-    public Dictionary<string, string> Meta { get; set; } = []; // 附加元数据
-    public object? Extra { get; set; }                    // 扩展数据
-}
-```
+public MyController(SimApiAuth auth) { }
 
-#### 5.3.4 SimApiAuth 助手方法
-
-```csharp
-// 注入使用
-public MyController(SimApiAuth auth) { ... }
-
-// 登录（token 不传则自动生成 GUID）
-string token = auth.Login(loginItem);
+string token = auth.Login(loginItem);              // 自动 GUID token
 string token = auth.Login(loginItem, "custom-token");
-
-// 更新登录信息（不改变 token）
-auth.Update(loginItem, token);
-
-// 获取登录信息
-SimApiLoginItem? info = auth.GetLogin(token);
-
-// 退出登录
-auth.Logout(token);
+auth.Update(loginItem, token);                     // 更新不换 token
+SimApiLoginItem? info = auth.GetLogin(token);      // 查询登录态
+auth.Logout(token);                                // 退出
 ```
 
-#### 5.3.5 自动注册路由
+### 9.3 SimApiLoginItem 结构
 
-启用 `EnableSimApiAuth` 后自动生成以下路由：
+```csharp
+{ Id: string, Type: string[], Meta: Dictionary<string,string>, Extra: object? }
+```
+
+- `Id`: 用户唯一标识
+- `Type`: 角色数组，如 `["user", "admin"]`
+- `Meta`: 附加元数据字典
+- `Extra`: 扩展对象
+
+### 9.4 自动路由
+
+启用后自动生成：
 
 | 路由 | 方法 | 说明 |
 |------|------|------|
@@ -269,336 +561,230 @@ auth.Logout(token);
 
 ---
 
-### 5.4 特性（Attributes）
+## 10. 模块详解：Swagger 文档（EnableSimApiDoc）
 
-#### `[SimApiAuth]` — 身份认证
-
-```csharp
-[SimApiAuth]                     // 仅检查是否登录
-[SimApiAuth("admin")]            // 检查 Type 中是否含 "admin"
-[SimApiAuth("admin,manager")]    // 检查 Type 是否含 "admin" 或 "manager"（逗号分隔）
-[SimApiAuth(new[]{"a", "b"})]    // 数组形式
-```
-
-#### `[SimApiDoc]` — Swagger 文档注解
+### 10.1 配置
 
 ```csharp
-[SimApiDoc("用户管理", "获取用户列表")]
-[SimApiDoc("用户管理", "创建用户", "创建一个新用户账号，需要管理员权限")]
-[SimApiDoc(new[]{"用户", "管理"}, "批量操作")]
-```
-
-#### `[SimApiSign]` — API 签名验证
-
-需配合实现 `SimApiSignProviderBase` 并注入：
-
-```csharp
-[SimApiSign(KeyProvider = typeof(MySignProvider))]
-public IActionResult SecureApi(...) { ... }
-```
-
-签名算法：`MD5(field1=v1&...&appId=xxx&timestamp=ts&nonce=nnn&密钥)`
-
-#### `[AesBody]` — AES 加密请求体
-
-客户端发送：`{"data": "AES密文"}`，服务端自动解密并反序列化：
-
-```csharp
-[HttpPost]
-public IActionResult Process([AesBody] MyRequest request)
-{
-    // request 已自动解密并反序列化
-}
-```
-
-#### `[OriginResponse]` — 跳过响应封装
-
-```csharp
-[HttpGet]
-[OriginResponse]
-public string GetRawData() => "raw data";
-```
-
-#### `[SynapseEvent]` — MQTT 事件处理方法
-
-```csharp
-// 参数1：事件名；参数2（可选）：事件数据
-[SynapseEvent("order/created")]
-public void OnOrderCreated(string eventName) { ... }
-
-[SynapseEvent("order/+/status")]  // 支持 MQTT 通配符 + 和 #
-public void OnOrderStatus(string eventName, MyEventData data) { ... }
-```
-
-#### `[SynapseRpc]` — MQTT RPC 方法
-
-```csharp
-[SynapseRpc]                    // 方法名自动为 "ClassName.MethodName"
-[SynapseRpc("getUserInfo")]     // 自定义 RPC 方法名
-
-// 0~2 个参数，第2个参数固定为 Dictionary<string,string>（headers）
-public UserDto GetUserInfo(GetUserRequest req) { ... }
-public UserDto GetUserInfo(GetUserRequest req, Dictionary<string, string> headers) { ... }
-```
-
----
-
-### 5.5 在线 API 文档（Swagger）
-
-#### 5.5.1 配置
-
-```csharp
-options.EnableSimApiDoc = true;
 options.ConfigureSimApiDoc(doc =>
 {
     doc.DocumentTitle = "接口文档";
 
-    // 接口分组（Id 对应 ApiExplorerSettings.GroupName）
-    doc.ApiGroups =
-    [
+    doc.ApiGroups = [
         new("api",   "公共接口"),
-        new("admin", "管理接口", "需要管理员Token")
+        new("admin", "管理接口", "描述可选")
     ];
 
-    // 配置认证方式（支持 SimApiAuth / ClientCredentials / Implicit / AuthorizationCode / Password）
-    doc.ApiAuth = new SimApiAuthOption
-    {
-        Type = ["SimApiAuth"]  // 默认
-    };
-
-    // 支持的调试方法（默认仅 POST）
-    doc.SupportedMethod = [SubmitMethod.Post, SubmitMethod.Get];
+    doc.ApiAuth = new SimApiAuthOption { Type = ["SimApiAuth"] };
+    doc.SupportedMethod = [SubmitMethod.Post]; // 默认仅 Post！按需添加其他
 });
+
+// 分组方式
+[ApiExplorerSettings(GroupName = "admin")]   // 归入 admin 组
+// 不标注则默认归入 "api" 组
 ```
 
-#### 5.5.2 接口分组
-
-```csharp
-// 归入 admin 文档
-[ApiExplorerSettings(GroupName = "admin")]
-public class AdminController : SimApiBaseController { ... }
-
-// 不标注则默认归入 Id="api" 的文档
-```
-
-#### 5.5.3 访问文档
+### 10.2 访问
 
 启动后访问 `/swagger`。
 
-#### 5.5.4 自动 Swagger 增强
-
-SimApi 内置多个 Swagger 过滤器，无需手动配置：
+### 10.3 自动 Swagger 过滤器（无需手动配置）
 
 | 过滤器 | 效果 |
 |--------|------|
-| `SimApiResponseOperationFilter` | 自动将返回类型包装为 `SimApiBaseResponse<T>` 显示 |
-| `SimApiAuthOperationFilter` | 为 `[SimApiAuth]` 接口添加 Token 认证要求 |
-| `SimApiSignOperationFilter` | 为 `[SimApiSign]` 接口自动注入签名参数说明 |
-| `AesBodyOperationFilter` | 为 `[AesBody]` 参数展示加密前的原始数据结构 |
-| `GlobalDynamicObjectSchemaFilter` | 为 `object`/`Dictionary` 类型生成合理 Schema 示例 |
-| `RemoveEmptyTagsFilter` | 清除没有接口的空分组 Tag |
+| `SimApiResponseOperationFilter` | 返回类型包装为 `SimApiBaseResponse<T>` |
+| `SimApiAuthOperationFilter` | `[SimApiAuth]` 接口加 Token 认证要求 |
+| `SimApiSignOperationFilter` | `[SimApiSign]` 接口注入签名参数说明 |
+| `AesBodyOperationFilter` | `[AesBody]` 参数展示原始数据结构 |
+| `GlobalDynamicObjectSchemaFilter` | `object`/`Dictionary` 类型生成 Schema 示例 |
+| `RemoveEmptyTagsFilter` | 清除空分组 Tag |
 
 ---
 
-### 5.6 S3 对象存储（SimApiStorage）
+## 11. 模块详解：对象存储（EnableSimApiStorage）
 
-基于 MinIO SDK（S3 兼容协议）。
+基于 MinIO SDK（S3 兼容）。
 
-#### 5.6.1 配置
+### 11.1 配置
 
 ```csharp
 options.EnableSimApiStorage = true;
 options.ConfigureSimApiStorage(s =>
 {
-    s.Endpoint  = "http://minio.example.com:9000";  // 注意不能以 / 结尾
+    s.Endpoint  = "http://minio:9000";   // 不能以 / 结尾
     s.AccessKey = "admin";
-    s.SecretKey = "password";
+    s.SecretKey = "pass";
     s.Bucket    = "my-bucket";
-    s.ServeUrl  = "http://cdn.example.com/my-bucket";  // 注意不能以 / 结尾
+    s.ServeUrl  = "http://cdn.example.com/my-bucket"; // 不能以 / 结尾
 });
 ```
 
-#### 5.6.2 使用
+### 11.2 API
 
 ```csharp
-public MyController(SimApiStorage storage) { ... }
+public MyController(SimApiStorage storage) { }
 
-// 获取预签名上传 URL（默认 2 小时过期），路径必须以 / 开头
+// 路径必须以 / 开头
 GetUploadUrlResponse r = storage.GetUploadUrl("/avatars/user1.jpg");
-// r.UploadUrl   → 上传用的预签名 URL（供前端直接 PUT 请求）
-// r.DownloadUrl → 下载用的公开 URL
+// r.UploadUrl   → PUT 上传地址（前端直接用）
+// r.DownloadUrl → 公开访问 URL
 // r.Path        → 相对路径
 
-// 获取预签名下载 URL（默认 10 分钟过期）
-string url = storage.GetDownloadUrl("/files/doc.pdf");
+string url = storage.GetDownloadUrl("/files/doc.pdf");            // 默认 10 分钟
 string url = storage.GetDownloadUrl("/files/doc.pdf", expire: 3600);
 
-// 直接服务端上传
-storage.UploadFile("/avatars/user1.jpg", stream, "image/jpeg");
+storage.UploadFile("/path/file.jpg", stream, "image/jpeg");
 
-// 路径转公开访问 URL
-// - 以 http/https 开头：原样返回
-// - 以 ~/ 开头：转当前请求域名的本地路径
-// - 以 / 开头：拼接 ServeUrl
-string? url = storage.FullUrl("/path/to/file");
-string? url = storage.GetUrl("/path/to/file");
+string? url  = storage.FullUrl("/path/file");   // 路径转完整 URL
+string? url  = storage.GetUrl("/path/file");     // 同上
+string? path = storage.GetPath("http://cdn.../my-bucket/path/file"); // URL→路径
 
-// URL 转相对路径
-string? path = storage.GetPath("http://cdn.example.com/my-bucket/path/file");
-
-// 暴露底层 MinIO 客户端
-IMinioClient mc = storage.Client;
+IMinioClient mc = storage.Client;  // 底层 MinIO 客户端
 ```
 
 ---
 
-### 5.7 任务调度（Hangfire）
+## 12. 模块详解：Redis 缓存（SimApiCache）
 
-基于 Hangfire + Redis 存储。
+> 依赖 `RedisConfiguration`，key 自动加前缀 `SimApi:Cache:`
 
-#### 5.7.1 配置
+```csharp
+public MyService(SimApiCache cache) { }
+
+cache.Set("key", value);                                              // 永不过期
+cache.Set("key", value, new DistributedCacheEntryOptions {
+    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+});
+string? raw = cache.Get("key");                                       // 原始字符串
+int? val    = cache.Get<int>("key");                                  // 反序列化
+cache.Remove("key");                                                  // 删除
+```
+
+---
+
+## 13. 模块详解：任务调度（EnableJob）
+
+Hangfire + Redis 存储。
+
+### 13.1 配置
 
 ```csharp
 options.EnableJob = true;
 options.ConfigureSimApiJob(job =>
 {
-    job.DashboardUrl      = "/jobs";        // null 则不启用 Dashboard
+    job.DashboardUrl      = "/jobs";     // null 则不开启 Dashboard
     job.DashboardAuthUser = "admin";
     job.DashboardAuthPass = "Admin@123!";
-    job.RedisConfiguration = null;          // null 则使用全局 RedisConfiguration
-    job.Database = 1;                       // Redis DB 编号，null 则使用默认
-    job.Servers =
-    [
+    job.RedisConfiguration = null;       // null 则用全局 RedisConfiguration
+    job.Database = 1;                    // Redis DB 编号
+    job.Servers = [
         new SimApiJobServerConfig { Queues = ["default"], WorkerNum = 5 },
         new SimApiJobServerConfig { Queues = ["email"],   WorkerNum = 2 }
     ];
 });
 ```
 
-#### 5.7.2 使用
+### 13.2 使用
 
 ```csharp
-// 立即执行
-BackgroundJob.Enqueue(() => Console.WriteLine("立即执行"));
-
-// 延迟执行
-BackgroundJob.Schedule(() => Console.WriteLine("延迟执行"), TimeSpan.FromMinutes(5));
-
-// 定时循环执行
-RecurringJob.AddOrUpdate("daily-report",
-    () => myService.GenerateReport(), Cron.Daily);
-
-// 依赖执行（上一个完成后）
-var jobId = BackgroundJob.Enqueue(() => Console.WriteLine("第一步"));
-BackgroundJob.ContinueJobWith(jobId, () => Console.WriteLine("第二步"));
+BackgroundJob.Enqueue(() => myService.DoWork());                        // 立即执行
+BackgroundJob.Schedule(() => myService.DoWork(), TimeSpan.FromMinutes(5)); // 延迟
+RecurringJob.AddOrUpdate("job-id", () => myService.DoWork(), Cron.Daily);   // 定时
+var id = BackgroundJob.Enqueue(() => Step1());
+BackgroundJob.ContinueJobWith(id, () => Step2());                           // 依赖链
 ```
 
-Dashboard 访问 `/jobs`，使用 HTTP Basic Auth（配置的用户名密码）。
+Dashboard 访问 `/jobs`，Basic Auth 登录。
 
 ---
 
-### 5.8 MQTT 消息通信（Synapse）
+## 14. 模块详解：MQTT 通信（EnableSynapse）
 
-基于 MQTTnet v5，通过 WebSocket 连接 MQTT Broker。
+基于 MQTTnet v5，WebSocket 连接。
 
-#### 5.8.1 配置
+### 14.1 配置
 
 ```csharp
 options.EnableSynapse = true;
 options.ConfigureSimApiSynapse(s =>
 {
-    s.Websocket  = "ws://mqtt.example.com:8083/mqtt";
-    s.Username   = "user";
-    s.Password   = "pass";
-    s.SysName    = "my-system";      // 系统名（Topic 命名空间前缀）
-    s.AppName    = "order-service";  // 服务名
-    s.AppId      = "instance-001";  // 实例 ID（不填则自动生成 GUID）
-    s.RpcTimeout = 3;                // RPC 超时秒数，默认 3
-    s.EventLoadBalancing  = false;   // 启用事件负载均衡（$queue 订阅），默认 false
-    s.EnableConfigStore   = true;    // 启用分布式配置中心，默认 true
-    s.DisableEventClient  = false;   // 禁用事件客户端，默认 false
-    s.DisableRpcClient    = false;   // 禁用 RPC 客户端，默认 false
+    s.Websocket = "ws://mqtt:8083/mqtt";
+    s.Username  = "user";
+    s.Password  = "pass";
+    s.SysName   = "my-system";           // Topic 命名空间前缀
+    s.AppName   = "order-service";       // 服务名
+    s.AppId     = "instance-001";        // 实例ID（不填自动GUID）
+    s.RpcTimeout = 3;                    // RPC 超时秒数
+    s.EventLoadBalancing  = false;       // $queue 订阅负载均衡
+    s.EnableConfigStore   = true;        // 分布式配置中心
+    s.DisableEventClient  = false;
+    s.DisableRpcClient    = false;
 });
 ```
 
-#### 5.8.2 MQTT Topic 规则
+### 14.2 Topic 规则
 
 | 用途 | Topic 格式 |
 |------|-----------|
 | 事件发布 | `{SysName}/event/{AppName}/{eventName}` |
-| 事件订阅（负载均衡关闭） | `{SysName}/event/{eventName}` |
-| 事件订阅（负载均衡开启） | `$queue/{SysName}/event/{eventName}` |
-| RPC 请求 | `{SysName}/{targetApp}/rpc/server/{method}`（`$queue` 订阅，天然负载均衡） |
+| 事件订阅（无负载均衡） | `{SysName}/event/{eventName}` |
+| 事件订阅（有负载均衡） | `$queue/{SysName}/event/{eventName}` |
+| RPC 请求 | `{SysName}/{targetApp}/rpc/server/{method}`（$queue 天然负载均衡） |
 | RPC 响应 | `{SysName}/{callerApp}/rpc/client/{AppId}/{messageId}` |
 | 配置存储 | `{SysName}/synapse-config-store/{key}`（Retain 消息） |
 
-#### 5.8.3 Synapse API（通过 DI 注入使用）
+### 14.3 Synapse API
 
 ```csharp
-public MyService(Synapse synapse) { ... }
+public MyService(Synapse synapse) { }
 
-// 发送事件
-synapse.Event("order/created", new { OrderId = 1 });
+synapse.Event("order/created", new { OrderId = 1 });  // 发布事件
 
-// 调用 RPC（同步阻塞，返回 SimApiBaseResponse<T>）
+// RPC 同步调用，返回 SimApiBaseResponse<T>
 var res = synapse.Rpc<UserDto>("user-service", "GetUserInfo", new { Id = 1 });
 var res = synapse.Rpc<UserDto>("user-service", "GetUserInfo", param,
     headers: new Dictionary<string, string> { { "traceId", "xxx" } });
 
-// 无类型 RPC
-var res = synapse.Rpc("user-service", "GetUserInfo", param);
+// code=502 表示 RPC 超时
 
-// 读写分布式配置
-synapse.SetConfig("max_retry", "3");
-string? value = synapse.GetConfig("max_retry");
+// 分布式配置
+synapse.SetConfig("key", "value");
+string? val = synapse.GetConfig("key");
+synapse.OnConfigChanged += (sender, item) => Console.WriteLine($"{item.Key}={item.Value}");
 
-// 监听配置变化
-synapse.OnConfigChanged += (sender, item) =>
-    Console.WriteLine($"{item.Key} = {item.Value}");
-
-// 在 RPC 方法内部抛出错误
+// RPC 方法内部抛错
 synapse.RpcError(400, "参数错误");
 synapse.RpcErrorWhen(id <= 0, 400, "ID 无效");
 ```
 
-#### 5.8.4 注册事件/RPC 处理器
+### 14.4 处理器注册
 
-启用 `EnableSynapse` 后，SimApi 会**自动扫描调用程序集**中所有含 `[SynapseRpc]` 或 `[SynapseEvent]` 方法的类，并自动注册为 Scoped 服务。
+含 `[SynapseRpc]`/`[SynapseEvent]` 的类会被**自动扫描注册为 Scoped 服务**，无需手动注册：
 
 ```csharp
-// 事件处理类（无需手动注入，自动注册）
+// 事件处理器
 public class OrderEventHandler
 {
     [SynapseEvent("order/+/status")]
-    public void OnOrderStatus(string eventName, OrderStatusDto data)
-    {
-        // eventName = "order/123/status"
-        // data 已自动反序列化
-    }
+    public void OnOrderStatus(string eventName, OrderStatusDto data) { }
 }
 
-// RPC 服务类（无需手动注入，自动注册）
+// RPC 服务
 public class UserRpcService
 {
-    [SynapseRpc]  // 方法名为 "UserRpcService.GetUserInfo"
-    public UserDto GetUserInfo(GetUserRequest req)
-    {
-        return new UserDto { ... };
-    }
+    [SynapseRpc]  // 注册为 "UserRpcService.GetUserInfo"
+    public UserDto GetUserInfo(GetUserRequest req) { return ...; }
 
-    [SynapseRpc("customRpcName")]
-    public ResultDto DoSomething(RequestDto req, Dictionary<string, string> headers)
-    {
-        // headers 包含 RPC 调用方传入的自定义头
-    }
+    [SynapseRpc("customName")]
+    public ResultDto DoSomething(RequestDto req, Dictionary<string, string> headers) { }
 }
 ```
 
 ---
 
-### 5.9 API 签名验证（SimApiSign）
+## 15. 模块详解：API 签名验证（[SimApiSign]）
 
-#### 5.9.1 实现密钥提供者
+### 15.1 实现密钥提供者
 
 ```csharp
 public class MySignProvider : SimApiSignProviderBase
@@ -606,14 +792,16 @@ public class MySignProvider : SimApiSignProviderBase
     private readonly IServiceScopeFactory _scopeFactory;
     public MySignProvider(IServiceScopeFactory sf) => _scopeFactory = sf;
 
-    public override string? AppIdName  { get; set; } = "appId";
-    public override string TimestampName { get; set; } = "timestamp";
-    public override string NonceName   { get; set; } = "nonce";
-    public override string SignName    { get; set; } = "sign";
-    public override int    QueryExpires { get; set; } = 5;            // 5秒过期
-    public override bool   DuplicateRequestProtection { get; set; } = true; // 防重放
-    public override string[] SignFields { get; set; } = ["userId"];   // 额外签名字段
+    // ── 以下参数均有默认值，按需覆盖即可（不写则用默认值）──
+    public override string? AppIdName   { get; set; } = "appId";           // Query/Header 参数名：应用ID
+    public override string TimestampName { get; set; } = "timestamp";      // Query/Header 参数名：时间戳
+    public override string NonceName    { get; set; } = "nonce";           // Query/Header 参数名：随机串
+    public override string SignName     { get; set; } = "sign";            // Query/Header 参数名：签名值
+    public override int    QueryExpires { get; set; } = 5;                 // 签名有效期（秒）
+    public override bool   DuplicateRequestProtection { get; set; } = true;// 防重放攻击
+    public override string[] SignFields { get; set; } = [];                // 额外参与签名的业务字段（默认无）
 
+    // ── 必须实现：根据 appId 返回对应密钥 ──
     public override string? GetKey(string? appId)
     {
         using var scope = _scopeFactory.CreateScope();
@@ -622,32 +810,26 @@ public class MySignProvider : SimApiSignProviderBase
     }
 }
 
-// 注册（Scoped 或 Transient）
-services.AddScoped<MySignProvider>();
+builder.Services.AddScoped<MySignProvider>();
 ```
 
-#### 5.9.2 使用
+### 15.2 使用
 
 ```csharp
 [SimApiSign(KeyProvider = typeof(MySignProvider))]
-public IActionResult SecureApi(...) { ... }
-```
+public IActionResult SecureApi(...) { }
 
-#### 5.9.3 签名算法
-
+// 签名算法: MD5(field1=v1&field2=v2&...&appId=xxx&timestamp=ts&nonce=nnn&密钥)
+// 支持通过 Query 或 Header 传入签名参数
 ```
-MD5(field1=v1&field2=v2&...&appId=xxx&timestamp=ts&nonce=nnn&密钥)
-```
-
-支持通过 Query 或 Header 传入签名参数。
 
 ---
 
-### 5.10 AES 加密传输（AesBody）
+## 16. 模块详解：AES 加密传输（[AesBody]）
 
-算法：**AES-256-CBC + PKCS7 填充**，IV 随机生成并附在密文前（Base64 编码）。
+算法：**AES-256-CBC + PKCS7**，IV 随机生成附在密文前，整体 Base64 编码。
 
-#### 5.10.1 实现密钥提供者
+### 16.1 实现密钥提供者
 
 ```csharp
 public class MyAesKeyProvider : AesBodyProviderBase
@@ -655,7 +837,7 @@ public class MyAesKeyProvider : AesBodyProviderBase
     private readonly IServiceScopeFactory _scopeFactory;
     public MyAesKeyProvider(IServiceScopeFactory sf) => _scopeFactory = sf;
 
-    public override string? AppIdName { get; set; } = "appId";  // 从 Query/Header 获取
+    public override string? AppIdName { get; set; } = "appId";
 
     public override string? GetKey(string? appId)
     {
@@ -664,209 +846,119 @@ public class MyAesKeyProvider : AesBodyProviderBase
         return db.Apps.Find(appId)?.SecretKey;
     }
 }
-
-// 注册
-services.AddScoped<MyAesKeyProvider>();
+builder.Services.AddScoped<MyAesKeyProvider>();
 ```
 
-#### 5.10.2 使用
+### 16.2 使用
 
 ```csharp
 [HttpPost]
-public IActionResult Submit([AesBody(KeyProvider = typeof(MyAesKeyProvider))] MyRequest request)
-{
-    // request 已自动解密并反序列化
-}
-```
+public IActionResult Submit([AesBody(KeyProvider = typeof(MyAesKeyProvider))] MyRequest req)
+{ /* request 已解密反序列化 */ }
 
-客户端请求格式（提交 JSON body）：
-```json
-{"data": "Base64(AES加密后的JSON字符串)"}
-```
+// 客户端提交: {"data": "Base64(AES-256-CBC 密文)"}
 
-#### 5.10.3 AES 工具类
-
-```csharp
-string cipher = SimApiAesUtil.Encrypt("明文内容", "任意长度密钥");
+// 静态工具类（无需注入，任意长度密钥会经 SHA256 处理为32字节）
+string cipher = SimApiAesUtil.Encrypt("明文", "任意长度密钥");
 string plain  = SimApiAesUtil.Decrypt(cipher, "任意长度密钥");
 ```
 
-密钥会经过 SHA256 处理为 32 字节，因此支持任意长度密钥。
-
 ---
 
-### 5.11 Redis 缓存（SimApiCache）
-
-统一加前缀 `SimApi:Cache:`，避免 key 冲突。
-
-```csharp
-public MyService(SimApiCache cache) { ... }
-
-// 存储（永不过期）
-cache.Set("userCount", 100);
-
-// 存储（带过期时间）
-cache.Set("userCount", 100, new DistributedCacheEntryOptions
-{
-    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
-});
-
-// 获取原始字符串
-string? raw = cache.Get("userCount");
-
-// 获取并反序列化为指定类型
-int? count = cache.Get<int>("userCount");
-```
-
-> 注意：`SimApiCache` 要求配置 `RedisConfiguration`。
-
----
-
-### 5.12 HTTP 客户端（SimApiHttpClient）
+## 17. 模块详解：HTTP 客户端（SimApiHttpClient）
 
 用于调用其他带签名/AES 加密的 SimApi 服务。
 
+### 17.1 构造函数与属性
+
 ```csharp
-var client = new SimApiHttpClient(appId: "myapp", appKey: "secret")
-{
-    Server        = "https://api.example.com",
-    AppIdName     = "appId",
-    TimestampName = "timestamp",
-    NonceName     = "nonce",
-    SignName      = "sign",
-    SignFields    = ["field1", "field2"]
-};
+// 构造函数（必填参数）
+var client = new SimApiHttpClient(
+    appId: "myapp",    // 必填：应用 ID
+    appKey: "secret"   // 必填：应用密钥
+    // debug: false     // 可选：是否打印请求/响应日志（默认 false）
+);
 
-// 仅签名请求
-var result = client.SignQuery<UserDto>("/api/user", body, queries);
+// 以下属性均有默认值，按需覆盖即可：
+client.Server        = "https://api.example.com"; // 必须设置！目标服务地址（无默认值）
+client.AppIdName     = "appId";                   // 默认 "appId"
+client.TimestampName = "timestamp";               // 默认 "timestamp"
+client.NonceName     = "nonce";                   // 默认 "nonce"
+client.SignName      = "sign";                    // 默认 "sign"
+client.SignFields    = ["field1", "field2"];      // 默认 []（空）
+```
 
-// 仅 AES 加密请求（body 自动加密为 {"data":"Base64密文"}）
-var result = client.AesQuery<UserDto>("/api/user", body);
+> **只有 `Server` 是必须设置的**，其他属性都有合理默认值。
+
+### 17.2 调用方法
+
+```csharp
+// 仅签名（自动计算 MD5 签名附加到 Query/Header）
+var r = client.SignQuery<T>("/api/user", body, queries);
+
+// 仅 AES 加密（body 自动加密为 {"data":"Base64密文"}）
+var r = client.AesQuery<T>("/api/user", body);
 
 // AES 加密 + 签名
-var result = client.AesSignQuery<UserDto>("/api/user", body, queries);
+var r = client.AesSignQuery<T>("/api/user", body, queries);
 ```
 
 ---
 
-### 5.13 工具类（SimApiUtil）
+## 18. 模块详解：Coce 统一身份平台（EnableCoceSdk）
 
-全部为静态成员，直接调用，无需注入。
+> 同时需要 `EnableSimApiAuth = true`
 
-```csharp
-// 时间
-DateTime cst       = SimApiUtil.CstNow;       // UTC+8 当前时间
-double   timestamp = SimApiUtil.TimestampNow;  // 秒级 Unix 时间戳
-
-// 版本
-string simApiVer = SimApiUtil.SimApiVersion;  // SimApi 包版本
-string appVer    = SimApiUtil.AppVersion;     // 宿主应用版本
-
-// 哈希加密
-string md5  = SimApiUtil.Md5("source");           // 32位（mode="x2"）
-string md5  = SimApiUtil.Md5("source", "x3");     // 48位
-string sha1 = SimApiUtil.Sha1("source");          // SHA1
-
-// 序列化
-string json = SimApiUtil.Json(obj);               // camelCase，中文不转义
-T obj       = SimApiUtil.XmlDeserialize<T>(xml);  // XML → 对象
-JsonSerializerOptions opts = SimApiUtil.JsonOption; // JSON 配置
-
-// 验证
-bool ok = SimApiUtil.CheckCell("13800138000");    // 手机号格式验证
-
-// 分页（IQueryable 扩展方法）
-var paged = dbContext.Users.AsQueryable().Paginate(page: 1, count: 20);
-```
-
----
-
-### 5.14 数据模型基类（SimApiBaseModel）
-
-ORM 实体基类，提供通用字段和轻量级属性映射能力。
+### 18.1 配置
 
 ```csharp
-public class UserEntity : SimApiBaseModel
-{
-    public string Name { get; set; }
-    // 自动拥有：Id (GUID, string)、CreatedAt、UpdatedAt
-}
-
-// 从 DTO 映射到实体（自动跳过 Id / CreatedAt / UpdatedAt）
-entity.MapData(dto);
-
-// 强制映射所有字段（包括 Id 等受保护字段）
-entity.MapData(dto, mapAll: true);
-
-// 只映射指定字段
-entity.MapData(dto, new[] { "Name", "Email" });
-
-// 手动更新 UpdatedAt
-entity.UpdateTime();
-```
-
-> **注意**：`MapData` 只映射**同名且同类型**且**源值不为 null** 的属性。
-
----
-
-### 5.15 Coce 统一身份平台（CoceSdk）
-
-集成 Coce 第三方 OAuth 统一身份认证平台（默认 `api.coce.cc`）。
-
-#### 5.15.1 配置
-
-```csharp
-options.EnableCoceSdk = true;   // 需同时启用 EnableSimApiAuth
 options.ConfigureCoceSdk(coce =>
 {
-    coce.ApiEndpoint  = "https://api.coce.cc";   // 默认值
-    coce.AuthEndpoint = "https://home.coce.cc";  // 默认值
+    coce.ApiEndpoint  = "https://api.coce.cc";   // 默认
+    coce.AuthEndpoint = "https://home.coce.cc";  // 默认
     coce.AppId  = "your-app-id";
     coce.AppKey = "your-app-key";
 });
 ```
 
-#### 5.15.2 自动注册路由
-
-| 路由 | 方法 | 说明 |
-|------|------|------|
-| `POST /auth/login` | 无需登录 | Coce 一键登录（前端传 `{"data":"lv1Token"}`） |
-| `POST /user/groups` | 需要登录 | 获取当前用户群组列表 |
-| `GET /auth/config` | 无需登录 | 获取 AppId 和授权 URL |
-
-#### 5.15.3 CoceApp 可用方法
+### 18.2 CoceApp API
 
 ```csharp
-public MyService(CoceApp coce) { ... }
+public MyService(CoceApp coce) { }
 
 // 用户
-coce.GetUserInfo(levelToken)               // 获取用户基本信息
-coce.GetUserGroups(levelToken)             // 获取用户群组
-coce.SearchUserByPhone("13800138000")      // 按手机号搜索用户
-coce.SearchUserByIds(new[]{"uid1","uid2"}) // 按 ID 批量获取用户
+coce.GetUserInfo(levelToken)
+coce.GetUserGroups(levelToken)
+coce.SearchUserByPhone("13800138000")
+coce.SearchUserByIds(new[]{"uid1","uid2"})
 
 // 消息
 coce.SendUserMessage(userId, "标题", "内容")
 
 // 支付
-string? tradeNo = coce.TradeCreate("商品名", 100, "扩展数据") // 创建订单
-coce.TradeCheck(tradeNo)                   // 查询订单状态
-coce.TradeRefund(tradeNo)                  // 发起退款
+string? tradeNo = coce.TradeCreate("商品名", 100, "扩展数据")
+coce.TradeCheck(tradeNo)
+coce.TradeRefund(tradeNo)
 
-// Token 管理
-coce.GetLevelToken(lv1Token, level: 5)     // 换取 Level Token
-coce.SaveToken(userId, levelToken)         // 保存到 Redis
-coce.GetToken(userId)                      // 从 Redis 读取
+// Token
+coce.GetLevelToken(lv1Token, level: 5)
+coce.SaveToken(userId, levelToken)
+coce.GetToken(userId)
 
 // 代理请求
 coce.ProxyQuery<T>(uri, token)
-coce.ProxyQuery<T>(uri, token, json)
 coce.ProxyQueue<T>(uri, token, data)
 ```
 
-#### 5.15.4 自定义登录逻辑
+### 18.3 自动路由
 
-实现 `ICoceLoginProcessor` 接口，在登录时根据群组赋予角色：
+| 路由 | 方法 | 说明 |
+|------|------|------|
+| `POST /auth/login` | 无需登录 | Coce 一键登录（前端传 `{"data":"lv1Token"}`） |
+| `POST /user/groups` | 需登录 | 获取群组列表 |
+| `GET /auth/config` | 无需登录 | 获取 AppId 和授权 URL |
+
+### 18.4 自定义登录处理器
 
 ```csharp
 public class MyLoginProcessor : ICoceLoginProcessor
@@ -878,193 +970,320 @@ public class MyLoginProcessor : ICoceLoginProcessor
         return item;
     }
 }
-
-// 注册
-services.AddScoped<ICoceLoginProcessor, MyLoginProcessor>();
+builder.Services.AddScoped<ICoceLoginProcessor, MyLoginProcessor>();
 ```
 
 ---
 
-### 5.16 日志（SimApiLogger）
-
-启用后替换默认控制台日志，输出格式如下：
-
-```
-[ Microsoft.AspNetCore.Hosting.Diagnostics ][ 2024-01-01 12:00:00:0000 ][ Information ]
-Request starting HTTP/1.1 POST http://localhost/api/user
-```
-
-| 日志级别 | 控制台颜色 |
-|----------|-----------|
-| Debug | 深紫色 |
-| Information | 深青色 |
-| Warning | 黄色 |
-| Error | 红色 |
-| Critical | 深红色 |
-
----
-
-## 6. 内置路由汇总
-
-| 路由 | 方法 | 启用条件 | 说明 |
-|------|------|----------|------|
-| `/swagger` | GET | `EnableSimApiDoc` | API 文档页面 |
-| `/versions` | GET/POST | `EnableVersionUrl` | 查看版本信息 |
-| `/auth/check` | POST | `EnableSimApiAuth` | 检测登录状态 |
-| `/auth/logout` | POST | `EnableSimApiAuth` | 退出登录 |
-| `/user/info` | POST | `EnableSimApiAuth` | 获取用户信息（需登录） |
-| `/auth/login` | POST | `EnableCoceSdk` | Coce 登录 |
-| `/user/groups` | POST | `EnableCoceSdk` | 获取用户群组（需登录） |
-| `/auth/config` | POST | `EnableCoceSdk` | 获取 Coce 配置 |
-| `/jobs` | GET | `EnableJob` | Hangfire Dashboard |
-
----
-
-## 7. 异常处理机制
-
-```
-HTTP 请求
-    ↓
-SimApiExceptionMiddleware（最外层，透传 Query-Id Header）
-    ├── 捕获 SimApiException → 返回 {code: xxx, message: xxx}
-    ├── 捕获 Exception       → 记录日志 + 返回 {code: 500, message: 错误信息}
-    └── 响应 404 等非 200/301/302 状态码 → 转换为 SimApiException
-         ↓
-SimApiAuthMiddleware（解析 Token → HttpContext.Items["LoginInfo"]）
-         ↓
-[SimApiSign] Filter（签名验证）
-         ↓
-[SimApiAuth] Filter（登录/角色检查）
-         ↓
-Controller.OnActionExecuting（模型验证 → 400）
-         ↓
-Action 方法执行
-         ↓
-SimApiResponseFilter（自动封装响应）
-```
-
-> **关键特性**：所有错误均以 **HTTP 200** 状态码返回，错误信息体现在响应 JSON 的 `code` 字段中。
-
----
-
-## 8. 完整配置示例
+## 19. 工具类（SimApiUtil，全部静态）
 
 ```csharp
+DateTime cst    = SimApiUtil.CstNow;          // UTC+8 当前时间
+double   ts     = SimApiUtil.TimestampNow;     // 秒级 Unix 时间戳
+string   simVer = SimApiUtil.SimApiVersion;    // SimApi 包版本
+string   appVer = SimApiUtil.AppVersion;       // 宿主应用版本
+
+string md5  = SimApiUtil.Md5("src");           // 32位 MD5
+string md5  = SimApiUtil.Md5("src", "x3");     // 48位
+string sha1 = SimApiUtil.Sha1("src");
+
+string json = SimApiUtil.Json(obj);             // camelCase，中文不转义
+T obj       = SimApiUtil.XmlDeserialize<T>(xml);
+JsonSerializerOptions opts = SimApiUtil.JsonOption; // 可复用配置
+
+bool ok = SimApiUtil.CheckCell("13800138000"); // 手机号验证
+
+// IQueryable 分页扩展
+var paged = dbContext.Users.AsQueryable().Paginate(page: 1, count: 20);
+```
+
+---
+
+## 20. 数据模型基类（SimApiBaseModel）
+
+ORM 实体基类，提供通用字段和轻量映射能力：
+
+```csharp
+public class UserEntity : SimApiBaseModel
+{
+    public string Name { get; set; }
+    // 自动拥有: Id(GUID string)、CreatedAt、UpdatedAt
+}
+
+entity.MapData(dto);                      // 跳过 Id/CreatedAt/UpdatedAt，同名同类型非null属性
+entity.MapData(dto, mapAll: true);        // 映射所有字段
+entity.MapData(dto, new[]{"Name"});       // 只映射指定字段
+entity.UpdateTime();                      // 手动更新 UpdatedAt
+
+// MapData 只映射: 同名 + 同类型 + 源值不为null
+```
+
+---
+
+## 21. DTO 规范
+
+### 21.1 组织方式
+
+DTO 在 `Controllers/Dtos/` 下，嵌套容器类：
+
+```csharp
+namespace MyApp.Controllers.Dtos;
+
+public abstract class AdminDto
+{
+    public class UserEditRequest
+    {
+        public required string Id { get; set; }
+        public required string Name { get; set; }
+    }
+
+    public class ApplicationListRequest : SimApiBasePageRequest
+    {
+        public string? Keyword { get; set; }
+    }
+}
+```
+
+### 21.2 命名规则
+
+| 类型 | 格式 | 示例 |
+|------|------|------|
+| 请求 DTO | `[动作]Request` | `UserEditRequest`、`DeviceSerialAddRequest` |
+| 响应 DTO | `[动作]Response` | `GenerateResponse`、`TokenResponse` |
+| 数据载体 | `[含义]Data` / `[含义]Item` | `GenerateData`、`AgentItem` |
+
+引用时用全限定名：`AdminDto.UserEditRequest`。
+
+### 21.3 属性规则
+
+```csharp
+public class RequestDto
+{
+    public required string Verify { get; set; }       // 必填
+    public required string AppId { get; set; }
+    [Range(1, 10000)] public required int Num { get; set; }  // 范围校验
+    public string? Remark { get; set; }               // 可选
+    public int Status { get; set; } = 1;              // 有默认值
+}
+```
+
+### 21.4 框架内置 DTO（优先复用）
+
+| DTO | 用途 |
+|-----|------|
+| `SimApiStringIdOnlyRequest` | 只有 `Id` 字段 |
+| `SimApiOneFieldRequest<T>` | 只有 `Data` 字段 |
+| `SimApiBasePageRequest` | 分页请求基类（Page + Count） |
+| `SimApiBaseResponse` | 通用响应（可带 code + message） |
+| `SimApiBaseResponse<T>` | 带数据的响应 |
+| `PageResponse<T>` | 分页响应（Total + Page + Count + List） |
+
+---
+
+## 22. Entity 与 DataContext 规范
+
+### 22.1 Entity
+
+所有实体继承 `SimApiBaseModel`：
+
+```csharp
+public class Account : SimApiBaseModel
+{
+    public required string Name { get; set; }
+    public required string Username { get; set; }
+    public required string Role { get; set; } = "user";
+    public int Status { get; set; } = 1;
+}
+```
+
+- 必填用 `required`，可选用 `?`，有默认值直接赋值
+- 外键命名：`[关联实体]Id`，如 `AccountId`、`AppId`
+- **不配导航属性**，**不写 Fluent API**，依赖 Convention 自动映射
+
+### 22.2 DataContext
+
+只定义 DbSet，不做任何配置：
+
+```csharp
+public class DataContext(DbContextOptions<DataContext> options) : DbContext(options)
+{
+    public required DbSet<Account> Accounts { get; set; }
+    public required DbSet<Application> Applications { get; set; }
+}
+```
+
+---
+
+## 23. EF Core 查询风格
+
+```csharp
+// 列表查询（排序 + ToArray）
+db.Accounts.OrderBy(x => x.CreatedAt).ToArray();
+
+// 动态条件查询
+var query = db.Devices.Where(x => x.ApplicationId == appId).OrderBy(x => x.CreatedAt).AsQueryable();
+if (!string.IsNullOrEmpty(request.Serial))
+    query = query.Where(x => x.Serial == request.Serial);
+
+// 分页
+var list = query.Paginate(request.Page, request.Count).ToArray();
+var total = query.Count();
+
+// 单条查询
+db.Accounts.Find(id);                                      // 主键用 Find（命中缓存）
+db.Accounts.FirstOrDefault(x => x.Username == username);    // 其他用 FirstOrDefault
+
+// 写操作
+db.Add(entity);       // 新增
+db.Update(entity);    // 修改
+db.Remove(entity);    // 删除
+db.SaveChanges();     // 最后统一 SaveChanges 一次
+
+// 存在性判断（不用 Count > 0）
+db.AppServices.Any(x => x.ServiceId == request.Id)
+```
+
+---
+
+## 24. Program.cs 完整模板
+
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+
+// 1. SimApi 框架
 builder.Services.AddSimApi(options =>
 {
-    // Redis（多功能共享）
-    options.RedisConfiguration = "localhost:6379";
-
-    // 认证
+    options.RedisConfiguration = builder.Configuration.GetConnectionString("Redis");
     options.EnableSimApiAuth = true;
-
-    // Swagger 文档
     options.EnableSimApiDoc = true;
+    options.EnableSimApiStorage = false;
+    options.EnableJob = false;
+    options.EnableSynapse = false;
+
     options.ConfigureSimApiDoc(doc =>
     {
-        doc.DocumentTitle = "我的服务接口文档";
-        doc.ApiGroups =
-        [
-            new("api",   "公共接口"),
-            new("admin", "管理接口", "需要管理员 Token")
-        ];
-        doc.ApiAuth = new SimApiAuthOption { Type = ["SimApiAuth"] };
+        doc.DocumentTitle = "接口文档";
+        doc.ApiGroups = [new("api", "公共接口"), new("admin", "管理接口")];
         doc.SupportedMethod = [SubmitMethod.Post];
-    });
-
-    // S3 存储
-    options.EnableSimApiStorage = true;
-    options.ConfigureSimApiStorage(s =>
-    {
-        s.Endpoint  = "http://minio:9000";
-        s.AccessKey = "admin";
-        s.SecretKey = "password";
-        s.Bucket    = "my-bucket";
-        s.ServeUrl  = "http://cdn.example.com/my-bucket";
-    });
-
-    // 任务调度
-    options.EnableJob = true;
-    options.ConfigureSimApiJob(job =>
-    {
-        job.DashboardUrl      = "/jobs";
-        job.DashboardAuthUser = "admin";
-        job.DashboardAuthPass = "Admin@123!";
-        job.Servers = [new() { Queues = ["default"], WorkerNum = 5 }];
-    });
-
-    // MQTT 通信
-    options.EnableSynapse = true;
-    options.ConfigureSimApiSynapse(s =>
-    {
-        s.Websocket = "ws://mqtt:8083/mqtt";
-        s.Username  = "user";
-        s.Password  = "pass";
-        s.SysName   = "my-system";
-        s.AppName   = "api-service";
-    });
-
-    // Coce 统一身份
-    options.EnableCoceSdk = true;
-    options.ConfigureCoceSdk(coce =>
-    {
-        coce.AppId  = "your-app-id";
-        coce.AppKey = "your-app-key";
     });
 });
 
+// 2. 数据库
+builder.Services.AddDbContext<DataContext>(opt =>
+    opt.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+
+// 3. 框架扩展点（接口注册）
+builder.Services.AddScoped<AesBodyProviderBase, AesBodyProvider>();
+builder.Services.AddScoped<SimApiSignProviderBase, SimApiSignProvider>();
+
+// 4. 项目自定义服务
+builder.Services.AddScoped<ResPermission>();
+builder.Services.AddSingleton<JsonSchemaHelper>();
+
 var app = builder.Build();
+
+// 5. 启动时自动迁移
+app.Services.CreateScope().ServiceProvider
+    .GetRequiredService<DataContext>().Database.Migrate();
+
+// 6. 框架中间件
 app.UseSimApi();
 app.Run();
 ```
 
 ---
 
-## 9. 项目依赖
+## 25. 配置文件规范
 
-| 包 | 版本 | 用途 |
-|----|------|------|
-| `Hangfire.AspNetCore` | 1.8.22 | 任务调度框架 |
-| `Hangfire.Console` | 1.4.3 | 任务控制台日志 |
-| `Hangfire.Redis.StackExchange` | 1.12.0 | Hangfire Redis 存储 |
-| `Microsoft.Extensions.Caching.StackExchangeRedis` | 10.0.1 | Redis 分布式缓存 |
-| `Minio` | 7.0.0 | S3 对象存储 |
-| `MQTTnet` | 5.0.1.1416 | MQTT 消息通信 |
-| `Swashbuckle.AspNetCore.Annotations` | 10.1.0 | Swagger 注解 |
-| `Swashbuckle.AspNetCore.SwaggerUI` | 10.1.0 | Swagger UI |
+`appsettings.json` 只保留框架默认值：
+
+```json
+{
+  "Logging": { "LogLevel": { "Default": "Information", "Microsoft.AspNetCore": "Warning" } },
+  "AllowedHosts": "*"
+}
+```
+
+`appsettings.Development.json` 存放开发环境实际配置（不提交 Git）：
+
+```json
+{
+  "ConnectionStrings": {
+    "Default": "Host=...;Database=...;Username=...;Password=...",
+    "Redis": "host:port,defaultDatabase=N"
+  },
+  "Sms": { "Account": "...", "Password": "..." }
+}
+```
+
+读取方式：
+```csharp
+builder.Configuration.GetConnectionString("Default")
+config["Gateway:Key"]
+config.GetSection("Sms").GetSection("Templates")["verify"]
+```
 
 ---
 
-## 10. 最佳实践
+## 26. 内置路由汇总
 
-### 10.1 控制器设计
+| 路由 | 方法 | 启用条件 |
+|------|------|----------|
+| `/swagger` | GET | `EnableSimApiDoc` |
+| `/versions` | GET/POST | `EnableVersionUrl`（默认开） |
+| `/auth/check` | POST | `EnableSimApiAuth` |
+| `/auth/logout` | POST | `EnableSimApiAuth` |
+| `/user/info` | POST | `EnableSimApiAuth`（需登录） |
+| `/auth/login` | POST | `EnableCoceSdk` |
+| `/user/groups` | POST | `EnableCoceSdk`（需登录） |
+| `/auth/config` | GET | `EnableCoceSdk` |
+| `/jobs` | GET | `EnableJob` |
 
-- 所有控制器继承 `SimApiBaseController`
-- 优先使用 `ErrorWhenNull` / `ErrorWhen` 系列方法进行前置校验，保持主逻辑清晰
-- 需要认证的接口标注 `[SimApiAuth]`，按角色访问控制的传入角色参数
-- 用 `[SimApiDoc]` 为每个接口添加文档注解，分组管理
+---
 
-### 10.2 存储管理
+## 27. 注释规范
 
-- 路径统一以 `/` 开头，按业务分类规划路径结构（如 `/avatars/{userId}/`）
-- 对公开资源使用 `GetUrl`，对私密资源使用 `GetDownloadUrl`（设合适过期时间）
-- 上传前在业务层验证文件类型和大小
+- **公有 API/方法**：XML 文档注释
+- **私有方法**：简单可不写；复杂逻辑写行内注释说**为什么**
+- **不要废话注释**
 
-### 10.3 任务调度
+```csharp
+/// <summary>
+/// 根据邮箱查用户，不存在返回 null。
+/// </summary>
+public Account? FindByEmail(string email) => db.Accounts.FirstOrDefault(x => x.Email == email);
 
-- 将长耗时操作异步化，接口立即返回，后台任务处理
-- 根据任务类型设置不同队列，避免低优先级任务阻塞高优先级任务
-- 定期检查 Hangfire Dashboard，监控失败任务
+// ✅ 有意义的注释（解释原因）
+// EF Core Find 优先命中一级缓存
+var user = db.Accounts.Find(id);
 
-### 10.4 Synapse 消息通信
+// ❌ 废话注释
+// 查询用户
+var user = db.Accounts.Find(id);
+```
 
-- 事件名使用层级路径风格（如 `order/created`、`payment/success`）
-- RPC 方法名使用简洁的语义名称
-- 为幂等性操作设计事件处理器（同一事件可能被多次投递）
-- 超时处理：`Rpc` 返回 `code=502` 表示超时
+---
 
-### 10.5 安全
+## 28. 禁止事项
 
-- Token 认证默认不设过期时间，建议在业务层配合定期清理或设置 Redis TTL
-- 签名验证默认开启防重放（5 秒 nonce 缓存），生产环境保持开启
-- AES 密钥通过数据库存储，不硬编码在代码中
+以下模式在使用 SimApi 框架时**明确禁止**：
+
+| ❌ 禁止 | ✅ 正确做法 |
+|---------|------------|
+| HTTP 4xx/5xx 表达业务错误 | HTTP 200 + JSON `code` 字段 |
+| `throw new Exception(message)` | `ErrorWhen` 系列 或 `throw new SimApiException(code, msg)` |
+| 新建 Service / Repository 层（除非项目明确需要） | Controller 直接操作 DbContext |
+| 使用 `ActionResult<T>` / `IActionResult` | 直接返回 Entity / void / SimApiBaseResponse |
+| 鉴权 Attribute 加在方法上 | 加在 Controller **类** 上 |
+| **手动判断 `LoginInfo.Type.Contains(...)` 做权限控制** | **一律用 `[SimApiAuth("role")]` Attribute** |
+| **Controller 里写非路由的 private 辅助方法** | **抽到 `Helpers/` 独立类** |
+| Entity 配导航属性 / EF Fluent API | 依赖 Convention 自动映射 |
+| DbContext 中写 `OnModelCreating`（除非必要） | 只定义 DbSet |
+| 花括号块命名空间 | 文件范围命名空间 |
+| 传统构造函数注入 | 主构造函数 |
+| `new List<T>()` / `new string[] {}` | `[]` 集合表达式 |
+| `Count() > 0` 判断存在 | `Any()` |
+| `ToList()` 再转数组 | 直接 `ToArray()` |
+| `string.IsNullOrEmpty` 判断必填入参 | `required` + 模型验证 |
+| 全局 catch 吞异常 | 让异常冒泡到 SimApiExceptionMiddleware |
+| `SimApiStorageOptions = Configuration.GetSection(...)` | `ConfigureSimApiStorage(s => {...})` |
