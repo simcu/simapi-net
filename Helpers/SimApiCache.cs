@@ -35,6 +35,16 @@ public class SimApiCache(IDistributedCache cache)
     }
 
     /// <summary>
+    /// 缓存Key是否存在
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public bool HasKey(string key)
+    {
+        return Get<string>(key) != null;
+    }
+
+    /// <summary>
     /// 获取string类型缓存
     /// </summary>
     /// <param name="key"></param>

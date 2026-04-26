@@ -11,6 +11,7 @@ public static class SimApiError
     /// <param name="code">错误代码</param>
     /// <param name="message">错误描述(若是常规错误,代码可自动带取描述)</param>
     /// <returns></returns>
+    [DoesNotReturn]
     public static void Error(int code = 500, string message = "")
     {
         throw new SimApiException(code, message);
