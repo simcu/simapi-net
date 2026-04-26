@@ -20,7 +20,7 @@ public class CoceController(CoceApp coce, SimApiAuth auth, IServiceProvider sp) 
     }
 
     [HttpPost]
-    public SimApiBaseResponse<string> Login([FromBody] SimApiOneFieldRequest<string> request)
+    public string Login([FromBody] SimApiOneFieldRequest<string> request)
     {
         var data = coce.GetLevelToken(request.Data!);
         ErrorWhenNull(data, 400);
@@ -39,14 +39,14 @@ public class CoceController(CoceApp coce, SimApiAuth auth, IServiceProvider sp) 
         };
         var processor = sp.GetService<ICoceLoginProcessor>();
         processor?.Process(loginItem, groups.ToArray());
-        return new SimApiBaseResponse<string>(auth.Login(loginItem));
+        return auth.Login(loginItem);
     }
 
     [HttpPost, SimApiAuth]
-    public SimApiBaseResponse<GroupInfo[]> ListGroups()
+    public GroupInfo[] ListGroups()
     {
         var levelToken = coce.GetToken(LoginInfo.Id!);
         var groups = coce.GetUserGroups(levelToken!)!;
-        return new SimApiBaseResponse<GroupInfo[]>(groups.ToArray());
+        return groups.ToArray();
     }
 }

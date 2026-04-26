@@ -68,16 +68,4 @@ public static class SimApiError
     {
         ErrorWhen(condition == null, code, message);
     }
-
-    /// <summary>
-    /// 检测给定的泛型变量是否为Null（提供更精确的编译器 null 流分析）
-    /// </summary>
-    /// <param name="condition">检测条件</param>
-    /// <param name="code">错误代码</param>
-    /// <param name="message">错误描述</param>
-    public static void ErrorWhenNull<T>([NotNull] T? condition, int code = 404,
-        string message = "请求的资源不存在") where T : class
-    {
-        ErrorWhen(condition == null, code, message);
-    }
 }

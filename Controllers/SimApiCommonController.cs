@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
-using SimApi.Communications;
 using SimApi.Helpers;
 
 namespace SimApi.Controllers;
@@ -14,22 +13,19 @@ public class SimApiCommonController : SimApiBaseController
     /// <returns></returns>
     [HttpGet("exception/{code:int}")]
     [ApiExplorerSettings(IgnoreApi = true)]
-    public SimApiBaseResponse ExceptionHandler(int code)
+    public void ExceptionHandler(int code)
     {
-        return new SimApiBaseResponse(code);
+        SimApiError.Error(code);
     }
 
 
     [HttpPost, HttpGet]
-    public SimApiBaseResponse<Dictionary<string, string>> Versions()
+    public Dictionary<string, string> Versions()
     {
-        return new SimApiBaseResponse<Dictionary<string, string>>()
+        return new Dictionary<string, string>
         {
-            Data = new Dictionary<string, string>
-            {
-                { "SimApi", SimApiUtil.SimApiVersion },
-                { "App", SimApiUtil.AppVersion }
-            }
+            { "SimApi", SimApiUtil.SimApiVersion },
+            { "App", SimApiUtil.AppVersion }
         };
     }
 }

@@ -14,13 +14,10 @@ public class SimApiAuthController(SimApiAuth auth) : SimApiBaseController
     /// </summary>
     /// <returns></returns>
     [HttpPost, SimApiDoc("认证", "检测登陆")]
-    public SimApiBaseResponse<string> CheckLogin()
+    public string CheckLogin()
     {
         ErrorWhenNull(LoginInfo, 401, "未登录");
-        return new SimApiBaseResponse<string>
-        {
-            Data = LoginInfo.Id
-        };
+        return LoginInfo.Id;
     }
 
     /// <summary>
@@ -28,23 +25,15 @@ public class SimApiAuthController(SimApiAuth auth) : SimApiBaseController
     /// </summary>
     /// <returns></returns>
     [HttpPost, SimApiDoc("认证", "退出登陆")]
-    public SimApiBaseResponse Logout()
+    public void Logout()
     {
-        string? token = null;
-
         if (Request.Headers.TryGetValue("Token", out var value))
         {
-            token = value;
+            auth.Logout(value!);
         }
-
-        auth.Logout(token!);
-        return new SimApiBaseResponse();
     }
 
 
-    [HttpPost, SimApiAuth]
-    public SimApiBaseResponse<SimApiLoginItem> UserInfo()
-    {
-        return new SimApiBaseResponse<SimApiLoginItem>(LoginInfo);
-    }
+    [HttpPost, SimApiAuth, SimApiDoc("认证", "获取已登录用户信息")]
+    public SimApiLoginItem UserInfo() => LoginInfo;
 }
