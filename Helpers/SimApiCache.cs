@@ -15,6 +15,7 @@ public class SimApiCache(IDistributedCache cache)
     /// <param name="options"></param>
     public void Set(string key, object value, DistributedCacheEntryOptions? options = null)
     {
+        SimApiError.ErrorWhenNull(value, 400, "缓存值不能为null");
         if (options is not null)
         {
             cache.SetString(Prefix + key, SimApiUtil.Json(value), options);
@@ -51,7 +52,7 @@ public class SimApiCache(IDistributedCache cache)
     /// <returns></returns>
     public string? Get(string key)
     {
-        return cache.GetString(Prefix + key);
+        return Get<string>(Prefix + key);
     }
 
     /// <summary>
