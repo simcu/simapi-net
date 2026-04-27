@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Net.Mail;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -95,6 +96,25 @@ public static class SimApiUtil
     }
 
     /// <summary>
+    /// 判断是否是Email地址
+    /// </summary>
+    /// <param name="email"></param>
+    /// <returns></returns>
+    public static bool CheckEmail(string email)
+    {
+        try
+        {
+            var m = new MailAddress(email);
+            return m.Address == email;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+
+    /// <summary>
     /// MD5加密字符串
     /// </summary>
     /// <param name="source">源字符串</param>
@@ -152,6 +172,17 @@ public static class SimApiUtil
     public static string Json(object? obj)
     {
         return JsonSerializer.Serialize(obj, JsonOption);
+    }
+
+    /// <summary>
+    /// 将JSON解析为对象（控制台输出中文不会被编码）
+    /// </summary>
+    /// <param name="jsonString"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public static T? FromJson<T>(string jsonString)
+    {
+        return JsonSerializer.Deserialize<T>(jsonString, JsonOption);
     }
 
     /// <summary>

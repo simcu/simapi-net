@@ -8,7 +8,7 @@ public class SimApiCache(IDistributedCache cache)
     private const string Prefix = "SimApi:Cache:";
 
     /// <summary>
-    /// 设置缓存
+    /// 设置缓存 (值不能为null)
     /// </summary>
     /// <param name="key"></param>
     /// <param name="value"></param>
@@ -64,6 +64,6 @@ public class SimApiCache(IDistributedCache cache)
     public T? Get<T>(string key)
     {
         var data = cache.GetString(Prefix + key);
-        return data == null ? default : JsonSerializer.Deserialize<T>(data);
+        return data == null ? default : SimApiUtil.FromJson<T>(data);
     }
 }
