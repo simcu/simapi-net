@@ -17,8 +17,9 @@ public partial class Synapse
         }
         else
         {
-            paramJson  = JsonSerializer.Serialize(param, SimApiUtil.JsonOption);
+            paramJson = SimApiUtil.Json(param);
         }
+
         var topic = $"{Options.SysName}/event/{Options.AppName}/{eventName}";
         var message = new MqttApplicationMessageBuilder()
             .WithTopic(topic)

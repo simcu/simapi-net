@@ -101,7 +101,7 @@ public partial class Synapse(SimApiOptions simApiOptions, ILogger<Synapse> logge
         else
         {
             var data = FireRpc(appName, method, param, headers, timeout);
-            res = JsonSerializer.Deserialize<SimApiBaseResponse<T>>(data, SimApiUtil.JsonOption);
+            res = SimApiUtil.FromJson<SimApiBaseResponse<T>>(data);
         }
 
         return (res as SimApiBaseResponse<T>)!;

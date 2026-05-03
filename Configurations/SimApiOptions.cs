@@ -19,6 +19,11 @@ public class SimApiOptions
     public bool EnableSimApiAuth { get; set; }
 
     /// <summary>
+    /// 启用SimApi网关授权, 基于上层网关透传的身份令牌验证
+    /// </summary>
+    public bool EnableSimApiGateAuth { get; set; }
+
+    /// <summary>
     /// 是否使用CoceSdk
     /// </summary>
     public bool EnableCoceSdk { get; set; }
@@ -81,7 +86,6 @@ public class SimApiOptions
     public bool EnableVersionUrl { get; set; } = true;
 
 
-
     /// <summary>
     /// 启用格式化的 Console Logger
     /// default: false
@@ -106,6 +110,8 @@ public class SimApiOptions
 
     public SimApiSynapseOptions SimApiSynapseOptions { get; set; } = new();
 
+    public SimApiGateAuthOptions SimApiGateAuthOptions { get; set; } = new();
+
     public void ConfigureSimApiSynapse(Action<SimApiSynapseOptions>? options = null)
     {
         options?.Invoke(SimApiSynapseOptions);
@@ -129,5 +135,10 @@ public class SimApiOptions
     public void ConfigureSimApiJob(Action<SimApiJobOptions>? options = null)
     {
         options?.Invoke(SimApiJobOptions);
+    }
+
+    public void ConfigureSimApiGateAuth(Action<SimApiGateAuthOptions>? options = null)
+    {
+        options?.Invoke(SimApiGateAuthOptions);
     }
 }

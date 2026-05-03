@@ -20,6 +20,7 @@ using SimApi.CoceSdk;
 using SimApi.Configurations;
 using SimApi.Logger;
 using SimApi.SwaggerFilters;
+using StackExchange.Redis;
 
 namespace SimApi;
 
@@ -37,6 +38,8 @@ public static class SimApiExtensions
         if (simApiOptions.RedisConfiguration != null)
         {
             builder.AddStackExchangeRedisCache(x => x.Configuration = simApiOptions.RedisConfiguration);
+            builder.AddSingleton<IConnectionMultiplexer>(_ =>
+                ConnectionMultiplexer.Connect(simApiOptions.RedisConfiguration));
             builder.AddSingleton<SimApiCache>();
         }
 
@@ -389,6 +392,20 @@ public static class SimApiExtensions
         {
             logger.LogInformation("开始配置SimApiResponseFilter...");
             builder.MapControllers();
+        }
+
+        if (options.EnableSimApiGateAuth)
+        {
+            logger.LogInformation("开始配置SimApiGateAuth...");
+            if (string.IsNullOrEmpty(options.SimApiGateAuthOptions.AppId) ||
+                string.IsNullOrEmpty(options.SimApiGateAuthOptions.AppKey))
+            {
+                logger.LogCritical("必须配置Gate的AppId和AppKey才能启用SimApiGateAuth");
+            }
+            else
+            {
+                builder.UseMiddleware<SimApiGateAuthMiddleware>();
+            }
         }
 
         if (options.EnableSimApiAuth)

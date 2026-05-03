@@ -14,7 +14,6 @@ namespace SimApi.CoceSdk;
 
 public class CoceApp(SimApiOptions simApiOptions, ILogger<CoceApp> logger, IDistributedCache cache)
 {
-    
     /// <summary>
     /// 获取Level Token
     /// </summary>
@@ -164,7 +163,7 @@ public class CoceApp(SimApiOptions simApiOptions, ILogger<CoceApp> logger, IDist
         var sign = SimApiUtil.Md5(signStr + simApiOptions.CoceSdkOptions.AppKey);
         logger.LogDebug("签名: {Sign}", sign);
         request.Add("sign", sign);
-        logger.LogDebug("请求地址: {PlatUrl} => {Data}", platUrl, JsonSerializer.Serialize(request));
+        logger.LogDebug("请求地址: {PlatUrl} => {Data}", platUrl, SimApiUtil.Json(request));
         var http = new HttpClient();
         return http.PostAsJsonAsync(platUrl, request).Result;
     }
@@ -178,7 +177,7 @@ public class CoceApp(SimApiOptions simApiOptions, ILogger<CoceApp> logger, IDist
     public IEnumerable<GroupInfo>? GetUserGroups(string token)
     {
         const string uri = "/api/lv2/user/groups";
-        var resp = ProxyQuery<GroupInfo[]>(uri, token,"{}");
+        var resp = ProxyQuery<GroupInfo[]>(uri, token, "{}");
         return resp;
     }
 
@@ -207,10 +206,10 @@ public class CoceApp(SimApiOptions simApiOptions, ILogger<CoceApp> logger, IDist
     public dynamic? ProxyQuery(string uri, string token, string json) => ProxyQuery<dynamic>(uri, token, json);
 
     public dynamic? ProxyQueue(string uri, string token, object data) =>
-        ProxyQuery<dynamic>(uri, token, JsonSerializer.Serialize(data));
+        ProxyQuery<dynamic>(uri, token, SimApiUtil.Json(data));
 
     public T? ProxyQueue<T>(string uri, string token, object data) =>
-        ProxyQuery<T>(uri, token, JsonSerializer.Serialize(data));
+        ProxyQuery<T>(uri, token, SimApiUtil.Json(data));
 
     public T? ProxyQuery<T>(string uri, string token, string json = "{}")
     {

@@ -1,8 +1,5 @@
-﻿using System.Text.Json;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Caching.Distributed;
-using SimApi.Communications;
 using SimApi.Helpers;
 
 namespace SimApi.Middlewares;
@@ -12,7 +9,7 @@ namespace SimApi.Middlewares;
 /// </summary>
 public class SimApiAuthMiddleware(RequestDelegate next)
 {
-    public Task Invoke(HttpContext httpContext, IDistributedCache cache, SimApiAuth auth)
+    public Task Invoke(HttpContext httpContext, SimApiAuth auth)
     {
         string? token = null;
         if (httpContext.Request.Headers.TryGetValue("Token", out var header))
@@ -24,8 +21,10 @@ public class SimApiAuthMiddleware(RequestDelegate next)
         var login = auth.GetLogin(token);
         if (login != null)
         {
+            httpContext.Items.Add("LoginToken", token);
             httpContext.Items.Add("LoginInfo", login);
         }
+
         return next(httpContext);
     }
 }

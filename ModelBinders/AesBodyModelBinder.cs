@@ -30,7 +30,7 @@ public class AesBodyModelBinder : IModelBinder
         SimApiOneFieldRequest<string>? aesRequest;
         try
         {
-            aesRequest = JsonSerializer.Deserialize<SimApiOneFieldRequest<string>>(requestBody, SimApiUtil.JsonOption);
+            aesRequest = SimApiUtil.FromJson<SimApiOneFieldRequest<string>>(requestBody);
         }
         catch (JsonException ex)
         {

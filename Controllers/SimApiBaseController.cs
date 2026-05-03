@@ -23,6 +23,8 @@ public class SimApiBaseController : Controller
     /// </summary>
     protected SimApiLoginItem LoginInfo => (SimApiLoginItem)HttpContext.Items["LoginInfo"]!;
 
+    protected SimApiLoginItem LoginToken => (SimApiLoginItem)HttpContext.Items["LoginToken"]!;
+
     /// <summary>
     /// 验证请求参数
     /// </summary>

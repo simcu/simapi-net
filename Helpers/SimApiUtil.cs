@@ -152,6 +152,51 @@ public static class SimApiUtil
     }
 
     /// <summary>
+    /// 字符串Base64编码
+    /// </summary>
+    /// <param name="str"></param>
+    /// <returns></returns>
+    public static string Base64Encode(string str)
+    {
+        var bytes = Encoding.UTF8.GetBytes(str);
+        return Convert.ToBase64String(bytes);
+    }
+
+    /// <summary>
+    /// 从Base64中解码字符串
+    /// </summary>
+    /// <param name="base64Str"></param>
+    /// <returns></returns>
+    public static string Base64Decode(string base64Str)
+    {
+        var bytes = Convert.FromBase64String(base64Str);
+        return Encoding.UTF8.GetString(bytes);
+    }
+
+    /// <summary>
+    /// 把对象Base64编码
+    /// </summary>
+    /// <param name="obj"></param>
+    /// <returns></returns>
+    public static string Base64Encode(object obj)
+    {
+        var json = Json(obj);
+        return Base64Encode(json);
+    }
+
+    /// <summary>
+    /// 从Base64中解析对象
+    /// </summary>
+    /// <param name="base64Str"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public static T? Base64Decode<T>(string base64Str)
+    {
+        var json = Base64Decode(base64Str);
+        return FromJson<T>(json);
+    }
+
+    /// <summary>
     /// 将XML字符串序列化为对象
     /// </summary>
     /// <param name="source"></param>

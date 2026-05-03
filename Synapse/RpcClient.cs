@@ -50,7 +50,7 @@ public partial class Synapse
         }
         else
         {
-            paramJson = JsonSerializer.Serialize(param, SimApiUtil.JsonOption);
+            paramJson = SimApiUtil.Json(param);
         }
 
         var topic = $"{Options.SysName}/{app}/rpc/server/{action}";
@@ -73,7 +73,7 @@ public partial class Synapse
         Client.PublishAsync(message, CancellationToken.None).Wait();
         logger.LogDebug(
             "Synapse RPC Client Request: ({PropsMessageId}) {OptionsAppName} -> {Action}@{App}\n{ParamJson}\nHeaders: {Headers}",
-            messageId, Options.AppName, action, app, paramJson, JsonSerializer.Serialize(headers));
+            messageId, Options.AppName, action, app, paramJson, SimApiUtil.Json(headers));
 
         string response;
         try
@@ -88,13 +88,12 @@ public partial class Synapse
             }
             else
             {
-                response = JsonSerializer.Serialize(new SimApiBaseResponse(502, "timeout"), SimApiUtil.JsonOption);
+                response = SimApiUtil.Json(new SimApiBaseResponse(502, "timeout"));
             }
         }
         catch
         {
-            response = JsonSerializer.Serialize(new SimApiBaseResponse(500, "Synapse RPC Client Error"),
-                SimApiUtil.JsonOption);
+            response = SimApiUtil.Json(new SimApiBaseResponse(500, "Synapse RPC Client Error"));
         }
 
         return response;

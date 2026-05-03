@@ -29,9 +29,10 @@ public class SimApiExceptionMiddleware(RequestDelegate next, ILogger<SimApiExcep
                     case 200:
                     case 301:
                     case 302:
-                        break;
                     case 404:
-                        throw new SimApiException(context.Response.StatusCode, "请求的接口不存在");
+                        break;
+                    // case 404:
+                    //     throw new SimApiException(context.Response.StatusCode, "请求的接口不存在");
                     default:
                         throw new SimApiException(context.Response.StatusCode);
                 }
@@ -79,6 +80,7 @@ public class SimApiExceptionMiddleware(RequestDelegate next, ILogger<SimApiExcep
 
         context.Response.StatusCode = 200;
         context.Response.ContentType = "application/json";
+        context.Response.ContentLength = null; // 清除可能已设置的 Content-Length
         await context.Response.WriteAsync(response.ToString());
     }
 }

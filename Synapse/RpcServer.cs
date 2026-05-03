@@ -10,7 +10,7 @@ using MQTTnet.Protocol;
 using SimApi.Communications;
 using SimApi.Exceptions;
 using SimApi.Helpers;
-using JsonSerializer = System.Text.Json.JsonSerializer;
+using System.Text.Json;
 
 namespace SimApi;
 
@@ -96,7 +96,7 @@ public partial class Synapse
                     }
                 }
 
-                var returnJson = JsonSerializer.Serialize((object)res, SimApiUtil.JsonOption);
+                var returnJson = SimApiUtil.Json(res);
                 var reply = $"{Options.SysName}/{appInfo[0]}/rpc/client/{appInfo[1]}/{appInfo[2]}";
                 var message = new MqttApplicationMessageBuilder()
                     .WithTopic(reply)
