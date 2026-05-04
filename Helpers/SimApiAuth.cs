@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
 using SimApi.Communications;
 using StackExchange.Redis;
@@ -137,8 +136,9 @@ public class SimApiAuth(IDistributedCache cache, IConnectionMultiplexer redis)
         {
             var setCacheKey = TokenSetCacheKey.Replace("{userId}", item.Id);
             _redisDb.SetRemove(setCacheKey, token);
-            var cacheKey = TokenCacheKey.Replace("{token}", token);
-            cache.Remove(cacheKey);
         }
+
+        var cacheKey = TokenCacheKey.Replace("{token}", token);
+        cache.Remove(cacheKey);
     }
 }

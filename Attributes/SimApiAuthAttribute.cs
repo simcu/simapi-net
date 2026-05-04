@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Linq;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.DependencyInjection;
 using SimApi.Communications;
 using SimApi.Exceptions;
+using SimApi.Interfaces;
+using static SimApi.Helpers.SimApiError;
 
 namespace SimApi.Attributes;
 
@@ -37,17 +39,16 @@ public class SimApiAuthAttribute : ActionFilterAttribute
     public override void OnActionExecuting(ActionExecutingContext context)
     {
         var loginInfo = (SimApiLoginItem)context.HttpContext.Items["LoginInfo"]!;
-        //检测是否登录
-        if (loginInfo == null)
+        var token = (string)context.HttpContext.Items["LoginToken"]!;
+        ErrorWhenNull(loginInfo, 401);
+        var checkers = context.HttpContext.RequestServices.GetServices<ISimApiAuthChecker>();
+        foreach (var checker in checkers)
         {
-            throw new SimApiException(401);
+            checker.Run(loginInfo, token);
         }
 
         if (Types == null) return;
         //检测用户类型
-        if (!Types.Intersect(loginInfo.Type).Any())
-        {
-            throw new SimApiException(403);
-        }
+        ErrorWhenFalse(Types.Intersect(loginInfo.Type).Any(), 403);
     }
 }

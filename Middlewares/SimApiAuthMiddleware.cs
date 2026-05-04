@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using SimApi.Helpers;
 
@@ -11,11 +12,9 @@ public class SimApiAuthMiddleware(RequestDelegate next)
 {
     public Task Invoke(HttpContext httpContext, SimApiAuth auth)
     {
-        string? token = null;
-        if (httpContext.Request.Headers.TryGetValue("Token", out var header))
-        {
-            token = header;
-        }
+        var token =
+            httpContext.Request.Headers["Token"].FirstOrDefault()
+            ?? httpContext.Request.Query["token"].FirstOrDefault();
 
         if (string.IsNullOrEmpty(token)) return next(httpContext);
         var login = auth.GetLogin(token);

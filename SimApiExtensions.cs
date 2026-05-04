@@ -18,6 +18,7 @@ using Microsoft.Extensions.Logging;
 using SimApi.Attributes;
 using SimApi.CoceSdk;
 using SimApi.Configurations;
+using SimApi.Interfaces;
 using SimApi.Logger;
 using SimApi.SwaggerFilters;
 using StackExchange.Redis;
@@ -63,6 +64,20 @@ public static class SimApiExtensions
             builder.AddSingleton<CoceApp>();
         }
 
+        var simApiAuthChecker = typeof(ISimApiAuthChecker);
+        var stackTrace = new StackTrace();
+        var callingMethod = stackTrace.GetFrame(stackTrace.FrameCount - 1)?.GetMethod();
+        var callerAssembly = callingMethod?.DeclaringType?.Assembly;
+        var callerTypes = callerAssembly?.GetTypes() ?? [];
+
+        foreach (var type in callerTypes)
+        {
+            if (type is { IsClass: true, IsAbstract: false } && simApiAuthChecker.IsAssignableFrom(type))
+            {
+                builder.AddScoped(simApiAuthChecker, type);
+            }
+        }
+
         if (simApiOptions.EnableJob)
         {
             builder.AddHangfire(x =>
@@ -96,12 +111,7 @@ public static class SimApiExtensions
         if (simApiOptions.EnableSynapse)
         {
             builder.AddSingleton<Synapse>();
-            //自动依赖注入
-            var stackTrace = new StackTrace();
-            var callingMethod = stackTrace.GetFrame(stackTrace.FrameCount - 1)?.GetMethod();
-            var assembly = callingMethod?.DeclaringType?.Assembly;
-            var types = assembly?.GetTypes() ?? [];
-            foreach (var type in types)
+            foreach (var type in callerTypes)
             {
                 var methodsWithSynapse = type.GetMethods()
                     .Where(m => m.GetCustomAttribute<SynapseRpcAttribute>() != null ||
@@ -394,6 +404,14 @@ public static class SimApiExtensions
             builder.MapControllers();
         }
 
+        var checkers = builder.Services.CreateScope().ServiceProvider.GetServices<ISimApiAuthChecker>().ToArray();
+        if (checkers.Length != 0)
+        {
+            var msg = checkers.Aggregate("开始配置SimApiAuthChecker...",
+                (current, checker) => current + $"\n|- {checker.GetType().FullName}");
+            logger.LogInformation(msg);
+        }
+
         if (options.EnableSimApiGateAuth)
         {
             logger.LogInformation("开始配置SimApiGateAuth...");
@@ -408,6 +426,12 @@ public static class SimApiExtensions
             }
         }
 
+        builder.MapControllerRoute(name: "CheckLogin", pattern: "/auth/check",
+            defaults: new
+            {
+                controller = "SimApiCommon",
+                action = "CheckLogin"
+            });
         if (options.EnableSimApiAuth)
         {
             logger.LogInformation("开始配置SimApiAuth...");
@@ -418,12 +442,7 @@ public static class SimApiExtensions
                     controller = "SimApiAuth",
                     action = "UserInfo"
                 });
-            builder.MapControllerRoute(name: "CheckLogin", pattern: "/auth/check",
-                defaults: new
-                {
-                    controller = "SimApiAuth",
-                    action = "CheckLogin"
-                });
+
             builder.MapControllerRoute(name: "Logout", pattern: "/auth/logout",
                 defaults: new
                 {
