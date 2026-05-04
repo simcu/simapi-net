@@ -426,23 +426,10 @@ public static class SimApiExtensions
             }
         }
 
-        builder.MapControllerRoute(name: "CheckLogin", pattern: "/auth/check",
-            defaults: new
-            {
-                controller = "SimApiCommon",
-                action = "CheckLogin"
-            });
         if (options.EnableSimApiAuth)
         {
             logger.LogInformation("开始配置SimApiAuth...");
             builder.UseMiddleware<SimApiAuthMiddleware>();
-            builder.MapControllerRoute(name: "GetUserInfo", pattern: "/user/info",
-                defaults: new
-                {
-                    controller = "SimApiAuth",
-                    action = "UserInfo"
-                });
-
             builder.MapControllerRoute(name: "Logout", pattern: "/auth/logout",
                 defaults: new
                 {
