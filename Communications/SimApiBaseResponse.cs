@@ -27,11 +27,11 @@ public class SimApiBaseResponse(int code = 200, string message = "成功")
         { 400, "参数错误" },
         { 401, "需要登录" },
         { 403, "无权访问" },
-        { 404, "接口不存在" },
+        { 404, "请求资源不存在" },
         { 500, "服务器错误" }
     };
 
-    public SimApiBaseResponse(int code) : this(code, MsgBox.GetValueOrDefault(code, "未知错误"))
+    public SimApiBaseResponse(int code) : this(code, MsgBox.GetValueOrDefault(code, "未知错误代码"))
     {
     }
 

@@ -8,9 +8,14 @@ using SimApi.Exceptions;
 
 namespace SimApi.Helpers;
 
-public class SimApiHttpClient(string? appId, string appKey, bool debug = false)
+public class SimApiHttpClient
 {
-    public string Server { get; init; } = string.Empty;
+    public required string Server { get; init; }
+    public required string AppId { get; init; }
+
+    public required string AppKey { get; init; }
+
+    public bool Debug { get; init; } = false;
     public string SignName { get; init; } = "sign";
     public string TimestampName { get; init; } = "timestamp";
     public string NonceName { get; init; } = "nonce";
@@ -32,11 +37,11 @@ public class SimApiHttpClient(string? appId, string appKey, bool debug = false)
             (current, signField) => current + $"{signField}={queries?[signField]}&");
         if (!string.IsNullOrEmpty(AppIdName))
         {
-            queryUrl += $"{AppIdName}={appId}&";
+            queryUrl += $"{AppIdName}={AppId}&";
         }
 
         queryUrl += $"{TimestampName}={(int)SimApiUtil.TimestampNow}&{NonceName}={Guid.NewGuid()}";
-        var signStr = $"{queryUrl}&{appKey}";
+        var signStr = $"{queryUrl}&{AppKey}";
         var path = $"{url}?{queryUrl}&{SignName}={SimApiUtil.Md5(signStr)}";
 
         if (queries != null)
@@ -60,12 +65,12 @@ public class SimApiHttpClient(string? appId, string appKey, bool debug = false)
         url = Server + url;
         if (!string.IsNullOrEmpty(AppIdName))
         {
-            url += $"?{AppIdName}={appId}";
+            url += $"?{AppIdName}={AppId}";
         }
 
         var req = new SimApiOneFieldRequest<string>
         {
-            Data = SimApiAesUtil.Encrypt(SimApiUtil.Json(body), appKey)
+            Data = SimApiAesUtil.Encrypt(SimApiUtil.Json(body), AppKey)
         };
         return Query<T>(url, req);
     }
@@ -82,7 +87,7 @@ public class SimApiHttpClient(string? appId, string appKey, bool debug = false)
     {
         var req = new SimApiOneFieldRequest<string>
         {
-            Data = SimApiAesUtil.Encrypt(SimApiUtil.Json(body), appKey)
+            Data = SimApiAesUtil.Encrypt(SimApiUtil.Json(body), AppKey)
         };
         return SignQuery<T>(url, req, queries);
     }
@@ -98,13 +103,13 @@ public class SimApiHttpClient(string? appId, string appKey, bool debug = false)
     private T? Query<T>(string url, object? req)
     {
         var http = new HttpClient();
-        if (debug)
+        if (Debug)
         {
             Console.WriteLine($"[HTTPCLIENT请求] {url}\n{SimApiUtil.Json(req)}\n");
         }
 
         var resp = http.PostAsJsonAsync(url, req).Result;
-        if (debug)
+        if (Debug)
         {
             Console.WriteLine($"[HTTPCLIENT响应] {resp.Content.ReadAsStringAsync().Result}\n");
         }
