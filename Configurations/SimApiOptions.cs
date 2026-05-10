@@ -113,6 +113,13 @@ public class SimApiOptions
 
     public SimApiHttpClientOptions SimApiHttpClientOptions { get; set; } = new();
 
+    public SimApiExceptionOptions SimApiExceptionOptions { get; set; } = new();
+
+    public void ConfigureSimApiException(Action<SimApiExceptionOptions>? options = null)
+    {
+        options?.Invoke(SimApiExceptionOptions);
+    }
+
     public void ConfigureSimApiHttpClient(Action<SimApiHttpClientOptions>? options = null)
     {
         options?.Invoke(SimApiHttpClientOptions);

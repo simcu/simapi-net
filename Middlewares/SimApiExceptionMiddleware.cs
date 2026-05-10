@@ -1,16 +1,22 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using SimApi.Communications;
 using Microsoft.Extensions.Logging;
+using SimApi.Configurations;
 using SimApi.Exceptions;
+using SimApi.Helpers;
 
 namespace SimApi.Middlewares;
 
 /// <summary>
 /// 异常处理中间件
 /// </summary>
-public class SimApiExceptionMiddleware(RequestDelegate next, ILogger<SimApiExceptionMiddleware> log)
+public class SimApiExceptionMiddleware(
+    RequestDelegate next,
+    ILogger<SimApiExceptionMiddleware> log,
+    SimApiOptions simApiOptions)
 {
     public async Task InvokeAsync(HttpContext context)
     {
@@ -24,18 +30,9 @@ public class SimApiExceptionMiddleware(RequestDelegate next, ILogger<SimApiExcep
             await next(context);
             if (!context.Response.HasStarted)
             {
-                switch (context.Response.StatusCode)
-                {
-                    case 200:
-                    case 301:
-                    case 302:
-                    case 404:
-                        break;
-                    // case 404:
-                    //     throw new SimApiException(context.Response.StatusCode, "请求的接口不存在");
-                    default:
-                        throw new SimApiException(context.Response.StatusCode);
-                }
+                SimApiError.ErrorWhenFalse(
+                    simApiOptions.SimApiExceptionOptions.SkipStatusCodes.Contains(context.Response.StatusCode),
+                    context.Response.StatusCode);
             }
         }
         catch (Exception ex)
