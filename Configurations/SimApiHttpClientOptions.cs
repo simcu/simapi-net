@@ -1,0 +1,8 @@
+﻿namespace SimApi.Configurations;
+
+public class SimApiHttpClientOptions
+{
+    public string Server { get; set; } = string.Empty;
+    public string AppId { get; set; } = string.Empty;
+    public string AppKey { get; set; } = string.Empty;
+}

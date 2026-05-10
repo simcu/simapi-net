@@ -3,19 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
+using Microsoft.Extensions.Logging;
 using SimApi.Communications;
+using SimApi.Configurations;
 using SimApi.Exceptions;
 
 namespace SimApi.Helpers;
 
-public class SimApiHttpClient
+public class SimApiHttpClient(SimApiOptions? apiOptions = null, ILogger<SimApiHttpClient>? logger = null)
 {
-    public required string Server { get; init; }
-    public required string AppId { get; init; }
+    public string Server { get; init; } = apiOptions?.SimApiHttpClientOptions.Server ?? string.Empty;
+    public string AppId { get; init; } = apiOptions?.SimApiHttpClientOptions.AppId ?? string.Empty;
+    public string AppKey { get; init; } = apiOptions?.SimApiHttpClientOptions.AppKey ?? string.Empty;
 
-    public required string AppKey { get; init; }
-
-    public bool Debug { get; init; } = false;
     public string SignName { get; init; } = "sign";
     public string TimestampName { get; init; } = "timestamp";
     public string NonceName { get; init; } = "nonce";
@@ -103,23 +103,12 @@ public class SimApiHttpClient
     private T? Query<T>(string url, object? req)
     {
         var http = new HttpClient();
-        if (Debug)
-        {
-            Console.WriteLine($"[HTTPCLIENT请求] {url}\n{SimApiUtil.Json(req)}\n");
-        }
-
+        logger?.LogDebug($"[HTTPCLIENT请求] {url}\n{SimApiUtil.Json(req)}\n");
         var resp = http.PostAsJsonAsync(url, req).Result;
-        if (Debug)
-        {
-            Console.WriteLine($"[HTTPCLIENT响应] {resp.Content.ReadAsStringAsync().Result}\n");
-        }
-
+        logger?.LogDebug($"[HTTPCLIENT响应] {resp.Content.ReadAsStringAsync().Result}\n");
         var res = resp.Content.ReadFromJsonAsync<SimApiBaseResponse<T>>().Result;
-        if (res == null)
-        {
-            throw new SimApiException(500, "请求发生错误");
-        }
-
-        return res.Code != 200 ? throw new SimApiException(res.Code, res.Message) : res.Data;
+        SimApiError.ErrorWhenNull(res, 500, "请求发生错误");
+        SimApiError.ErrorWhen(res.Code != 200, res.Code, res.Message);
+        return res.Data;
     }
 }

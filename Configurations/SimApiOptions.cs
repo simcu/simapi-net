@@ -1,5 +1,4 @@
 using System;
-using SimApi.CoceSdk;
 
 namespace SimApi.Configurations;
 
@@ -51,9 +50,6 @@ public class SimApiOptions
     /// </summary>
     public bool EnableCors { get; set; } = true;
 
-
-    public CoceAppSdkOption CoceSdkOptions { get; set; } = new();
-
     /// <summary>
     /// 启用异常拦截,启用后，所有的异常将被通过json反馈。
     /// default: true
@@ -93,6 +89,9 @@ public class SimApiOptions
     public bool EnableLogger { get; set; } = true;
 
 
+    public bool EnableSimApiHttpClient { get; set; } = false;
+
+
     /// <summary>
     /// 配置Job
     /// </summary>
@@ -112,14 +111,16 @@ public class SimApiOptions
 
     public SimApiGateAuthOptions SimApiGateAuthOptions { get; set; } = new();
 
+    public SimApiHttpClientOptions SimApiHttpClientOptions { get; set; } = new();
+
+    public void ConfigureSimApiHttpClient(Action<SimApiHttpClientOptions>? options = null)
+    {
+        options?.Invoke(SimApiHttpClientOptions);
+    }
+
     public void ConfigureSimApiSynapse(Action<SimApiSynapseOptions>? options = null)
     {
         options?.Invoke(SimApiSynapseOptions);
-    }
-
-    public void ConfigureCoceSdk(Action<CoceAppSdkOption>? options = null)
-    {
-        options?.Invoke(CoceSdkOptions);
     }
 
     public void ConfigureSimApiDoc(Action<SimApiDocOptions>? options = null)
