@@ -99,7 +99,7 @@ public class SimApiAuthGate(SimApiAuthGateClient simapi)
     public SimApiAuthGateDto.GetCodeResponse GetAuthCode(string? scene = null, Dictionary<string, object>? data = null,
         string? backUrl = null)
     {
-        var code = simapi.SignQuery<string>("/api/auth/confirm/code",
+        var code = simapi.SignQuery<string>("/api/auth/login/code",
             new { scene, data, backUrl });
         return new SimApiAuthGateDto.GetCodeResponse()
         {
@@ -117,7 +117,7 @@ public class SimApiAuthGate(SimApiAuthGateClient simapi)
     /// <returns></returns>
     public SimApiAuthGateDto.AuthInfoResponse GetAuthInfo(string code, string? scene = null)
     {
-        var resp = simapi.SignQuery<SimApiAuthGateDto.AuthInfoResponse>("/api/auth/confirm/get", new { code });
+        var resp = simapi.SignQuery<SimApiAuthGateDto.AuthInfoResponse>("/api/auth/login/get", new { code });
         ErrorWhenNull(resp, 400232, "登录信息获取失败");
         ErrorWhen(resp.Scene != scene, 403003, "登录场景不匹配");
         return resp;
