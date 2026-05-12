@@ -56,7 +56,6 @@ public class SimApiOptions
     /// </summary>
     public bool EnableSimApiResponseFilter { get; set; } = true;
 
-
     /// <summary>
     /// 开启ForwardHeaders,开启后可以透传负载均衡的Headers
     /// default: true
@@ -69,23 +68,16 @@ public class SimApiOptions
     /// </summary>
     public bool EnableLowerUrl { get; set; } = true;
 
-
-    /// <summary>
-    /// 应用可以通过 /versions 显示出应用版本和SimApi包版本
-    /// default: true
-    /// </summary>
-    public bool EnableVersionUrl { get; set; } = true;
-
-
     /// <summary>
     /// 启用格式化的 Console Logger
     /// default: false
     /// </summary>
     public bool EnableLogger { get; set; } = true;
 
-
+    /// <summary>
+    /// 是否启用SimApiHttpClient
+    /// </summary>
     public bool EnableSimApiHttpClient { get; set; } = false;
-
 
     /// <summary>
     /// 配置Job
@@ -109,6 +101,13 @@ public class SimApiOptions
     public SimApiHttpClientOptions SimApiHttpClientOptions { get; set; } = new();
 
     public SimApiExceptionOptions SimApiExceptionOptions { get; set; } = new();
+
+    public SimApiRouteOptions SimApiRouteOptions { get; set; } = new();
+
+    public void ConfigureSimApiRoute(Action<SimApiRouteOptions>? options = null)
+    {
+        options?.Invoke(SimApiRouteOptions);
+    }
 
     public void ConfigureSimApiException(Action<SimApiExceptionOptions>? options = null)
     {

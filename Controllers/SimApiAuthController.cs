@@ -5,8 +5,6 @@ using SimApi.Helpers;
 
 namespace SimApi.Controllers;
 
-using static SimApiError;
-
 public class SimApiAuthController(SimApiAuth auth) : SimApiBaseController
 {
     /// <summary>
@@ -21,5 +19,11 @@ public class SimApiAuthController(SimApiAuth auth) : SimApiBaseController
             auth.Logout(value!);
         }
     }
-    
+
+    /// <summary>
+    /// 获取已登录用户信息
+    /// </summary>
+    /// <returns></returns>
+    [HttpPost, SimApiAuth, SimApiDoc("认证", "获取已登录用户信息")]
+    public SimApiLoginItem UserInfo() => LoginInfo;
 }

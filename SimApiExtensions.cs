@@ -443,21 +443,39 @@ public static class SimApiExtensions
         {
             logger.LogInformation("开始配置SimApiAuth...");
             builder.UseMiddleware<SimApiAuthMiddleware>();
-            builder.MapControllerRoute(name: "Logout", pattern: "/auth/logout",
-                defaults: new
-                {
-                    controller = "SimApiAuth",
-                    action = "Logout"
-                });
         }
 
-        if (options.EnableVersionUrl)
+
+        if (options.SimApiRouteOptions.VersionRoute != null)
         {
-            builder.MapControllerRoute(name: "Versions", pattern: "/versions",
+            logger.LogInformation("注册内置Route: Versions => {}", options.SimApiRouteOptions.LogoutRoute);
+            builder.MapControllerRoute(name: "Versions", pattern: options.SimApiRouteOptions.VersionRoute,
                 defaults: new
                 {
                     controller = "SimApiCommon",
                     action = "Versions"
+                });
+        }
+
+        if (options.SimApiRouteOptions.UserInfoRoute != null)
+        {
+            logger.LogInformation("注册内置Route: UserInfo => {}", options.SimApiRouteOptions.UserInfoRoute);
+            builder.MapControllerRoute(name: "UserInfo", pattern: options.SimApiRouteOptions.UserInfoRoute,
+                defaults: new
+                {
+                    controller = "SimApiAuth",
+                    action = "UserInfo"
+                });
+        }
+
+        if (options.SimApiRouteOptions.LogoutRoute != null)
+        {
+            logger.LogInformation("注册内置Route: Logout => {}", options.SimApiRouteOptions.LogoutRoute);
+            builder.MapControllerRoute(name: "Logout", pattern: options.SimApiRouteOptions.LogoutRoute,
+                defaults: new
+                {
+                    controller = "SimApiAuth",
+                    action = "Logout"
                 });
         }
 
