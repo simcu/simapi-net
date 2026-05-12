@@ -333,7 +333,10 @@ public static class SimApiExtensions
         {
             builder.AddSingleton<SimApiAuthGateClient>();
             builder.AddSingleton<SimApiAuthGate>();
-            builder.AddSingleton<SimApiIam>();
+            if (simApiOptions.SimApiAuthGateOptions.UseIam)
+            {
+                builder.AddSingleton<SimApiIam>();
+            }
         }
 
         builder.AddSingleton(simApiOptions);

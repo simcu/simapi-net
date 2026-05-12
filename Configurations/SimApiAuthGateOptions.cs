@@ -11,4 +11,5 @@ public class SimApiAuthGateOptions
     /// 注意: 只有内部应用需要开启这个,也就是api通过内部网关代理后
     /// </summary>
     public bool UseMiddleware { get; set; }
+    public bool UseIam { get; set; }
 }
