@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SimApi.Attributes;
+using SimApi.AuthGate;
 using SimApi.Configurations;
 using SimApi.Interfaces;
 using SimApi.Logger;
@@ -328,6 +329,13 @@ public static class SimApiExtensions
                 });
         }
 
+        if (simApiOptions.EnableSimApiAuthGate)
+        {
+            builder.AddSingleton<SimApiAuthGateClient>();
+            builder.AddSingleton<SimApiAuthGate>();
+            builder.AddSingleton<SimApiIam>();
+        }
+
         builder.AddSingleton(simApiOptions);
         return builder;
     }
@@ -411,17 +419,20 @@ public static class SimApiExtensions
             logger.LogInformation(msg);
         }
 
-        if (options.EnableSimApiGateAuth)
+        if (options.EnableSimApiAuthGate)
         {
-            logger.LogInformation("开始配置SimApiGateAuth...");
-            if (string.IsNullOrEmpty(options.SimApiGateAuthOptions.AppId) ||
-                string.IsNullOrEmpty(options.SimApiGateAuthOptions.AppKey))
+            logger.LogInformation("开始配置SimApiAuthGate...");
+            if (string.IsNullOrEmpty(options.SimApiAuthGateOptions.AppId) ||
+                string.IsNullOrEmpty(options.SimApiAuthGateOptions.AppKey))
             {
-                logger.LogCritical("必须配置Gate的AppId和AppKey才能启用SimApiGateAuth");
+                logger.LogCritical("必须配置AuthGate的AppId和AppKey才能启用SimApiAuthGate");
             }
             else
             {
-                builder.UseMiddleware<SimApiGateAuthMiddleware>();
+                if (options.SimApiAuthGateOptions.UseMiddleware)
+                {
+                    builder.UseMiddleware<SimApiAuthGateMiddleware>();
+                }
             }
         }
 

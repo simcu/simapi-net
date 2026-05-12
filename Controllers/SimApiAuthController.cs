@@ -21,4 +21,5 @@ public class SimApiAuthController(SimApiAuth auth) : SimApiBaseController
             auth.Logout(value!);
         }
     }
+    
 }

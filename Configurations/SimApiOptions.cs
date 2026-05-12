@@ -20,12 +20,7 @@ public class SimApiOptions
     /// <summary>
     /// 启用SimApi网关授权, 基于上层网关透传的身份令牌验证
     /// </summary>
-    public bool EnableSimApiGateAuth { get; set; }
-
-    /// <summary>
-    /// 是否使用CoceSdk
-    /// </summary>
-    public bool EnableCoceSdk { get; set; }
+    public bool EnableSimApiAuthGate { get; set; }
 
     /// <summary>
     /// 开启S3兼容的存储系统。
@@ -109,7 +104,7 @@ public class SimApiOptions
 
     public SimApiSynapseOptions SimApiSynapseOptions { get; set; } = new();
 
-    public SimApiGateAuthOptions SimApiGateAuthOptions { get; set; } = new();
+    public SimApiAuthGateOptions SimApiAuthGateOptions { get; set; } = new();
 
     public SimApiHttpClientOptions SimApiHttpClientOptions { get; set; } = new();
 
@@ -145,8 +140,8 @@ public class SimApiOptions
         options?.Invoke(SimApiJobOptions);
     }
 
-    public void ConfigureSimApiGateAuth(Action<SimApiGateAuthOptions>? options = null)
+    public void ConfigureSimApiAuthGate(Action<SimApiAuthGateOptions>? options = null)
     {
-        options?.Invoke(SimApiGateAuthOptions);
+        options?.Invoke(SimApiAuthGateOptions);
     }
 }

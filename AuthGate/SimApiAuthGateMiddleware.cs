@@ -1,14 +1,13 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using SimApi.Communications;
 using SimApi.Configurations;
 using SimApi.Helpers;
 
-namespace SimApi.Middlewares;
+namespace SimApi.AuthGate;
 
-public class SimApiGateAuthMiddleware(RequestDelegate next, ILogger<SimApiGateAuthMiddleware> logger)
+public class SimApiAuthGateMiddleware(RequestDelegate next, ILogger<SimApiAuthGateMiddleware> logger)
 {
     public Task Invoke(HttpContext httpContext, SimApiOptions simApiOptions)
     {
@@ -17,7 +16,7 @@ public class SimApiGateAuthMiddleware(RequestDelegate next, ILogger<SimApiGateAu
             httpContext.Request.Headers.TryGetValue("X-SimApi-Gate-Sign", out var sign))
         {
             var signStr =
-                $"appId={simApiOptions.SimApiGateAuthOptions.AppId}&auth={auth}&time={time}&appKey={simApiOptions.SimApiGateAuthOptions.AppKey}";
+                $"appId={simApiOptions.SimApiAuthGateOptions.AppId}&auth={auth}&time={time}&appKey={simApiOptions.SimApiAuthGateOptions.AppKey}";
             logger.LogDebug($"签名字符串 => {signStr}");
             if (SimApiUtil.Md5(signStr) == sign && !string.IsNullOrEmpty(auth))
             {

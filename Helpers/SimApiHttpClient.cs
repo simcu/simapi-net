@@ -12,15 +12,15 @@ namespace SimApi.Helpers;
 
 public class SimApiHttpClient(SimApiOptions? apiOptions = null, ILogger<SimApiHttpClient>? logger = null)
 {
-    public string Server { get; init; } = apiOptions?.SimApiHttpClientOptions.Server ?? string.Empty;
-    public string AppId { get; init; } = apiOptions?.SimApiHttpClientOptions.AppId ?? string.Empty;
-    public string AppKey { get; init; } = apiOptions?.SimApiHttpClientOptions.AppKey ?? string.Empty;
+    public virtual  string Server { get; init; } = apiOptions?.SimApiHttpClientOptions.Server ?? string.Empty;
+    public virtual  string AppId { get; init; } = apiOptions?.SimApiHttpClientOptions.AppId ?? string.Empty;
+    public virtual  string AppKey { get; init; } = apiOptions?.SimApiHttpClientOptions.AppKey ?? string.Empty;
 
-    public string SignName { get; init; } = "sign";
-    public string TimestampName { get; init; } = "timestamp";
-    public string NonceName { get; init; } = "nonce";
-    public string? AppIdName { get; init; } = "appId";
-    public string[] SignFields { get; init; } = [];
+    public virtual  string SignName { get; init; } = "sign";
+    public virtual  string TimestampName { get; init; } = "timestamp";
+    public virtual  string NonceName { get; init; } = "nonce";
+    public virtual  string? AppIdName { get; init; } = "appId";
+    public virtual  string[] SignFields { get; init; } = [];
 
     /// <summary>
     /// 发起签名请求
