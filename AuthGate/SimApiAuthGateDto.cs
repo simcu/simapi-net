@@ -21,7 +21,7 @@ public class SimApiAuthGateDto
         public Dictionary<string, object>? Data { get; set; }
     }
 
-    public class AuthInfoResponse
+    public class LoginInfoResponse
     {
         public string? Scene { get; set; }
         public Dictionary<string, object>? Data { get; set; }
