@@ -1,6 +1,6 @@
 ﻿namespace SimApi.Configurations;
 
-public class SimApiAuthGateOptions
+public class SimApiAuthCenterOptions
 {
     public string? Server { get; set; }
     public string? AppId { get; set; }

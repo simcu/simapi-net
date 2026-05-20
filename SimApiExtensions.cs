@@ -333,7 +333,7 @@ public static class SimApiExtensions
         {
             builder.AddSingleton<SimApiAuthClient>();
             builder.AddSingleton<SimApiAuthCenter>();
-            if (simApiOptions.SimApiAuthGateOptions.UseIam)
+            if (simApiOptions.SimApiAuthCenterOptions.UseIam)
             {
                 builder.AddSingleton<SimApiAuthIam>();
             }
@@ -425,14 +425,14 @@ public static class SimApiExtensions
         if (options.EnableSimApiAuthGate)
         {
             logger.LogInformation("开始配置SimApiAuthGate...");
-            if (string.IsNullOrEmpty(options.SimApiAuthGateOptions.AppId) ||
-                string.IsNullOrEmpty(options.SimApiAuthGateOptions.AppKey))
+            if (string.IsNullOrEmpty(options.SimApiAuthCenterOptions.AppId) ||
+                string.IsNullOrEmpty(options.SimApiAuthCenterOptions.AppKey))
             {
                 logger.LogCritical("必须配置AuthGate的AppId和AppKey才能启用SimApiAuthGate");
             }
             else
             {
-                if (options.SimApiAuthGateOptions.UseMiddleware)
+                if (options.SimApiAuthCenterOptions.UseMiddleware)
                 {
                     builder.UseMiddleware<SimApiAuthCenterMiddleware>();
                 }

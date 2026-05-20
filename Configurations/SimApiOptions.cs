@@ -96,7 +96,7 @@ public class SimApiOptions
 
     public SimApiSynapseOptions SimApiSynapseOptions { get; set; } = new();
 
-    public SimApiAuthGateOptions SimApiAuthGateOptions { get; set; } = new();
+    public SimApiAuthCenterOptions SimApiAuthCenterOptions { get; set; } = new();
 
     public SimApiHttpClientOptions SimApiHttpClientOptions { get; set; } = new();
 
@@ -139,8 +139,8 @@ public class SimApiOptions
         options?.Invoke(SimApiJobOptions);
     }
 
-    public void ConfigureSimApiAuthGate(Action<SimApiAuthGateOptions>? options = null)
+    public void ConfigureSimApiAuthCenter(Action<SimApiAuthCenterOptions>? options = null)
     {
-        options?.Invoke(SimApiAuthGateOptions);
+        options?.Invoke(SimApiAuthCenterOptions);
     }
 }

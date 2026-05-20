@@ -16,7 +16,7 @@ public class SimApiAuthCenterMiddleware(RequestDelegate next, ILogger<SimApiAuth
             httpContext.Request.Headers.TryGetValue("X-SimApi-Gate-Sign", out var sign))
         {
             var signStr =
-                $"appId={simApiOptions.SimApiAuthGateOptions.AppId}&auth={auth}&time={time}&appKey={simApiOptions.SimApiAuthGateOptions.AppKey}";
+                $"appId={simApiOptions.SimApiAuthCenterOptions.AppId}&auth={auth}&time={time}&appKey={simApiOptions.SimApiAuthCenterOptions.AppKey}";
             logger.LogDebug($"签名字符串 => {signStr}");
             if (SimApiUtil.Md5(signStr) == sign && !string.IsNullOrEmpty(auth))
             {
