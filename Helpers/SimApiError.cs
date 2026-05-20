@@ -65,7 +65,7 @@ public static class SimApiError
     /// <param name="code">错误代码</param>
     /// <param name="message">错误描述</param>
     public static void ErrorWhenNull([NotNull] object? condition, int code = 404,
-        string message = "请求的资源不存在")
+        string message = "")
     {
         ErrorWhen(condition == null, code, message);
     }

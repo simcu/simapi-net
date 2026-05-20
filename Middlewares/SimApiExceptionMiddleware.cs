@@ -45,11 +45,15 @@ public class SimApiExceptionMiddleware(
                 response = string.IsNullOrEmpty(simEx.Message)
                     ? new SimApiBaseResponse(simEx.Code)
                     : new SimApiBaseResponse(simEx.Code, simEx.Message);
+                if (context.Response.StatusCode == 404)
+                {
+                    response.Message = "接口不存在";
+                }
             }
             else
             {
-                log.LogError(ex, "服务器异常");
-                response = new SimApiBaseResponse(500, "服务器错误");
+                log.LogError(ex, ex.Message);
+                response = new SimApiBaseResponse(500);
             }
 
             await ErrorResponseAsync(context, response);

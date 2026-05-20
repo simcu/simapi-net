@@ -16,7 +16,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SimApi.Attributes;
-using SimApi.AuthGate;
+using SimApi.AuthSDK;
 using SimApi.Configurations;
 using SimApi.Interfaces;
 using SimApi.Logger;
@@ -331,11 +331,11 @@ public static class SimApiExtensions
 
         if (simApiOptions.EnableSimApiAuthGate)
         {
-            builder.AddSingleton<SimApiAuthGateClient>();
-            builder.AddSingleton<SimApiAuthGate>();
+            builder.AddSingleton<SimApiAuthClient>();
+            builder.AddSingleton<SimApiAuthCenter>();
             if (simApiOptions.SimApiAuthGateOptions.UseIam)
             {
-                builder.AddSingleton<SimApiIam>();
+                builder.AddSingleton<SimApiAuthIam>();
             }
         }
 
@@ -434,7 +434,7 @@ public static class SimApiExtensions
             {
                 if (options.SimApiAuthGateOptions.UseMiddleware)
                 {
-                    builder.UseMiddleware<SimApiAuthGateMiddleware>();
+                    builder.UseMiddleware<SimApiAuthCenterMiddleware>();
                 }
             }
         }
@@ -463,7 +463,7 @@ public static class SimApiExtensions
             builder.MapControllerRoute(name: "UserInfo", pattern: options.SimApiRouteOptions.UserInfoRoute,
                 defaults: new
                 {
-                    controller = "SimApiAuth",
+                    controller = "SimApiCommon",
                     action = "UserInfo"
                 });
         }

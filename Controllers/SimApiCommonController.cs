@@ -31,4 +31,12 @@ public class SimApiCommonController : SimApiBaseController
             { "App", SimApiUtil.AppVersion }
         };
     }
+    
+    
+    /// <summary>
+    /// 获取已登录用户信息
+    /// </summary>
+    /// <returns></returns>
+    [HttpPost, SimApiAuth, SimApiDoc("认证", "获取已登录用户信息")]
+    public SimApiLoginItem UserInfo() => LoginInfo;
 }

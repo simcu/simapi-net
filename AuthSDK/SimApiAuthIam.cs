@@ -1,15 +1,15 @@
 ﻿using Microsoft.Extensions.Logging;
 using static SimApi.Helpers.SimApiError;
 
-namespace SimApi.AuthGate;
+namespace SimApi.AuthSDK;
 
-public class SimApiIam(SimApiAuthGateClient simapi, ILogger<SimApiIam> logger)
+public class SimApiAuthIam(SimApiAuthClient simapi, ILogger<SimApiAuthIam> logger)
 {
     /// <summary>
     /// 向Iam注册权限
     /// </summary>
     /// <param name="permissions"></param>
-    public void RegisterPermissions(SimApiIamDto.PermissionItem[] permissions)
+    public void RegisterPermissions(SimApiAuthIamDto.PermissionItem[] permissions)
     {
         var log = $"检测到 {permissions.Length} 个权限接口，正在注册..: ";
         foreach (var permission in permissions)

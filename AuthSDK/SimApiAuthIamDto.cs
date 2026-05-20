@@ -1,6 +1,6 @@
-﻿namespace SimApi.AuthGate;
+﻿namespace SimApi.AuthSDK;
 
-public class SimApiIamDto
+public class SimApiAuthIamDto
 {
     public class PermissionItem
     {

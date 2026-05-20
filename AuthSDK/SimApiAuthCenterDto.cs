@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace SimApi.AuthGate;
+namespace SimApi.AuthSDK;
 
-public class SimApiAuthGateDto
+public class SimApiAuthCenterDto
 {
     public class AppAndProfileItem
     {
-        public string Id { get; set; } = "";
-        public string Name { get; set; } = "";
+        public required string Id { get; set; }
+        public required string Name { get; set; }
         public string? Image { get; set; }
         public string? Description { get; set; }
     }
@@ -36,5 +36,26 @@ public class SimApiAuthGateDto
         public required string Code { get; set; }
         public required string Server { get; set; }
         public required string FullUrl { get; set; }
+    }
+
+    public class GroupRelatedItem
+    {
+        public required string Id { get; set; }
+        public required string Name { get; set; }
+        public string? Image { get; set; }
+        public string? Description { get; set; }
+        public bool IsOwner { get; set; }
+        public bool IsAdmin { get; set; }
+        public bool IsMember { get; set; }
+    }
+
+    public class GroupDetailTreeNode
+    {
+        public required string Id { get; set; }
+        public required string Name { get; set; }
+        public string? Image { get; set; }
+        public string? Description { get; set; }
+        public int Sort { get; set; }
+        public List<GroupDetailTreeNode> Children { get; set; } = [];
     }
 }

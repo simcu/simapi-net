@@ -5,9 +5,9 @@ using SimApi.Communications;
 using SimApi.Configurations;
 using SimApi.Helpers;
 
-namespace SimApi.AuthGate;
+namespace SimApi.AuthSDK;
 
-public class SimApiAuthGateMiddleware(RequestDelegate next, ILogger<SimApiAuthGateMiddleware> logger)
+public class SimApiAuthCenterMiddleware(RequestDelegate next, ILogger<SimApiAuthCenterMiddleware> logger)
 {
     public Task Invoke(HttpContext httpContext, SimApiOptions simApiOptions)
     {

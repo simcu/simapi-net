@@ -2,9 +2,9 @@
 using SimApi.Configurations;
 using SimApi.Helpers;
 
-namespace SimApi.AuthGate;
+namespace SimApi.AuthSDK;
 
-public class SimApiAuthGateClient(SimApiOptions apiOptions, ILogger<SimApiAuthGateClient> logger)
+public class SimApiAuthClient(SimApiOptions apiOptions, ILogger<SimApiAuthClient> logger)
     : SimApiHttpClient(apiOptions, logger)
 {
     public override string Server { get; init; } = apiOptions.SimApiAuthGateOptions.Server ?? string.Empty;
