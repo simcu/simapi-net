@@ -77,7 +77,7 @@ public class SimApiAuthCenter(SimApiAuthClient simapi)
     /// <returns></returns>
     public string[]? GroupRelatedIndex(string groupId, string profileId)
     {
-        return Client.SignQuery<string[]>("/api/auth/internal/group/get-related-groupid", new { groupId, profileId });
+        return Client.SignQuery<string[]>("/api/auth/internal/group/related-group-ids", new { groupId, profileId });
     }
 
     #endregion
@@ -119,7 +119,7 @@ public class SimApiAuthCenter(SimApiAuthClient simapi)
     /// <returns></returns>
     public bool CheckIsAppOwner(string profileId, string applicationId)
     {
-        return Client.SignQuery<bool>("/api/auth/internal/apps/check-owner", new
+        return Client.SignQuery<bool>("/api/auth/internal/app/check-owner", new
         {
             ProfileId = profileId,
             AppId = applicationId,
@@ -134,7 +134,7 @@ public class SimApiAuthCenter(SimApiAuthClient simapi)
     /// <returns></returns>
     public SimApiAuthCenterDto.AppAndProfileItem[]? GetAppList(string profileId, IEnumerable<string> appIds)
     {
-        return Client.SignQuery<SimApiAuthCenterDto.AppAndProfileItem[]>("/api/auth/internal/apps/related", new
+        return Client.SignQuery<SimApiAuthCenterDto.AppAndProfileItem[]>("/api/auth/internal/app/related", new
         {
             ProfileId = profileId,
             AllowedAppIds = appIds,
