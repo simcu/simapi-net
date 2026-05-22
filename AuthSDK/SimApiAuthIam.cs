@@ -26,10 +26,11 @@ public class SimApiAuthIam(SimApiAuthClient simapi, ILogger<SimApiAuthIam> logge
     /// 获取拥有的权限标识数组
     /// </summary>
     /// <param name="profileId"></param>
+    /// <param name="groupId"></param>
     /// <returns></returns>
-    public string[] GetPermissionOwned(string profileId)
+    public string[] GetPermissionOwned(string profileId, string? groupId = null)
     {
-        return simapi.SignQuery<string[]>("/api/iam/permission/owned", new { profileId }) ?? [];
+        return simapi.SignQuery<string[]>("/api/iam/permission/owned", new { profileId, groupId }) ?? [];
     }
 
     /// <summary>
@@ -37,9 +38,10 @@ public class SimApiAuthIam(SimApiAuthClient simapi, ILogger<SimApiAuthIam> logge
     /// </summary>
     /// <param name="profileId"></param>
     /// <param name="permission"></param>
-    public void CheckPermission(string profileId, string permission)
+    /// <param name="groupId"></param>
+    public void CheckPermission(string profileId, string permission, string? groupId = null)
     {
-        var ok = simapi.SignQuery<bool>("/api/iam/permission/check", new { profileId, permission });
+        var ok = simapi.SignQuery<bool>("/api/iam/permission/check", new { profileId, permission, groupId });
         ErrorWhen(!ok, 403, "没有该权限");
     }
 }

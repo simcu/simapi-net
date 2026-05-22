@@ -12,15 +12,15 @@ namespace SimApi.Helpers;
 
 public class SimApiHttpClient(SimApiOptions? apiOptions = null, ILogger<SimApiHttpClient>? logger = null)
 {
-    public virtual  string Server { get; init; } = apiOptions?.SimApiHttpClientOptions.Server ?? string.Empty;
-    public virtual  string AppId { get; init; } = apiOptions?.SimApiHttpClientOptions.AppId ?? string.Empty;
-    public virtual  string AppKey { get; init; } = apiOptions?.SimApiHttpClientOptions.AppKey ?? string.Empty;
+    public virtual string Server { get; init; } = apiOptions?.SimApiHttpClientOptions.Server ?? string.Empty;
+    public virtual string AppId { get; init; } = apiOptions?.SimApiHttpClientOptions.AppId ?? string.Empty;
+    public virtual string AppKey { get; init; } = apiOptions?.SimApiHttpClientOptions.AppKey ?? string.Empty;
 
-    public virtual  string SignName { get; init; } = "sign";
-    public virtual  string TimestampName { get; init; } = "timestamp";
-    public virtual  string NonceName { get; init; } = "nonce";
-    public virtual  string? AppIdName { get; init; } = "appId";
-    public virtual  string[] SignFields { get; init; } = [];
+    public virtual string SignName { get; init; } = "sign";
+    public virtual string TimestampName { get; init; } = "timestamp";
+    public virtual string NonceName { get; init; } = "nonce";
+    public virtual string? AppIdName { get; init; } = "appId";
+    public virtual string[] SignFields { get; init; } = [];
 
     /// <summary>
     /// 发起签名请求
@@ -106,6 +106,7 @@ public class SimApiHttpClient(SimApiOptions? apiOptions = null, ILogger<SimApiHt
         logger?.LogDebug($"[HTTPCLIENT请求] {url}\n{SimApiUtil.Json(req)}\n");
         var resp = http.PostAsJsonAsync(url, req).Result;
         logger?.LogDebug($"[HTTPCLIENT响应] {resp.Content.ReadAsStringAsync().Result}\n");
+        SimApiError.ErrorWhenFalse(resp.IsSuccessStatusCode, (int)resp.StatusCode, $"HTTP ERROR: {resp.StatusCode}");
         var res = resp.Content.ReadFromJsonAsync<SimApiBaseResponse<T>>().Result;
         SimApiError.ErrorWhenNull(res, 500, "请求发生错误");
         SimApiError.ErrorWhen(res.Code != 200, res.Code, res.Message);
