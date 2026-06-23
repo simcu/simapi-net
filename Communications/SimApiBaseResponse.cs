@@ -51,7 +51,7 @@ public class SimApiBaseResponse(int code = 200, string message = "成功")
 /// <typeparam name="T"></typeparam>
 public class PageResponse<T>
 {
-    public T? List { get; set; }
+    public T[] List { get; set; } = [];
     public int Page { get; set; } = 1;
     public int Count { get; set; } = 20;
     public int Total { get; set; }
