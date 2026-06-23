@@ -67,7 +67,7 @@ public class SimApiHttpClient(SimApiOptions? apiOptions = null, ILogger<SimApiHt
         {
             url += $"?{AppIdName}={AppId}";
         }
-
+        logger?.LogDebug($"[HTTPCLIENT请求][加密前BODY] {url}\n{SimApiUtil.Json(body)}\n");
         var req = new SimApiOneFieldRequest<string>
         {
             Data = SimApiAesUtil.Encrypt(SimApiUtil.Json(body), AppKey)
@@ -85,6 +85,7 @@ public class SimApiHttpClient(SimApiOptions? apiOptions = null, ILogger<SimApiHt
     /// <returns></returns>
     public T AesSignQuery<T>(string url, object body, Dictionary<string, string>? queries = null)
     {
+        logger?.LogDebug($"[HTTPCLIENT请求][加密前BODY] {url}\n{SimApiUtil.Json(body)}\n");
         var req = new SimApiOneFieldRequest<string>
         {
             Data = SimApiAesUtil.Encrypt(SimApiUtil.Json(body), AppKey)
