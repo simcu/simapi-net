@@ -37,15 +37,15 @@ app.Run();
 
 所有接口输出 JSON，HTTP 状态码始终 `200`，错误信息在 `code` 字段：
 
-| code | 含义 |
-|------|------|
-| 200 | 成功 |
-| 204 | 无数据 |
-| 400 | 参数错误 |
-| 401 | 需要登录 |
-| 403 | 无权访问 |
-| 404 | 资源不存在 |
-| 500 | 服务器错误 |
+| code | 含义       |
+| ---- | ---------- |
+| 200  | 成功       |
+| 204  | 无数据     |
+| 400  | 参数错误   |
+| 401  | 需要登录   |
+| 403  | 无权访问   |
+| 404  | 资源不存在 |
+| 500  | 服务器错误 |
 
 ### 异常处理流程
 
@@ -146,25 +146,25 @@ public class SimApiBaseController : Controller
 
 ### 自动路由
 
-| 路由 | 方法 | 条件 | 说明 |
-|------|------|------|------|
-| `/versions` | GET/POST | `EnableVersionUrl`(默认) | 返回 SimApi/App 版本 |
-| `/user/info` | POST | `EnableSimApiAuth` | 需登录，返回 LoginInfo |
-| `/logout` | POST | `EnableSimApiAuth` | 退出登录（可自定义路由） |
-| `/swagger` | GET | `EnableSimApiDoc` | Swagger UI |
-| `/jobs` | GET | `EnableJob` + DashboardUrl | Hangfire 控制台 |
-| `/exception/{code:int}` | GET | 始终 | 错误反馈页面 |
+| 路由                    | 方法     | 条件                                         | 说明                     |
+| ----------------------- | -------- | -------------------------------------------- | ------------------------ |
+| `/versions`             | GET/POST | `VersionRoute != null`(默认)                 | 返回 SimApi/App 版本     |
+| `/user/info`            | POST     | `EnableSimApiAuth` + `UserInfoRoute != null` | 需登录，返回 LoginInfo   |
+| `/auth/logout`          | POST     | `EnableSimApiAuth` + `LogoutRoute != null`   | 退出登录（可自定义路由） |
+| `/swagger`              | GET      | `EnableSimApiDoc`                            | Swagger UI               |
+| `/jobs`                 | GET      | `EnableJob` + `DashboardUrl != null`         | Hangfire 控制台          |
+| `/exception/{code:int}` | GET      | 始终                                         | 错误反馈页面             |
 
 ### 返回值规范
 
-| 场景 | 返回类型 |
-|------|----------|
-| 写操作 | `void` |
-| 单条查询 | 直接 Entity |
-| 列表查询 | `Entity[]` |
-| 分页 | `PageResponse<Entity[]>` |
-| 自定义状态 | `SimApiBaseResponse` |
-| 跳封装 | 方法加 `[OriginResponse]` |
+| 场景       | 返回类型                  |
+| ---------- | ------------------------- |
+| 写操作     | `void`                    |
+| 单条查询   | 直接 Entity               |
+| 列表查询   | `Entity[]`                |
+| 分页       | `PageResponse<Entity[]>`  |
+| 自定义状态 | `SimApiBaseResponse`      |
+| 跳封装     | 方法加 `[OriginResponse]` |
 
 ---
 
@@ -322,7 +322,8 @@ public class MySignProvider : SimApiSignProviderBase
 ```csharp
 [SynapseEvent("order/created")]          // 指定 eventName
 [SynapseEvent]                            // 不指定 = 方法名
-// 参数: 0个 / 1个(string eventName) / 2个(string eventName, T data)
+// 参数: 1个(string eventName) / 2个(string eventName, T data)
+// 注意: 至少需要1个参数
 ```
 
 ### [SynapseRpc] — MQTT RPC 方法
@@ -358,14 +359,14 @@ options.ConfigureSimApiDoc(doc =>
 
 ### 自动过滤器
 
-| 过滤器 | 效果 |
-|--------|------|
-| `SimApiResponseOperationFilter` | 返回值包装为 `SimApiBaseResponse<T>` |
-| `SimApiAuthOperationFilter` | 鉴权接口 + Token Header |
-| `SimApiSignOperationFilter` | 签名接口注入签名参数 |
-| `AesBodyOperationFilter` | AES 接口展示原始结构 |
-| `GlobalDynamicObjectSchemaFilter` | object/Dictionary → Schema |
-| `RemoveEmptyTagsFilter` | 清除空分组 |
+| 过滤器                            | 效果                                 |
+| --------------------------------- | ------------------------------------ |
+| `SimApiResponseOperationFilter`   | 返回值包装为 `SimApiBaseResponse<T>` |
+| `SimApiAuthOperationFilter`       | 鉴权接口 + Token Header              |
+| `SimApiSignOperationFilter`       | 签名接口注入签名参数                 |
+| `AesBodyOperationFilter`          | AES 接口展示原始结构                 |
+| `GlobalDynamicObjectSchemaFilter` | object/Dictionary → Schema           |
+| `RemoveEmptyTagsFilter`           | 清除空分组                           |
 
 ---
 
@@ -439,9 +440,9 @@ virtual string[] SignFields  { get; init; } = [];
 ### 调用方法
 
 ```csharp
-T? SignQuery<T>(string url, object? body = null, Dictionary<string, string>? queries = null);
-T? AesQuery<T>(string url, object body);
-T? AesSignQuery<T>(string url, object body, Dictionary<string, string>? queries = null);
+T SignQuery<T>(string url, object? body = null, Dictionary<string, string>? queries = null);
+T AesQuery<T>(string url, object body);
+T AesSignQuery<T>(string url, object body, Dictionary<string, string>? queries = null);
 ```
 
 ---
@@ -498,13 +499,13 @@ options.ConfigureSimApiSynapse(s =>
 
 ### Topic 规则
 
-| 用途 | Topic 格式 |
-|------|-----------|
-| 事件发布 | `{SysName}/event/{AppName}/{eventName}` |
-| 事件订阅 | `{SysName}/event/{eventName}` (或 `$queue/` 前缀) |
-| RPC 请求 | `{SysName}/{targetApp}/rpc/server/{method}` |
+| 用途     | Topic 格式                                             |
+| -------- | ------------------------------------------------------ |
+| 事件发布 | `{SysName}/event/{AppName}/{eventName}`                |
+| 事件订阅 | `{SysName}/event/{eventName}` (或 `$queue/` 前缀)      |
+| RPC 请求 | `{SysName}/{targetApp}/rpc/server/{method}`            |
 | RPC 响应 | `{SysName}/{callerApp}/rpc/client/{AppId}/{messageId}` |
-| 配置 | `{SysName}/synapse-config-store/{key}` (Retain) |
+| 配置     | `{SysName}/synapse-config-store/{key}` (Retain)        |
 
 ### API
 
@@ -588,11 +589,11 @@ void UpdateTime();
 
 ## 15. DTO 规范
 
-| 类型 | 命名 | 示例 |
-|------|------|------|
-| 请求 | `[动作]Request` | `UserEditRequest` |
-| 响应 | `[动作]Response` | `TokenResponse` |
-| 载体 | `[含义]Data/Item` | `GenerateData` |
+| 类型 | 命名              | 示例              |
+| ---- | ----------------- | ----------------- |
+| 请求 | `[动作]Request`   | `UserEditRequest` |
+| 响应 | `[动作]Response`  | `TokenResponse`   |
+| 载体 | `[含义]Data/Item` | `GenerateData`    |
 
 ### 框架内置 DTO
 
@@ -628,7 +629,6 @@ builder.Services.AddSimApi(options =>
     options.EnableSimApiResponseFilter = true;   // 响应统一封装
     options.EnableForwardHeaders     = true;     // 反向代理 Header
     options.EnableLowerUrl           = true;     // URL 小写
-    options.EnableVersionUrl         = true;     // /versions 接口
 
     // 子模块配置
     options.ConfigureSimApiDoc(doc => { ... });
@@ -646,31 +646,31 @@ builder.Services.AddSimApi(options =>
 
 ## 17. GOTCHAS — 常见错误
 
-| ❌ 错误 | ✅ 正确 |
-|---------|---------|
-| 存储路径 `avatars/file.jpg`（无前导 `/`） | 必须以 **`/`** 开头 |
-| `s.Endpoint = "http://x:9000/"` | **不能以 `/` 结尾** |
-| `synapse.PublishEvent(...)` | 方法名是 **`synapse.Event(...)`** |
-| `synapse.CallRpcAsync(...)` | 方法名是 **`synapse.Rpc<T>(...)`** |
-| HTTP 4xx/5xx 状态码 | 永远 **HTTP 200**，错误在 JSON code |
-| `SupportedMethod` 写多种方法 | 默认仅 **POST** |
+| ❌ 错误                                                 | ✅ 正确                                      |
+| ------------------------------------------------------ | ------------------------------------------- |
+| 存储路径 `avatars/file.jpg`（无前导 `/`）              | 必须以 **`/`** 开头                         |
+| `s.Endpoint = "http://x:9000/"`                        | **不能以 `/` 结尾**                         |
+| `synapse.PublishEvent(...)`                            | 方法名是 **`synapse.Event(...)`**           |
+| `synapse.CallRpcAsync(...)`                            | 方法名是 **`synapse.Rpc<T>(...)`**          |
+| HTTP 4xx/5xx 状态码                                    | 永远 **HTTP 200**，错误在 JSON code         |
+| `SupportedMethod` 写多种方法                           | 默认仅 **POST**                             |
 | `SimApiStorageOptions = Configuration.GetSection(...)` | 用 **`ConfigureSimApiStorage(s => {...})`** |
-| 代码中 `LoginInfo.Type.Contains("admin")` | 用 `[SimApiAuth("admin")]` |
-| `return ActionResult<T>` | 直接返回 Entity / void |
+| 代码中 `LoginInfo.Type.Contains("admin")`              | 用 `[SimApiAuth("admin")]`                  |
+| `return ActionResult<T>`                               | 直接返回 Entity / void                      |
 ---
 
 ## 18. 禁止事项
 
-| ❌ 禁止 | ✅ 正确                                                 |
-|---------|------------------------------------------------------|
-| HTTP 4xx/5xx 表达业务错误 | HTTP 200 + JSON `code`                               |
-| `throw new Exception(msg)` | `ErrorWhen` 或 `throw new SimApiException(code, msg)` |
-| 鉴权 Attribute 只放方法 | 可以放 Controller **类**上                                |
-| 手动判断 `LoginInfo.Type.Contains(...)` | `[SimApiAuth("role")]`                               |
-| Entity 配导航属性 / Fluent API | Convention 自动映射                                      |
-| 花括号块命名空间 | 文件范围 `namespace X;`                                  |
-| 传统构造函数注入 | 主构造函数                                                |
-| `new List<T>()` / `new string[]{}` | `[]` 集合表达式                                           |
-| `Count() > 0` | `Any()`                                              |
-| `ToList()` → 数组 | 直接 `ToArray()`                                       |
-| 全局 catch 吞异常 | 让异常冒泡到 SimApiExceptionMiddleware                     |
+| ❌ 禁止                                  | ✅ 正确                                                |
+| --------------------------------------- | ----------------------------------------------------- |
+| HTTP 4xx/5xx 表达业务错误               | HTTP 200 + JSON `code`                                |
+| `throw new Exception(msg)`              | `ErrorWhen` 或 `throw new SimApiException(code, msg)` |
+| 鉴权 Attribute 只放方法                 | 可以放 Controller **类**上                            |
+| 手动判断 `LoginInfo.Type.Contains(...)` | `[SimApiAuth("role")]`                                |
+| Entity 配导航属性 / Fluent API          | Convention 自动映射                                   |
+| 花括号块命名空间                        | 文件范围 `namespace X;`                               |
+| 传统构造函数注入                        | 主构造函数                                            |
+| `new List<T>()` / `new string[]{}`      | `[]` 集合表达式                                       |
+| `Count() > 0`                           | `Any()`                                               |
+| `ToList()` → 数组                       | 直接 `ToArray()`                                      |
+| 全局 catch 吞异常                       | 让异常冒泡到 SimApiExceptionMiddleware                |

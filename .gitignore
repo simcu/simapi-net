@@ -434,3 +434,6 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
+
+# BitFun snapshot data - auto managed
+.bitfun/
