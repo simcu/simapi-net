@@ -339,6 +339,7 @@ public static class SimApiExtensions
             }
         }
 
+        builder.AddSingleton(simApiOptions.SimApiRequestLogOptions);
         builder.AddSingleton(simApiOptions);
         return builder;
     }
@@ -495,6 +496,12 @@ public static class SimApiExtensions
                     x.SupportedSubmitMethods(docOptions.SupportedMethod);
                     x.DisplayRequestDuration();
                 });
+        }
+
+        if (options.EnableRequestLog)
+        {
+            logger.LogInformation("开始配置SimApiRequestLog...");
+            builder.UseMiddleware<SimApiRequestLogMiddleware>();
         }
 
         if (options.EnableSimApiException)

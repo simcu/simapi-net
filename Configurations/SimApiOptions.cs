@@ -57,6 +57,12 @@ public class SimApiOptions
     public bool EnableSimApiResponseFilter { get; set; } = true;
 
     /// <summary>
+    /// 启用请求日志中间件
+    /// default: false
+    /// </summary>
+    public bool EnableRequestLog { get; set; }
+
+    /// <summary>
     /// 开启ForwardHeaders,开启后可以透传负载均衡的Headers
     /// default: true
     /// </summary>
@@ -104,6 +110,8 @@ public class SimApiOptions
 
     public SimApiRouteOptions SimApiRouteOptions { get; set; } = new();
 
+    public SimApiRequestLogOptions SimApiRequestLogOptions { get; set; } = new();
+
     public void ConfigureSimApiRoute(Action<SimApiRouteOptions>? options = null)
     {
         options?.Invoke(SimApiRouteOptions);
@@ -142,5 +150,10 @@ public class SimApiOptions
     public void ConfigureSimApiAuthCenter(Action<SimApiAuthCenterOptions>? options = null)
     {
         options?.Invoke(SimApiAuthCenterOptions);
+    }
+
+    public void ConfigureSimApiRequestLog(Action<SimApiRequestLogOptions>? options = null)
+    {
+        options?.Invoke(SimApiRequestLogOptions);
     }
 }
