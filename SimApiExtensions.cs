@@ -209,6 +209,7 @@ public static class SimApiExtensions
                 x.OperationFilter<SimApiSignOperationFilter>();
                 x.OperationFilter<AesBodyOperationFilter>();
                 x.SchemaFilter<GlobalDynamicObjectSchemaFilter>();
+                x.SchemaFilter<DictionarySchemaFilter>();
                 x.DocumentFilter<RemoveEmptyTagsFilter>();
                 if (simApiOptions.EnableSimApiAuth)
                 {
