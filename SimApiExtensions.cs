@@ -36,11 +36,20 @@ public static class SimApiExtensions
     {
         var simApiOptions = new SimApiOptions();
         options?.Invoke(simApiOptions);
+
         if (simApiOptions.RedisConfiguration != null)
         {
             builder.AddStackExchangeRedisCache(x => x.Configuration = simApiOptions.RedisConfiguration);
             builder.AddSingleton<IConnectionMultiplexer>(_ =>
                 ConnectionMultiplexer.Connect(simApiOptions.RedisConfiguration));
+        }
+        else if (simApiOptions.EnableSimApiAuth || simApiOptions.EnableSimApiCache)
+        {
+            builder.AddDistributedMemoryCache();
+        }
+
+        if (simApiOptions.EnableSimApiCache)
+        {
             builder.AddSingleton<SimApiCache>();
         }
 
@@ -358,6 +367,11 @@ public static class SimApiExtensions
         if (options.RedisConfiguration != null)
         {
             logger.LogInformation("开始配置 RedisCache ...");
+        }
+
+        if (options.EnableSimApiCache)
+        {
+            logger.LogInformation("开始配置SimApiCache...");
         }
 
         //请求一下检测存储错误

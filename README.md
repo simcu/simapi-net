@@ -13,6 +13,7 @@ ASP.NET Core API 基础框架库，提供统一异常拦截、响应封装、Tok
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSimApi(options =>
 {
+    // RedisConfiguration 可选：配置则使用 Redis，不配则自动使用 InMemory
     options.RedisConfiguration = "localhost:6379";
     options.EnableSimApiAuth = true;
     options.EnableSimApiDoc = true;
@@ -190,6 +191,26 @@ public class SimApiLoginItem {
 ```
 
 **Token 传参**: Header `Token: <value>`
+
+### 存储模式
+
+`SimApiAuth` 内部自动判断，无需手动配置：
+
+| 条件 | 存储后端 | 用户↔Token 映射 |
+|------|---------|-----------------|
+| 配置了 `RedisConfiguration` | Redis（`IDistributedCache` + Set） | Redis Set |
+| 未配置 `RedisConfiguration` | InMemory（`DistributedMemoryCache`） | `ConcurrentDictionary` |
+
+- **Redis 模式**：支持多实例共享，Token 持久化，适合生产环境
+- **InMemory 模式**：零配置即可启用 `EnableSimApiAuth`，适合开发/测试/单实例场景。注意重启后所有登录态丢失
+
+```csharp
+// 不配 Redis 也能用 Auth
+builder.Services.AddSimApi(options =>
+{
+    options.EnableSimApiAuth = true;  // 自动使用 InMemory
+});
+```
 
 ### 认证后处理 Hook — ISimApiAuthChecker
 
@@ -406,9 +427,11 @@ IMinioClient Client { get; }             // 底层 MinIO 客户端
 
 ---
 
-## 8. Redis 缓存 — SimApiCache
+## 8. 缓存 — SimApiCache
 
-依赖 `RedisConfiguration`，Key 自动加前缀 `SimApi:Cache:`。
+通过 `EnableSimApiCache`（默认 `true`）控制。Key 自动加前缀 `SimApi:Cache:`。
+
+存储后端与 `SimApiAuth` 一致：配了 `RedisConfiguration` 就用 Redis，否则用 InMemory。
 
 ```csharp
 void Set(string key, object value, DistributedCacheEntryOptions? options = null);
@@ -617,6 +640,7 @@ builder.Services.AddSimApi(options =>
 
     // 功能开关
     options.EnableSimApiAuth         = false;    // Token 认证
+    options.EnableSimApiCache        = true;     // 缓存（Redis 或 InMemory）
     options.EnableSimApiAuthGate     = false;    // Auth Center 网关鉴权
     options.EnableSimApiDoc          = false;    // Swagger 文档
     options.EnableSimApiStorage      = false;    // S3 存储

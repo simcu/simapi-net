@@ -18,6 +18,12 @@ public class SimApiOptions
     public bool EnableSimApiAuth { get; set; }
 
     /// <summary>
+    /// 启用Cache功能
+    /// </summary>
+    public bool EnableSimApiCache { get; set; } = true;
+
+
+    /// <summary>
     /// 启用SimApi网关授权, 基于上层网关透传的身份令牌验证
     /// </summary>
     public bool EnableSimApiAuthGate { get; set; }

@@ -437,3 +437,4 @@ MigrationBackup/
 
 # BitFun snapshot data - auto managed
 .bitfun/
+/.bitfun/search/flashgrep-index/
