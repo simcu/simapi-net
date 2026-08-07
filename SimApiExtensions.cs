@@ -464,7 +464,7 @@ public static class SimApiExtensions
 
         if (options.SimApiRouteOptions.VersionRoute != null)
         {
-            logger.LogInformation("注册内置Route: Versions => {}", options.SimApiRouteOptions.LogoutRoute);
+            logger.LogInformation("注册内置Route: Versions => {}", options.SimApiRouteOptions.VersionRoute);
             builder.MapControllerRoute(name: "Versions", pattern: options.SimApiRouteOptions.VersionRoute,
                 defaults: new
                 {
