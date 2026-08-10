@@ -1,13 +1,16 @@
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using SimApi.Attributes;
 using SimApi.Communications;
+using SimApi.Configurations;
 using SimApi.Helpers;
 using static SimApi.Helpers.SimApiError;
 
 namespace SimApi.Controllers;
 
-public class SimApiCommonController : SimApiBaseController
+public class SimApiCommonController(SimApiOptions simApiOptions) : SimApiBaseController
 {
     /// <summary>
     /// 错误回馈页面
@@ -21,18 +24,27 @@ public class SimApiCommonController : SimApiBaseController
         Error(code);
     }
 
-
+    /// <summary>
+    /// 给前端的自定义信息
+    /// </summary>
+    /// <returns></returns>
     [HttpPost, HttpGet]
-    public Dictionary<string, string> Versions()
+    public Dictionary<string, object> WebConfig()
     {
-        return new Dictionary<string, string>
+        var resp = simApiOptions.WebConfig!.ToDictionary();
+        if (simApiOptions.WebConfigIncludeVersion)
         {
-            { "SimApi", SimApiUtil.SimApiVersion },
-            { "App", SimApiUtil.AppVersion }
-        };
+            resp.Add("Versions", new Dictionary<string, string>
+            {
+                { "SimApi", SimApiUtil.SimApiVersion },
+                { "App", SimApiUtil.AppVersion }
+            });
+        }
+
+        return resp;
     }
-    
-    
+
+
     /// <summary>
     /// 获取已登录用户信息
     /// </summary>

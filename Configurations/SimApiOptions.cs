@@ -1,10 +1,24 @@
 using System;
+using System.Collections.Generic;
 
 namespace SimApi.Configurations;
 
 public class SimApiOptions
 {
+    /// <summary>
+    /// Redis配置
+    /// </summary>
     public string? RedisConfiguration { get; set; }
+
+    /// <summary>
+    /// 原样返回给前端的配置信息
+    /// </summary>
+    public Dictionary<string, object>? WebConfig { get; set; }
+
+    /// <summary>
+    /// WebConfig返回是否包含版本信息
+    /// </summary>
+    public bool WebConfigIncludeVersion { get; set; } = true;
 
     /// <summary>
     /// 是否启用后台任务系统 *基于Hangfire

@@ -36,6 +36,8 @@ public static class SimApiExtensions
     {
         var simApiOptions = new SimApiOptions();
         options?.Invoke(simApiOptions);
+        simApiOptions.WebConfig ??= new();
+        builder.AddSingleton(simApiOptions);
 
         if (simApiOptions.RedisConfiguration != null)
         {
@@ -350,7 +352,6 @@ public static class SimApiExtensions
         }
 
         builder.AddSingleton(simApiOptions.SimApiRequestLogOptions);
-        builder.AddSingleton(simApiOptions);
         return builder;
     }
 
@@ -461,18 +462,6 @@ public static class SimApiExtensions
             builder.UseMiddleware<SimApiAuthMiddleware>();
         }
 
-
-        if (options.SimApiRouteOptions.VersionRoute != null)
-        {
-            logger.LogInformation("注册内置Route: Versions => {}", options.SimApiRouteOptions.VersionRoute);
-            builder.MapControllerRoute(name: "Versions", pattern: options.SimApiRouteOptions.VersionRoute,
-                defaults: new
-                {
-                    controller = "SimApiCommon",
-                    action = "Versions"
-                });
-        }
-
         if (options.SimApiRouteOptions.UserInfoRoute != null)
         {
             logger.LogInformation("注册内置Route: UserInfo => {}", options.SimApiRouteOptions.UserInfoRoute);
@@ -492,6 +481,17 @@ public static class SimApiExtensions
                 {
                     controller = "SimApiAuth",
                     action = "Logout"
+                });
+        }
+
+        if (options.SimApiRouteOptions.WebConfigRoute != null)
+        {
+            logger.LogInformation("注册内置Route: Logout => {}", options.SimApiRouteOptions.WebConfigRoute);
+            builder.MapControllerRoute(name: "WebConfig", pattern: options.SimApiRouteOptions.WebConfigRoute,
+                defaults: new
+                {
+                    controller = "SimApiCommon",
+                    action = "WebConfig"
                 });
         }
 
