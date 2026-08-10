@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using SimApi.Configurations;
+using SimApi.Helpers;
 
 namespace SimApi.Middlewares;
 
@@ -53,7 +54,25 @@ public class SimApiRequestLogMiddleware(
         var requestBodyText = await new StreamReader(context.Request.Body).ReadToEndAsync();
         context.Request.Body.Seek(0, SeekOrigin.Begin);
         logMessage.AppendLine("*( RequestBody ) =>");
-        logMessage.AppendLine(requestBodyText);
+        if (options.RequestStringLogLength == 0)
+        {
+            logMessage.AppendLine(requestBodyText);
+        }
+        else
+        {
+            var reqLogs = SimApiUtil.FromJson<Dictionary<string, object>>(requestBodyText);
+            foreach (var reqLog in reqLogs)
+            {
+                if (reqLog.Value is not JsonElement { ValueKind: JsonValueKind.String } je) continue;
+                var str = je.GetString();
+                if (str?.Length > options.RequestStringLogLength)
+                {
+                    reqLogs[reqLog.Key] = str[..options.RequestStringLogLength] + $"...({str.Length})";
+                }
+            }
+
+            logMessage.AppendLine(SimApiUtil.Json(reqLogs));
+        }
 
         var originalBodyStream = context.Response.Body;
         using var responseBody = new MemoryStream();

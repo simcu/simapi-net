@@ -11,4 +11,9 @@ public class SimApiRequestLogOptions
     /// 是否打印完整的响应体
     /// </summary>
     public bool ShowFullResponse { get; set; }
+
+    /// <summary>
+    /// 请求字段显示最长长度
+    /// </summary>
+    public int RequestStringLogLength { get; set; } = 0;
 }
