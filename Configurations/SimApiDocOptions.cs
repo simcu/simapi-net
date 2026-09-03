@@ -6,7 +6,7 @@ namespace SimApi.Configurations;
 /// <summary>
 /// 文档组配置
 /// </summary>
-public class SimApiDocGroupOption(string id, string name, string description = "")
+public class SimApiDocGroupOption(string id, string name, string description = "", bool isDefault = false)
 {
     /// <summary>
     /// 文档标识
@@ -22,6 +22,11 @@ public class SimApiDocGroupOption(string id, string name, string description = "
     /// 文档描述
     /// </summary>
     public string Description { get; set; } = description!;
+
+    /// <summary>
+    /// 是否为默认文档组: 未标注分组的接口全部归入此文档组
+    /// </summary>
+    public bool IsDefault { get; set; } = isDefault;
 }
 
 /// <summary>
@@ -50,13 +55,19 @@ public class SimApiDocOptions
     /// </summary>
     public SimApiDocGroupOption[] ApiGroups { get; set; } =
     [
-        new("api", "Api", "Api接口文档")
+        new("api", "Api", "Api接口文档", isDefault: true)
     ];
 
     /// <summary>
     /// 授权配置
     /// </summary>
     public SimApiAuthOption ApiAuth { get; set; } = new();
+
+    /// <summary>
+    /// 接口文档页面访问前缀, 默认 "docs"。
+    /// 访问 /docs 即打开文档页面, JSON 地址为 /docs/{文档组Id}.json
+    /// </summary>
+    public string UrlPrefix { get; set; } = "docs";
 
     /// <summary>
     /// 文档页面标题

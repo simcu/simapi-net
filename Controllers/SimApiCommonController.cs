@@ -18,7 +18,7 @@ public class SimApiCommonController(SimApiOptions simApiOptions) : SimApiBaseCon
     /// <param name="code">错误代码</param>
     /// <returns></returns>
     [HttpGet("exception/{code:int}")]
-    [ApiExplorerSettings(IgnoreApi = true)]
+    [SimApiDoc(ignore: true)]
     public void ExceptionHandler(int code)
     {
         Error(code);
@@ -29,6 +29,7 @@ public class SimApiCommonController(SimApiOptions simApiOptions) : SimApiBaseCon
     /// </summary>
     /// <returns></returns>
     [HttpPost, HttpGet]
+    [HttpPost, SimApiDoc("公共", "获取自定义配置",groupNames: "*")]
     public Dictionary<string, object> WebConfig()
     {
         var resp = simApiOptions.WebConfig!.ToDictionary();
@@ -49,6 +50,6 @@ public class SimApiCommonController(SimApiOptions simApiOptions) : SimApiBaseCon
     /// 获取已登录用户信息
     /// </summary>
     /// <returns></returns>
-    [HttpPost, SimApiAuth, SimApiDoc("认证", "获取已登录用户信息")]
+    [HttpPost, SimApiAuth, SimApiDoc("认证", "获取已登录用户信息",groupNames: "*")]
     public SimApiLoginItem UserInfo() => LoginInfo;
 }

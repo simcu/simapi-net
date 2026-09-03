@@ -28,7 +28,7 @@ public static class SimApiUtil
     {
         // ReferenceHandler = ReferenceHandler.Preserve,
         Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         // DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 

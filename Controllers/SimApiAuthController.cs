@@ -11,7 +11,7 @@ public class SimApiAuthController(SimApiAuth auth) : SimApiBaseController
     /// 退出登陆
     /// </summary>
     /// <returns></returns>
-    [HttpPost, SimApiDoc("认证", "退出登陆")]
+    [HttpPost, SimApiDoc("认证", "退出登陆",groupNames: "*")]
     public void Logout()
     {
         if (Request.Headers.TryGetValue("Token", out var value))

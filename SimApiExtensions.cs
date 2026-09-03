@@ -9,15 +9,18 @@ using Hangfire.Redis.StackExchange;
 using SimApi.Helpers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.OpenApi;
 using SimApi.Middlewares;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SimApi.Attributes;
 using SimApi.AuthSDK;
 using SimApi.Configurations;
+using SimApi.Controllers;
 using SimApi.Interfaces;
 using SimApi.Logger;
 using SimApi.SwaggerFilters;
@@ -229,15 +232,42 @@ public static class SimApiExtensions
 
                 x.DocInclusionPredicate((docName, apiDesc) =>
                 {
-                    // 获取接口标记的 GroupName（未标记则为 null）
-                    var actionGroupName = apiDesc.ActionDescriptor.EndpointMetadata
+                    var metadata = apiDesc.ActionDescriptor.EndpointMetadata;
+
+                    // 类/方法上的 [SimApiDoc] 标注统一控制文档归属
+                    var docAttrs = metadata.OfType<SimApiDocAttribute>().ToArray();
+
+                    // Ignore: 不出现在任何文档(路由不受影响)
+                    if (docAttrs.Any(a => a.Ignore))
+                    {
+                        return false;
+                    }
+
+                    // GroupNames: 逗号分隔的文档组列表; "*" 表示所有文档;
+                    // 标注在类上则整类生效, 方法级标注可覆盖
+                    var groupNames = docAttrs
+                        .Select(a => a.GroupNames)
+                        .FirstOrDefault(g => !string.IsNullOrWhiteSpace(g));
+                    if (groupNames != null)
+                    {
+                        var groups = groupNames.Split(',',
+                            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                        return groups.Contains(SimApiDocAttribute.AllGroups) || groups.Contains(docName);
+                    }
+
+                    // 兼容: ApiExplorerSettings.GroupName 单组标注
+                    var actionGroupName = metadata
                         .OfType<ApiExplorerSettingsAttribute>()
                         .FirstOrDefault()?.GroupName;
 
-                    // 情况1：接口未标记任何 GroupName（actionGroupName 为 null）
+                    // 未标注任何分组 → 放入配置为 IsDefault 的文档组;
+                    // 未配置 IsDefault 时依次回退 id 为 "api" 的组 / 第一个组
                     if (actionGroupName == null)
                     {
-                        return docName == "api"; // 未分组接口只属于默认分组v1
+                        var defaultGroup = docOptions.ApiGroups.FirstOrDefault(g => g.IsDefault)
+                                           ?? docOptions.ApiGroups.FirstOrDefault(g => g.Id == "api")
+                                           ?? docOptions.ApiGroups.FirstOrDefault();
+                        return defaultGroup != null && docName == defaultGroup.Id;
                     }
 
                     return docName == actionGroupName;
@@ -308,6 +338,13 @@ public static class SimApiExtensions
                     });
                 }
             });
+
+            // 让 SimApiRouteOptions 配置的内置约定路由(UserInfo/Logout/WebConfig)
+            // 也能出现在文档中: 通过 IApiDescriptionProvider 手工产出 ApiDescription,
+            // 请求/响应 schema 由 Swashbuckle 自动分析, [SimApiDoc] 注解自动生效。
+            builder.TryAddEnumerable(
+                ServiceDescriptor.Transient<IApiDescriptionProvider,
+                    SimApiBuiltInRoutesDescriptionProvider>());
         }
 
         // 使用Header转发，应对代理后获取真实ip
@@ -316,7 +353,7 @@ public static class SimApiExtensions
             builder.Configure<ForwardedHeadersOptions>(fwOptions =>
             {
                 fwOptions.ForwardedHeaders = ForwardedHeaders.All;
-                fwOptions.KnownNetworks.Clear();
+                fwOptions.KnownIPNetworks.Clear();
                 fwOptions.KnownProxies.Clear();
             });
         }
@@ -462,36 +499,19 @@ public static class SimApiExtensions
             builder.UseMiddleware<SimApiAuthMiddleware>();
         }
 
-        if (options.SimApiRouteOptions.UserInfoRoute != null)
+        // 注册内置Route(UserInfo/Logout/WebConfig)。
+        // 路径统一由 SimApiBuiltInRoutes 路由表提供: 配置为 null/空 的端点不注册。
+        foreach (var route in SimApiBuiltInRoutes.Get(options.SimApiRouteOptions))
         {
-            logger.LogInformation("注册内置Route: UserInfo => {}", options.SimApiRouteOptions.UserInfoRoute);
-            builder.MapControllerRoute(name: "UserInfo", pattern: options.SimApiRouteOptions.UserInfoRoute,
+            logger.LogInformation("注册内置Route: {RouteName} => {RoutePath} [{HttpMethods}]", route.RouteName,
+                route.Path, string.Join(", ", route.HttpMethods));
+            builder.MapControllerRoute(
+                name: route.RouteName,
+                pattern: route.Path,
                 defaults: new
                 {
-                    controller = "SimApiCommon",
-                    action = "UserInfo"
-                });
-        }
-
-        if (options.SimApiRouteOptions.LogoutRoute != null)
-        {
-            logger.LogInformation("注册内置Route: Logout => {}", options.SimApiRouteOptions.LogoutRoute);
-            builder.MapControllerRoute(name: "Logout", pattern: options.SimApiRouteOptions.LogoutRoute,
-                defaults: new
-                {
-                    controller = "SimApiAuth",
-                    action = "Logout"
-                });
-        }
-
-        if (options.SimApiRouteOptions.WebConfigRoute != null)
-        {
-            logger.LogInformation("注册内置Route: Logout => {}", options.SimApiRouteOptions.WebConfigRoute);
-            builder.MapControllerRoute(name: "WebConfig", pattern: options.SimApiRouteOptions.WebConfigRoute,
-                defaults: new
-                {
-                    controller = "SimApiCommon",
-                    action = "WebConfig"
+                    controller = route.Controller,
+                    action = route.Action
                 });
         }
 
@@ -499,12 +519,14 @@ public static class SimApiExtensions
         {
             logger.LogInformation("开始配置SimApiDoc...");
             var docOptions = options.SimApiDocOptions;
-            builder.UseSwagger(x => x.RouteTemplate = "/swagger/{documentName}.json")
+            builder.UseSwagger(x => x.RouteTemplate = $"/{docOptions.UrlPrefix}/{{documentName}}.json")
                 .UseSwaggerUI(x =>
                 {
+                    x.RoutePrefix = docOptions.UrlPrefix;
                     x.DocumentTitle = docOptions.DocumentTitle;
                     foreach (var group in docOptions.ApiGroups)
                     {
+                        // 相对端点: 页面位于 /{UrlPrefix}/, 自动解析为 /{UrlPrefix}/{group.Id}.json
                         x.SwaggerEndpoint($"{group.Id}.json", name: group.Name);
                     }
 

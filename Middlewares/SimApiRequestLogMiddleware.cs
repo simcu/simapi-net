@@ -60,18 +60,36 @@ public class SimApiRequestLogMiddleware(
         }
         else
         {
-            var reqLogs = SimApiUtil.FromJson<Dictionary<string, object>>(requestBodyText);
-            foreach (var reqLog in reqLogs)
+            // GET/DELETE 等无 body 的请求, 或表单/文件上传等非 JSON body:
+            // 不进行长度裁剪, 原样记录, 避免空 JSON 解析抛异常
+            Dictionary<string, object>? reqLogs = null;
+            try
             {
-                if (reqLog.Value is not JsonElement { ValueKind: JsonValueKind.String } je) continue;
-                var str = je.GetString();
-                if (str?.Length > options.RequestStringLogLength)
-                {
-                    reqLogs[reqLog.Key] = str[..options.RequestStringLogLength] + $"...({str.Length})";
-                }
+                reqLogs = SimApiUtil.FromJson<Dictionary<string, object>>(requestBodyText);
+            }
+            catch (JsonException)
+            {
+                reqLogs = null;
             }
 
-            logMessage.AppendLine(SimApiUtil.Json(reqLogs));
+            if (reqLogs == null)
+            {
+                logMessage.AppendLine(requestBodyText);
+            }
+            else
+            {
+                foreach (var reqLog in reqLogs)
+                {
+                    if (reqLog.Value is not JsonElement { ValueKind: JsonValueKind.String } je) continue;
+                    var str = je.GetString();
+                    if (str?.Length > options.RequestStringLogLength)
+                    {
+                        reqLogs[reqLog.Key] = str[..options.RequestStringLogLength] + $"...({str.Length})";
+                    }
+                }
+
+                logMessage.AppendLine(SimApiUtil.Json(reqLogs));
+            }
         }
 
         var originalBodyStream = context.Response.Body;
