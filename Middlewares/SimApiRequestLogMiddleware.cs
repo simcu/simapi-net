@@ -61,35 +61,8 @@ public class SimApiRequestLogMiddleware(
         else
         {
             // GET/DELETE 等无 body 的请求, 或表单/文件上传等非 JSON body:
-            // 不进行长度裁剪, 原样记录, 避免空 JSON 解析抛异常
-            Dictionary<string, object>? reqLogs = null;
-            try
-            {
-                reqLogs = SimApiUtil.FromJson<Dictionary<string, object>>(requestBodyText);
-            }
-            catch (JsonException)
-            {
-                reqLogs = null;
-            }
-
-            if (reqLogs == null)
-            {
-                logMessage.AppendLine(requestBodyText);
-            }
-            else
-            {
-                foreach (var reqLog in reqLogs)
-                {
-                    if (reqLog.Value is not JsonElement { ValueKind: JsonValueKind.String } je) continue;
-                    var str = je.GetString();
-                    if (str?.Length > options.RequestStringLogLength)
-                    {
-                        reqLogs[reqLog.Key] = str[..options.RequestStringLogLength] + $"...({str.Length})";
-                    }
-                }
-
-                logMessage.AppendLine(SimApiUtil.Json(reqLogs));
-            }
+            // 不做长度裁剪, 原样记录, 避免空 JSON 解析抛异常
+            logMessage.AppendLine(TrimJsonStringFields(requestBodyText, options.RequestStringLogLength));
         }
 
         var originalBodyStream = context.Response.Body;
@@ -114,7 +87,12 @@ public class SimApiRequestLogMiddleware(
             var responseText = await new StreamReader(responseBody).ReadToEndAsync();
 
             logMessage.AppendLine($"*( Response [{context.Response.StatusCode}] ) =>");
-            if (options.ShowFullResponse)
+            if (options.ResponseStringLogLength > 0)
+            {
+                // 与请求体相同的字段级裁剪: JSON 按字段截断超长字符串, 非 JSON/空响应原样记录
+                logMessage.Append(TrimJsonStringFields(responseText, options.ResponseStringLogLength));
+            }
+            else if (options.ShowFullResponse)
             {
                 logMessage.Append(responseText);
             }
@@ -138,5 +116,46 @@ public class SimApiRequestLogMiddleware(
         }
 
         edi?.Throw();
+    }
+
+    /// <summary>
+    /// 与请求体相同的字段级裁剪:
+    /// JSON body 则把长度超过 maxLength 的字符串字段截断为前 maxLength 字符并追加 ...(原长度);
+    /// 空 body 或非 JSON body(表单/文件上传等)原样返回, 不裁剪
+    /// </summary>
+    private static string TrimJsonStringFields(string text, int maxLength)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return text;
+        }
+
+        Dictionary<string, object>? logs;
+        try
+        {
+            logs = SimApiUtil.FromJson<Dictionary<string, object>>(text);
+        }
+        catch (JsonException)
+        {
+            return text;
+        }
+
+        if (logs == null)
+        {
+            return text;
+        }
+
+        // 遍历键快照后再赋值, 避免枚举过程中修改 Dictionary 引发异常
+        foreach (var key in logs.Keys.ToList())
+        {
+            if (logs[key] is not JsonElement { ValueKind: JsonValueKind.String } je) continue;
+            var str = je.GetString();
+            if (str?.Length > maxLength)
+            {
+                logs[key] = str[..maxLength] + $"...({str.Length})";
+            }
+        }
+
+        return SimApiUtil.Json(logs);
     }
 }

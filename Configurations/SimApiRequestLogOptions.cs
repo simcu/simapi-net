@@ -16,4 +16,9 @@ public class SimApiRequestLogOptions
     /// 请求字段显示最长长度
     /// </summary>
     public int RequestStringLogLength { get; set; } = 0;
+
+    /// <summary>
+    /// 响应字段显示最长长度
+    /// </summary>
+    public int ResponseStringLogLength { get; set; } = 0;
 }
