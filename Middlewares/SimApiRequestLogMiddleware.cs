@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -119,8 +120,8 @@ public class SimApiRequestLogMiddleware(
     }
 
     /// <summary>
-    /// 与请求体相同的字段级裁剪:
-    /// JSON body 则把长度超过 maxLength 的字符串字段截断为前 maxLength 字符并追加 ...(原长度);
+    /// 与请求体相同的字段级裁剪(递归):
+    /// 遍历 JSON 对象/数组的所有层级, 把长度超过 maxLength 的字符串字段截断为前 maxLength 字符并追加 ...(原长度);
     /// 空 body 或非 JSON body(表单/文件上传等)原样返回, 不裁剪
     /// </summary>
     private static string TrimJsonStringFields(string text, int maxLength)
@@ -130,32 +131,66 @@ public class SimApiRequestLogMiddleware(
             return text;
         }
 
-        Dictionary<string, object>? logs;
+        JsonNode? root;
         try
         {
-            logs = SimApiUtil.FromJson<Dictionary<string, object>>(text);
+            root = JsonNode.Parse(text);
         }
         catch (JsonException)
         {
             return text;
         }
 
-        if (logs == null)
+        if (root == null)
         {
             return text;
         }
 
-        // 遍历键快照后再赋值, 避免枚举过程中修改 Dictionary 引发异常
-        foreach (var key in logs.Keys.ToList())
-        {
-            if (logs[key] is not JsonElement { ValueKind: JsonValueKind.String } je) continue;
-            var str = je.GetString();
-            if (str?.Length > maxLength)
-            {
-                logs[key] = str[..maxLength] + $"...({str.Length})";
-            }
-        }
+        TrimNode(root, maxLength);
+        return SimApiUtil.Json(root);
+    }
 
-        return SimApiUtil.Json(logs);
+    /// <summary>
+    /// 递归裁剪节点下所有层级的字符串值:
+    /// 纯字符串字面量超长时截断, 数字/布尔/嵌套对象/数组继续向下递归
+    /// </summary>
+    private static void TrimNode(JsonNode? node, int maxLength)
+    {
+        switch (node)
+        {
+            case JsonObject obj:
+                // 键快照遍历后再赋值, 避免枚举过程中修改集合引发异常
+                foreach (var prop in obj.ToList())
+                {
+                    if (prop.Value is JsonValue value &&
+                        value.TryGetValue<string>(out var str) &&
+                        str.Length > maxLength)
+                    {
+                        obj[prop.Key] = JsonValue.Create(str[..maxLength] + $"...({str.Length})");
+                    }
+                    else
+                    {
+                        TrimNode(prop.Value, maxLength);
+                    }
+                }
+
+                break;
+            case JsonArray arr:
+                for (var i = 0; i < arr.Count; i++)
+                {
+                    if (arr[i] is JsonValue value &&
+                        value.TryGetValue<string>(out var str) &&
+                        str.Length > maxLength)
+                    {
+                        arr[i] = JsonValue.Create(str[..maxLength] + $"...({str.Length})");
+                    }
+                    else
+                    {
+                        TrimNode(arr[i], maxLength);
+                    }
+                }
+
+                break;
+        }
     }
 }
