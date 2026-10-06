@@ -354,6 +354,7 @@ public static class SimApiExtensions
             {
                 fwOptions.ForwardedHeaders = ForwardedHeaders.All;
                 fwOptions.KnownNetworks.Clear();
+                fwOptions.KnownProxies.Clear();
             });
         }
 
