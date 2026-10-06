@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using SimApi.Communications;
+using SimApi.Interfaces;
 using StackExchange.Redis;
 
 namespace SimApi.Helpers;
@@ -18,14 +20,16 @@ public class SimApiAuth
 
     private readonly IDistributedCache _cache;
     private readonly IDatabase? _redisDb;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     // InMemory 模式：用户 → Token集合
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> _userTokens = new();
 
-    public SimApiAuth(IDistributedCache cache, IServiceProvider sp)
+    public SimApiAuth(IDistributedCache cache, IServiceProvider sp, IServiceScopeFactory scopeFactory)
     {
         _cache = cache;
         _redisDb = sp.GetService<IConnectionMultiplexer>()?.GetDatabase();
+        _scopeFactory = scopeFactory;
     }
 
     /// <summary>
@@ -88,6 +92,13 @@ public class SimApiAuth
     /// <returns></returns>
     public SimApiLoginItem? GetLogin(string token)
     {
+        using var scope = _scopeFactory.CreateScope(); // 用完即释放
+        foreach (var resolver in scope.ServiceProvider.GetServices<ISimApiTokenResolver>())
+        {
+            var item = resolver.Run(token);
+            if (item != null) return item;
+        }
+
         var cacheKey = TokenCacheKey.Replace("{token}", token);
         var login = _cache.GetString(cacheKey);
         var resp = login != null ? SimApiUtil.FromJson<SimApiLoginItem>(login) : null;

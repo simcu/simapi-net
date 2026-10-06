@@ -78,7 +78,7 @@ SimApi/
 ├── Configurations/        # SimApiOptions + 各模块 Option 类
 ├── Controllers/           # SimApiBaseController, SimApiCommonController, SimApiAuthController
 ├── Helpers/               # SimApiError, SimApiAuth, SimApiCache, SimApiHttpClient, SimApiStorage, SimApiUtil, SimApiAesUtil
-├── Interfaces/            # ISimApiAuthChecker
+├── Interfaces/            # ISimApiAuthChecker, ISimApiTokenResolver
 ├── Middlewares/            # SimApiExceptionMiddleware, SimApiAuthMiddleware
 ├── Synapse/               # MQTT Pub/Sub + RPC + Config Store
 ├── Exceptions/            # SimApiException
@@ -220,6 +220,33 @@ public interface ISimApiAuthChecker {
 }
 // 实现后自动注册为 Scoped，每次认证后调用
 ```
+
+### 自定义 Token 解析 — ISimApiTokenResolver
+
+让认证识别**本库之外签发的 Token**（JWT、第三方登录态等），是 `GetLogin` 的前置扩展点。
+
+```csharp
+public interface ISimApiTokenResolver {
+    SimApiLoginItem? Run(string token);   // 不是自己负责的 Token 返回 null
+}
+```
+
+**必须由使用者手动注册**，本库不会自动发现实现（`AddScoped` / `AddSingleton` / `AddTransient` 均可）：
+
+```csharp
+builder.Services.AddScoped<ISimApiTokenResolver, MyJwtTokenResolver>();
+```
+
+调用行为：
+
+- 每次 `GetLogin`（即每个携带 Token 的请求）都会**先**按注册顺序执行全部 resolver，返回非 `null` 即短路生效；全部返回 `null` 才回退到内置缓存查询
+- 因此本机 `Login()` 签发的 Token 同样会走一遍 resolver 链，实现应保持廉价，或自行做短 TTL 缓存
+- `Logout` 与 `GetAllLogins` 内部也会调用 `GetLogin`，同样会触发 resolver 链，其中 `GetAllLogins` 会按该用户的 Token 数量执行多次
+- 每次调用在新建的子作用域内解析，可以注入 Scoped 服务（如 `DbContext`）；但它**不是当前请求的作用域**，请求级事务 / UnitOfWork 的未提交改动不可见，实现应当只读
+- 返回值必须是完全物化的对象，作用域在返回后立即释放，不可返回依赖延迟加载的 EF 追踪实体
+- 返回的登录态**不受本库管理**：`Login` / `Update` / `GetAllLogins` 不会包含它，`Logout` 对它无效，吊销需由实现方自行处理
+- 抛出的异常会中断整条链并导致该请求认证失败；表示"不是我的 Token"请返回 `null`，不要抛异常
+- 仅在 `EnableSimApiAuth = true` 时才会被执行
 
 ---
 
